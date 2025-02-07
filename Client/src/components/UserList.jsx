@@ -19,7 +19,7 @@ export default function UserList() {
 
     const componentContent = () => {
         let content = null;
-    
+
         if (!loginUser) {
             content = Array(10).fill().map((_) => (
                 <div key={uuidv4()} className="flex space-x-3 mb-4">
@@ -35,10 +35,10 @@ export default function UserList() {
         } else {
             content = <GroupList />;
         }
-        
+
         return <>{content}</>;
     };
-    
+
 
     return (
         <>

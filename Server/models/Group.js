@@ -10,7 +10,7 @@ const groupSchema = new Schema(
         image: { 
             type: String,
         },
-        description: { // about image
+        description: { // about group
             type: String,
         },
         members: [

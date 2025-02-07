@@ -1,19 +1,11 @@
-import React, { useContext, useEffect } from "react";
+import React from "react";
 import UserList from "../components/UserList";
 import ChatRoom from "../components/ChatRoom";
-import UserContext from "../context/UserContext";
-import loginUser from '../TempData.js';
 
 export default function ChatPage() {
 
-    const { setLoginUser } = useContext(UserContext);
-
-    useEffect(() => {
-        setLoginUser(loginUser);
-    }, [loginUser]);
-
     return (
-        <div className="flex-1 flex"> {/* flex-wrap */}
+        <div className="flex-1 flex">
             
             <div className="h-full flex-1 md:flex-none flex flex-col md:w-80 lg:w-90 md:border-e border-gray-700">
                 <UserList/>

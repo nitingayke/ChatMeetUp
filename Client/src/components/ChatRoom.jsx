@@ -9,23 +9,27 @@ import SentimentSatisfiedOutlinedIcon from '@mui/icons-material/SentimentSatisfi
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import loginUser from '../TempData';
 import Brightness1Icon from '@mui/icons-material/Brightness1';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import { v4 as uuidv4 } from 'uuid';
 import { formatTime } from '../utils/helpers.js';
+import UserContext from '../context/UserContext.js';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 
 export default function ChatRoom() {
+
     const [remoteUser, setRemoteUser] = useState(null);
     const [message, setMessage] = useState("");
     const [anchorEl1, setAnchorEl1] = useState(null);
     const open1 = Boolean(anchorEl1);
+
     const { userChat } = useContext(ChatContext);
+    const { loginUser } = useContext(UserContext);
 
     useEffect(() => {
         if (userChat) {
-            setRemoteUser(userChat?.user1 === loginUser.username ? userChat?.user2 : userChat?.user1);
+            setRemoteUser(userChat?.user1?.username === loginUser.username ? userChat?.user2 : userChat?.user1);
         }
     }, [userChat]);
 
@@ -44,6 +48,7 @@ export default function ChatRoom() {
             console.error("Error sending message:", error);
         }
     };
+
 
     if (!userChat) {
         return (
@@ -69,7 +74,7 @@ export default function ChatRoom() {
                                     </li>
                                     {
                                         userChat?.members?.map((joinUser) => (
-                                            <li key={uuidv4()}>{joinUser.user}</li>  
+                                            <li key={uuidv4()}>{joinUser.user.username}</li>
                                         ))
                                     }
                                 </ul>
@@ -100,32 +105,80 @@ export default function ChatRoom() {
                 <ul className='space-y-3'>
                     {userChat?.messages.map((data) => (
 
-                        <li key={uuidv4()} className={`flex ${data?.sender === loginUser?.username && 'justify-end'}`}>
+                        <li key={uuidv4()} className={`flex ${data?.sender?.username === loginUser?.username && 'justify-end'}`}>
 
-                            <div className={`relative flex ${data?.sender === loginUser?.username && 'flex-row-reverse'}`}>
+                            <div className={`relative flex ${data?.sender?.username === loginUser?.username && 'flex-row-reverse'}`}>
                                 <Avatar
                                     src={data?.sender?.image}
                                     className='sticky top-0'
                                     sx={{ position: 'sticky', top: 0 }}
                                 />
-                                <div className={`bg-[#000000c2] p-2 border border-gray-700 mt-4 rounded-b-lg ${loginUser.username === data.sender ? 'rounded-s-lg me-2 ms-10' : 'rounded-e-lg me-10 ms-2'}`}>
+                                <div className={`bg-[#000000c2] p-2 border border-gray-700 mt-4 rounded-b-lg ${loginUser.username === data.sender.username ? 'rounded-s-lg me-2 ms-10' : 'rounded-e-lg me-10 ms-2'}`}>
 
-                                    <div className={`text-[0.8rem] space-x-2 flex justify-between border-b border-gray-700 pb-1 text-gray-400 ${loginUser.username === data.sender ? 'flex-dir-reverse' : ''}`}
-                                        style={{ flexDirection: (loginUser.username === data.sender) ? 'row-reverse' : '' }}>
-                                        <p className=''>{data?.sender}</p>
+                                    <div className={`text-[0.8rem] space-x-2 flex justify-between border-b border-gray-700 pb-1 text-gray-400 ${loginUser.username === data.sender.username ? 'flex-dir-reverse' : ''}`}
+                                        style={{ flexDirection: (loginUser.username === data.sender?.username) ? 'row-reverse' : '' }}>
+
+                                        <p>{data?.sender?.username}</p>
                                         <p className='pe-2'>{formatTime(data?.createdAt)}</p>
+
                                     </div>
 
-                                    <p className='pt-1 text-gray-200'>{data?.message}</p>
-                                    {
-                                        (loginUser.username == data.sender) && <div className={`text-base/4 ${(loginUser.username === data.sender)}`}>
-                                            {
-                                                (data?.readBy?.length >= 2)
-                                                    ? <CheckCircleOutlinedIcon className='text-green-500 absolute right-10' style={{ fontSize: '0.9rem' }} />
-                                                    : <Brightness1Icon className='text-gray-500 absolute right-10' style={{ fontSize: '0.9rem' }} />
-                                            }
+                                    {data?.message && <p className='pt-3 text-gray-200'>{data?.message}</p>}
+
+                                    {data?.attachments?.video && (
+                                        <div className='mt-5'>
+                                            <iframe
+                                                key={data._id}
+                                                title={`Video - ${data._id}`}
+                                                width="100%"
+                                                height="100%"
+                                                src={data.attachments.video}
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            ></iframe>
+                                        </div>)}
+
+                                    {(data?.attachments?.pdf) && (<div className='mt-4'>
+                                        <div className='h-20 bg-cover bg-[url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQh59esa59OmZuX7w7QkhDnRQXhLVky4jW2LQ&s)] rounded mb-2 h-25'></div>
+                                        <div className='flex justify-between items-center'>
+                                            <p>Download PDF </p>
+                                            <a href={data?.attachments?.pdf} target='_blank' download className="text-blue-500 hover:text-blue-700 border-3 rounded-full p-[0.5px]">
+                                                <DownloadOutlinedIcon />
+                                            </a>
                                         </div>
-                                    }
+                                    </div>)}
+
+                                    {(data?.attachments?.image) && <div className='mt-5'>
+                                        <img src={data?.attachments?.image} alt="" className='w-full' />
+                                    </div>}
+
+                                    {data?.poll && <div className='mt-2 space-y-2 w-full md:min-w-70'>
+                                        {
+                                            (data?.poll || []).map((pollOption) => <button
+                                                key={uuidv4()}
+                                                className='px-1 py-2 text-base/3 w-full flex flex-col cursor-pointer rounded hover:bg-[#ffffff15]'>
+                                                <p className='text-sm'>
+                                                    {pollOption?.option}
+                                                    <span className='ps-2'>{pollOption?.votes?.length}</span>
+                                                </p>
+                                                <div className='rounded h-2 bg-gray-900 w-full mt-1'>
+                                                    <p className="rounded bg-green-500 h-full"
+                                                        style={{ width: `${Math.min(100, (pollOption?.votes?.length / (userChat?.members?.length || 2)) * 100)}%` }}> {/*  userChat?.members?.length => group is there else not group   */}
+                                                    </p>
+                                                </div>
+
+                                            </button>)
+                                        }
+                                    </div>}
+
+
+                                    {(loginUser.username == data.sender.username) && <div className={`text-base/4 ${(loginUser.username === data.sender.username)}`}>
+                                        {
+                                            (data?.readBy?.length >= 2)
+                                                ? <CheckCircleOutlinedIcon className='text-green-500 absolute right-10' style={{ fontSize: '0.9rem' }} />
+                                                : <Brightness1Icon className='text-gray-500 absolute right-10' style={{ fontSize: '0.9rem' }} />
+                                        }
+                                    </div>}
                                 </div>
 
                             </div>
