@@ -1,8 +1,20 @@
 import React from "react";
 import UserList from "../components/UserList";
-import ChatRoom from "../components/ChatRoom";
+import ChatRoom from "../components/ChatComponent/ChatRoom";
+import { useNavigate } from "react-router-dom";
+import { useSnackbar } from "notistack";
 
 export default function ChatPage() {
+
+    const navigate = useNavigate();
+    const { enqueueSnackbar } = useSnackbar();
+
+
+    if (!localStorage.getItem('authToken')) {
+        enqueueSnackbar("You are not logged in. Please log in to continue.");
+        navigate("/");
+        return;
+    }
 
     return (
         <div className="flex-1 flex">

@@ -11,25 +11,20 @@ import Brightness1Icon from '@mui/icons-material/Brightness1';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { Link } from 'react-router-dom';
 
-
-export default function GroupList() {
-
+export default function GroupList({ searchQuery }) {
+    
     const [selectedUser, setSelectedUser] = useState(null);
-
     const { setUserChat } = useContext(ChatContext);
     const { loginUser } = useContext(UserContext);
 
-    const handleSelectUser = (value) => {
-        setUserChat(value);
-        setSelectedUser(value._id);
-    }
 
     useEffect(() => {
         if (loginUser?.groups?.length > 0) {
             setUserChat(loginUser.groups[0]);
             setSelectedUser(loginUser.groups[0]._id);
         }
-    }, []);
+    }, [loginUser?.groups]); 
+
 
     if (!loginUser?.groups || loginUser.groups.length === 0) {
         return (
@@ -42,65 +37,82 @@ export default function GroupList() {
         );
     }
 
+
+    const filteredGroups = loginUser.groups
+        .filter(group => {
+            const groupName = group?.name || '';
+            return groupName.toLowerCase().includes((searchQuery || "").toLowerCase());
+        })
+        .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
+
+    
+    if (filteredGroups.length === 0) {
+        return (
+            <div className='text-center text-gray-500 py-5'>
+                <h1>No group found matching <b className='text-white break-words'>{searchQuery}</b>.</h1>
+            </div>
+        );
+    }
+
     return (
         <>
-            {
-                loginUser?.groups.map((value, idx) => (
+            {filteredGroups.map((group) => {
+                const lastMessage = group.messages?.length ? group.messages.at(-1) : null; 
+
+                return (
                     <ListItem
-                        key={value._id}
+                        key={group._id}
                         sx={{ padding: 0 }}
-                        className={`border-b border-gray-900 hover:bg-gray-800 ${selectedUser === value._id && 'bg-[#80808045]'}`}
+                        className={`border-b border-gray-900 hover:bg-gray-800 ${selectedUser === group._id ? 'bg-[#80808045]' : ''}`}
                     >
-                        <ListItemButton onClick={() => handleSelectUser(value)} >
-                            <ListItemAvatar >
-                                <Avatar alt={value?.name} src={value?.image} />
+                        <ListItemButton onClick={() => {
+                            setUserChat(group);
+                            setSelectedUser(group._id);
+                        }}>
+                            <ListItemAvatar>
+                                <Avatar alt={group?.name} src={group?.image} />
                             </ListItemAvatar>
 
                             <div className='flex-1'>
                                 <div className='flex items-center justify-between space-x-2'>
-
-                                    <h1 className='font-semibold truncate w-35'>{value?.name}</h1>
+                                    <h1 className='font-semibold truncate w-35'>{group?.name}</h1>
                                     <div className='text-[0.7rem]'>
-                                        {
-                                            value?.messages?.length > 0
-                                                ? <p className='text-gray-300'>{formatTime(value?.messages[value?.messages?.length - 1]?.createdAt)}</p>
-                                                : <div className='space-x-1 flex items-center text-gray-500'>
-                                                    <PeopleAltOutlinedIcon style={{ fontSize: "1rem" }} />
-                                                    <span className='text-sm'>{value?.members?.length}</span>
-                                                </div>
-                                        }
+                                        {lastMessage ? (
+                                            <p className='text-gray-300'>{formatTime(lastMessage.createdAt)}</p>
+                                        ) : (
+                                            <div className='space-x-1 flex items-center text-gray-500'>
+                                                <PeopleAltOutlinedIcon style={{ fontSize: "1rem" }} />
+                                                <span className='text-sm'>{group?.members?.length}</span>
+                                            </div>
+                                        )}
                                     </div>
-
                                 </div>
                                 <div className='text-sm flex-1 text-gray-400'>
-                                    {(value?.messages ?? []).length > 0 ? (
+                                    {lastMessage ? (
                                         <div className='text-[0.8rem] space-x-1 line-clamp-2'>
-                                            {loginUser?.username === value?.messages?.at(-1)?.sender?.username && (
+                                            {loginUser?.username === lastMessage?.sender?.username && (
                                                 <span>
-                                                    {value?.messages?.at(-1)?.readBy?.length === value?.members?.length ? (
+                                                    {lastMessage?.readBy?.length === group?.members?.length ? (
                                                         <CheckCircleOutlinedIcon className='text-green-500' style={{ fontSize: '0.9rem' }} />
                                                     ) : (
                                                         <Brightness1Icon style={{ fontSize: '0.9rem' }} />
                                                     )}
                                                 </span>
                                             )}
-
                                             <span className='text-yellow-500 whitespace-nowrap pe-1'>
-                                                {String(value?.messages?.at(-1)?.sender?.username ?? 'Unknown')}&#58;
+                                                {lastMessage?.sender?.username ?? 'Unknown'}&#58;
                                             </span>
-
-                                            {String(value?.messages?.at(-1)?.message ?? '')}
+                                            {lastMessage?.message ?? ''}
                                         </div>
                                     ) : (
                                         <p className='text-[0.8rem]'>No messages yet</p>
                                     )}
                                 </div>
-
                             </div>
                         </ListItemButton>
                     </ListItem>
-                ))
-            }
+                );
+            })}
         </>
-    )
+    );
 }

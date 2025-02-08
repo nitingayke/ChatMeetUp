@@ -1,10 +1,26 @@
+import { Server } from "socket.io";
 
-const socketController = (io, socket) => {
-
-    io.on('message', () => {
-        socket.emit('message-reply', { message: 'cool boss'});
+const connectToSocket = (server) => {
+    const io = new Server(server, {
+        cors: {
+            origin: "http://localhost:5173",
+            methods: ["GET", "POST", "DELETE", "PUT"],
+        },
     });
-}
 
+    console.log("Socket.IO is running...");
 
-export default socketController;
+    io.on("connection", (socket) => {
+        console.log(`A user connected: ${socket.id}`);
+
+        socket.on("message-backend", ({ message }) => {
+            console.log("Message received:", message);
+        });
+
+        socket.on("disconnect", () => {
+            console.log("User disconnected.");
+        });
+    });
+};
+
+export { connectToSocket };

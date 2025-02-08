@@ -5,8 +5,10 @@ import Skeleton from '@mui/material/Skeleton';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Button from '@mui/material/Button';
 import UserContext from '../context/UserContext';
+
 import ConnectionsList from './NetworkList/ConnectionsList';
 import GroupList from './NetworkList/GroupList';
+
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -31,9 +33,9 @@ export default function UserList() {
                 </div>
             ));
         } else if (selectedButton === 'users') {
-            content = <ConnectionsList />;
+            content = <ConnectionsList searchQuery={searchQuery} />;
         } else {
-            content = <GroupList />;
+            content = <GroupList searchQuery={searchQuery} />;
         }
 
         return <>{content}</>;
