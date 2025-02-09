@@ -1,30 +1,25 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Avatar from '@mui/material/Avatar';
-import ChatContext from '../../context/ChatContext.js';
 import { formatTime } from '../../utils/helpers.js';
 import UserContext from '../../context/UserContext.js';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import Brightness1Icon from '@mui/icons-material/Brightness1';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function GroupList({ searchQuery }) {
     
+    const navigate = useNavigate();
     const [selectedUser, setSelectedUser] = useState(null);
-    const { setUserChat } = useContext(ChatContext);
     const { loginUser } = useContext(UserContext);
 
-
-    useEffect(() => {
-        if (loginUser?.groups?.length > 0) {
-            setUserChat(loginUser.groups[0]);
-            setSelectedUser(loginUser.groups[0]._id);
-        }
-    }, [loginUser?.groups]); 
-
+    const handleSelectedGroup = (group) => {
+        setSelectedUser(group._id);
+        navigate(`/u/chatting/${group._id}`);
+    }
 
     if (!loginUser?.groups || loginUser.groups.length === 0) {
         return (
@@ -41,7 +36,7 @@ export default function GroupList({ searchQuery }) {
     const filteredGroups = loginUser.groups
         .filter(group => {
             const groupName = group?.name || '';
-            return groupName.toLowerCase().includes((searchQuery || "").toLowerCase());
+            return (groupName || "").toLowerCase().includes((searchQuery || "").toLowerCase());
         })
         .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
 
@@ -65,10 +60,7 @@ export default function GroupList({ searchQuery }) {
                         sx={{ padding: 0 }}
                         className={`border-b border-gray-900 hover:bg-gray-800 ${selectedUser === group._id ? 'bg-[#80808045]' : ''}`}
                     >
-                        <ListItemButton onClick={() => {
-                            setUserChat(group);
-                            setSelectedUser(group._id);
-                        }}>
+                        <ListItemButton onClick={() => handleSelectedGroup(group)}>
                             <ListItemAvatar>
                                 <Avatar alt={group?.name} src={group?.image} />
                             </ListItemAvatar>

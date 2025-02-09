@@ -11,7 +11,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <UserContextProvider>
 
-      <SnackbarProvider maxSnack={5} >
+      <SnackbarProvider maxSnack={3} >
 
         <BrowserRouter>
           <App />

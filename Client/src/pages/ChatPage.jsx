@@ -12,7 +12,7 @@ export default function ChatPage() {
 
     if (!localStorage.getItem('authToken')) {
         enqueueSnackbar("You are not logged in. Please log in to continue.");
-        navigate("/");
+        navigate("/login");
         return;
     }
 

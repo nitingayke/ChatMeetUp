@@ -7,6 +7,7 @@ import { createServer } from "node:http";
 dotenv.config();
 
 import authRoute from './routes/authRoutes.js';
+import chatRoute from './routes/chatRoutes.js';
 import insertData from './models/helperData.js';
 import { connectToSocket } from './controllers/socketController.js';
 
@@ -24,6 +25,9 @@ app.use(cors({
 }));
 
 app.use('/user', authRoute);
+
+app.use("/chatRoute", chatRoute);
+
 app.get('/insertData', insertData);
 
 app.get('*', (req, res) => {

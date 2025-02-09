@@ -1,30 +1,23 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Avatar from '@mui/material/Avatar';
-import ChatContext from '../../context/ChatContext.js';
 import { formatTime } from '../../utils/helpers.js';
 import UserContext from '../../context/UserContext.js';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function ConnectionsList({ searchQuery }) {
+
+    const navigate = useNavigate();
+
     const [selectedUser, setSelectedUser] = useState(null);
-    const { setUserChat } = useContext(ChatContext);
-    const { loginUser } = useContext(UserContext);
+    const { loginUser, onlineUsers } = useContext(UserContext);
 
     const handleSelectUser = (value) => {
-        setUserChat(value);
         setSelectedUser(value._id);
+        navigate(`/u/chatting/${value._id}`);
     };
-
-    useEffect(() => {
-        if (loginUser?.connections?.length > 0) {
-            setUserChat(loginUser.connections[0]);
-            setSelectedUser(loginUser.connections[0]._id);
-        }
-    }, [loginUser?.connections]); 
-
 
     if (!loginUser?.connections || loginUser.connections.length === 0) {
         return (
@@ -42,7 +35,7 @@ export default function ConnectionsList({ searchQuery }) {
         .filter(value => {
             if (!value?.user1 || !value?.user2) return false; 
             const username = loginUser?.username === value?.user1?.username ? value?.user2?.username : value?.user1?.username;
-            return username.toLowerCase().includes((searchQuery || "").toLowerCase());
+            return (username || "").toLowerCase().includes((searchQuery || "").toLowerCase());
         })
         .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0)); 
 
@@ -69,7 +62,7 @@ export default function ConnectionsList({ searchQuery }) {
                         className={`border-b border-gray-900 hover:bg-gray-800 ${selectedUser === connection._id ? 'bg-[#80808045]' : ''}`}
                     >
                         <ListItemButton onClick={() => handleSelectUser(connection)}>
-                            <ListItemAvatar>
+                            <ListItemAvatar className='relative'>
                                 <Avatar alt={otherUser?.username} src={otherUser?.image} />
                             </ListItemAvatar>
 
@@ -77,7 +70,7 @@ export default function ConnectionsList({ searchQuery }) {
                                 <div className='flex items-center justify-between'>
                                     <h1 className='font-semibold truncate w-35 mb-1'>{otherUser?.username ?? 'Unknown'}</h1>
                                     
-                                    {idx % 2 !== 0 ? (
+                                    {(onlineUsers?.includes(connection?._id)) ? (
                                         <p className="text-xs text-green-400 flex items-center">Online</p>
                                     ) : (
                                         <div className='text-[0.7rem]'>

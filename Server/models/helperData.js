@@ -7,28 +7,20 @@ import Chat from "./Chat.js";
 const insertData = async (req, res) => {
 
     try {
-        
-        const newMessage = new Chat({
-            sender: '67a1e57093a029541e02920c',
-            attachments: {
-                pdf: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-            },
-            message: "Google ask DSA question 2025.",
-        });
+        const currChat = await Chat.findById('67a1ee38a414b10ea74d481f');
 
-        const responseChat = await newMessage.save();
+        if (!currChat) {
+            return res.json({ "Error": "Chat not found" });
+        }
 
-        const createdGroup = await Group.findById('67a47dcc06c75febb9cccb45');
+        currChat.poll[3].votes = [];
 
-        createdGroup.messages.push(responseChat._id);
-       
-        const responseGroup = await createdGroup.save();
+        const response = await currChat.save();
 
-        return res.json({ responseGroup });
+        return res.json({ response });
     } catch (error) {
-        return res.json({ "Error": error.message || "Error occured"})
+        return res.json({ "Error": error.message || "Error occurred" });
     }
-
 }
 
 export default insertData;

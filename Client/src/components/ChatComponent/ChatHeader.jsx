@@ -20,11 +20,11 @@ export default function ChatHeader() {
     const open1 = Boolean(anchorEl1);
 
     const { userChat, messageSearchQuery, setMessageSearchQuery } = useContext(ChatContext);
-    const { loginUser } = useContext(UserContext);
+    const { loginUser, onlineUsers } = useContext(UserContext);
 
     useEffect(() => {
         if (userChat) {
-            setRemoteUser(userChat?.user1?.username === loginUser.username ? userChat?.user2 : userChat?.user1);
+            setRemoteUser(userChat?.user1?.username === loginUser?.username ? userChat?.user2 : userChat?.user1);
         }
     }, [userChat]);
 
@@ -52,7 +52,11 @@ export default function ChatHeader() {
                                     ))
                                 }
                             </ul>
-                            : <p className='text-green-500 text-sm'>Online</p>
+                            : <p className='text-sm'>
+                                {
+                                    (onlineUsers?.includes(remoteUser?._id)) ? <span className='text-green-500'>Online</span> : <span className='text-gray-500'>Offline</span>
+                                }
+                            </p>
                     }
                 </div>
             </div>
@@ -63,13 +67,13 @@ export default function ChatHeader() {
                 {
                     (isSearchStatus)
                         ? <div className='h-8 p-1 rounded bg-[#80808045] flex flex-1 md:min-w-40 lg:min-w-70'>
-                            <input 
-                            type="text" 
-                            className='bg-black p-1 rounded text-sm flex-1'
-                            value={messageSearchQuery}
-                            onChange={(e) => setMessageSearchQuery(e.target.value)}
-                            placeholder='Search message' />
-                            <button onClick={handleSearchClose} className='ps-2 text-gray-500 hover:text-white cursor-pointer'><CloseOutlinedIcon style={{fontSize: "1.2rem"}}/></button>
+                            <input
+                                type="text"
+                                className='bg-gray-600 p-1 rounded text-sm flex-1'
+                                value={messageSearchQuery}
+                                onChange={(e) => setMessageSearchQuery(e.target.value)}
+                                placeholder='Search message' />
+                            <button onClick={handleSearchClose} className='ps-2 text-gray-500 hover:text-white cursor-pointer'><CloseOutlinedIcon style={{ fontSize: "1.2rem" }} /></button>
                         </div>
                         : <button onClick={() => setIsSearchStatus(true)} className='h-8 w-10 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white'>
                             <SearchOutlinedIcon />

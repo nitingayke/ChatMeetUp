@@ -47,7 +47,6 @@ const userLogin = async (req, res) => {
     })
 }
 
-
 const userRegister = async (req, res) => {
 
     const { username, email, password } = req.body;
@@ -109,7 +108,6 @@ const getLoginUserData = async (req, res) => {
                         { path: 'poll', select: 'votes' },
                         { path: 'reactions' },
                         { path: 'readBy', select: 'username image description' },
-                        { path: 'deleteBy', select: 'username image description' }
                     ]
                 }
             ]
@@ -124,7 +122,6 @@ const getLoginUserData = async (req, res) => {
                         { path: 'poll', select: 'votes' },
                         { path: 'reactions' },
                         { path: 'readBy', select: 'username image description' },
-                        { path: 'deleteBy', select: 'username image description' }
                     ]
                 }
             ]

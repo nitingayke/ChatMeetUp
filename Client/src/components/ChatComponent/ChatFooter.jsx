@@ -58,12 +58,13 @@ export default function ChatFooter() {
 
     const handleEmojiClick = (emojiData) => {
         setMessage((prevMsg) => prevMsg + emojiData.emoji);
+        setOpenModal(false);
     }
 
     const handleMessageSubmit = (e) => {
         e.preventDefault();
         try {
-
+            socket.emit('user-online', { userId: loginUser._id })
             setMessage("");
         } catch (error) {
             console.error("Error sending message:", error);
