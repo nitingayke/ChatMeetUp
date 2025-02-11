@@ -18,6 +18,10 @@ import EmojiPicker from 'emoji-picker-react';
 import ChatContext from '../../context/ChatContext.js';
 import UserContext from '../../context/UserContext.js';
 import { socket } from '../../services/socketService.js';
+import CreatePoll from '../InputComponent.jsx/CreatePoll.jsx';
+import ImageUpload from '../InputComponent.jsx/ImageUpload.jsx';
+import PdfUpload from '../InputComponent.jsx/PdfUpload.jsx';
+import VideoUpload from '../InputComponent.jsx/VideoUpload.jsx';
 
 
 const style = {
@@ -36,9 +40,8 @@ export default function ChatFooter() {
     const [message, setMessage] = useState("");
 
 
-    const { userChat } = useContext(ChatContext);
+    const { userChat, inputComponent, setInputComponent, pollOptions, setPollOptions, inputFile, setInputFile } = useContext(ChatContext);
     const { loginUser } = useContext(UserContext);
-
 
     const [menuOpen, setMenuOpen] = useState(false);
     const anchorRef = useRef(null);
@@ -49,11 +52,15 @@ export default function ChatFooter() {
         setMenuOpen((prevOpen) => !prevOpen);
     };
 
-    const handleCloseMenu = (event) => {
+    const handleCloseMenu = (event, componentType) => {
         if (anchorRef?.current?.contains(event.target)) {
             return;
         }
+
+        setInputComponent(componentType);
         setMenuOpen(false);
+        setInputFile(null);
+        setPollOptions([]);
     };
 
     const handleEmojiClick = (emojiData) => {
@@ -61,86 +68,133 @@ export default function ChatFooter() {
         setOpenModal(false);
     }
 
-    const handleMessageSubmit = (e) => {
-        e.preventDefault();
-        try {
-            socket.emit('user-online', { userId: loginUser._id })
-            setMessage("");
-        } catch (error) {
-            console.error("Error sending message:", error);
+    const handleMessageSubmit = () => {
+
+        if ((message || "").trim().length === 0 && (!pollOptions || pollOptions.length === 0) && (!inputFile)) {
+            enqueueSnackbar("Please enter a message, select a file, or add poll options before sending.", {
+                variant: "warning"
+            });
+            return;
         }
+
+        socket.emit("add-chat-message", {
+            message: (message || "").trim(),
+            pollOptions,
+            video: (inputComponent === "video") ? inputFile : null,
+            pdf: (inputComponent === "pdf") ? inputFile : null,
+            image: (inputComponent === "image") ? inputFile : null,
+            userId: loginUser._id,
+            recipientId: userChat._id
+        });
+
+        setPollOptions([]);
+        setInputFile(null);
+        setMessage("");
+        setInputComponent(null);
     };
 
+    const inputOptionComponent = () => {
+
+        let component = null;
+
+        if (inputComponent === "poll") {
+            component = <CreatePoll />
+        } else if (inputComponent === 'image') {
+            component = <ImageUpload />
+        } else if (inputComponent === 'pdf') {
+            component = <PdfUpload />
+        } else if (inputComponent === 'video') {
+            component = <VideoUpload />
+        }
+
+        return <>{component}</>;
+    }
+
     return (
-        <div className="flex items-center space-x-2 w-full">
+        <>
+            {
+                inputOptionComponent()
+            }
 
-            <div>
-                <button
-                    ref={anchorRef}
-                    className='text-gray-500 hover:text-white cursor-pointer'
-                    onClick={handleToggleMenu}
-                >
-                    <DashboardSharpIcon />
+            <div className="flex items-center space-x-2 w-full">
+                <div>
+                    <button
+                        ref={anchorRef}
+                        className='text-gray-500 hover:text-white cursor-pointer'
+                        onClick={handleToggleMenu}
+                    >
+                        <DashboardSharpIcon />
+                    </button>
+
+                    <Popper
+                        open={menuOpen}
+                        anchorEl={anchorRef.current}
+                        role={undefined}
+                        placement="top-start"
+                        transition
+                        disablePortal
+
+                    >
+                        {({ TransitionProps }) => (
+                            <Grow {...TransitionProps}>
+                                <Paper className="bg-gray-900 text-white shadow-md rounded-md">
+                                    <ClickAwayListener onClickAway={(event) => handleCloseMenu(event, "")}>
+                                        <MenuList style={{ marginBottom: "1.2rem" }} className='text-gray-800' >
+                                            <MenuItem onClick={(event) => handleCloseMenu(event, "image")}>
+                                                <ImageIcon style={{ fontSize: '1rem' }} className="mr-2" />
+                                                <span>Image</span>
+                                            </MenuItem>
+
+                                            <MenuItem onClick={(event) => handleCloseMenu(event, "pdf")}>
+                                                <PictureAsPdfIcon style={{ fontSize: '1rem' }} className="mr-2" />
+                                                <span>PDF</span>
+                                            </MenuItem>
+
+                                            <MenuItem onClick={(event) => handleCloseMenu(event, "video")}>
+                                                <OndemandVideoIcon style={{ fontSize: '1rem' }} className="mr-2" />
+                                                <span>Video</span>
+                                            </MenuItem>
+
+                                            <MenuItem onClick={(event) => handleCloseMenu(event, "poll")}>
+                                                <PollIcon style={{ fontSize: '1rem' }} className="mr-2" />
+                                                <span>Poll</span>
+                                            </MenuItem>
+
+                                        </MenuList>
+                                    </ClickAwayListener>
+                                </Paper>
+                            </Grow>
+                        )}
+                    </Popper>
+                </div>
+
+                <button onClick={() => setOpenModal(true)} className='text-gray-500 hover:text-white cursor-pointer'>
+                    <SentimentSatisfiedOutlinedIcon />
                 </button>
+                <Modal open={openModal} onClose={() => setOpenModal(false)} aria-labelledby="modal-title">
+                    <Box sx={style}>
+                        <EmojiPicker onEmojiClick={handleEmojiClick} />
+                    </Box>
+                </Modal>
 
-                <Popper
-                    open={menuOpen}
-                    anchorEl={anchorRef.current}
-                    role={undefined}
-                    placement="top-start"
-                    transition
-                    disablePortal
-
-                >
-                    {({ TransitionProps }) => (
-                        <Grow {...TransitionProps}>
-                            <Paper className="bg-gray-900 text-white shadow-md rounded-md">
-                                <ClickAwayListener onClickAway={handleCloseMenu}>
-                                    <MenuList style={{ marginBottom: "1.2rem" }}>
-                                        <MenuItem onClick={handleCloseMenu}>
-                                            <ImageIcon className="mr-2" /> Image
-                                        </MenuItem>
-                                        <MenuItem onClick={handleCloseMenu}>
-                                            <PictureAsPdfIcon className="mr-2" /> PDF
-                                        </MenuItem>
-                                        <MenuItem onClick={handleCloseMenu}>
-                                            <OndemandVideoIcon className="mr-2" /> Video
-                                        </MenuItem>
-                                        <MenuItem onClick={handleCloseMenu}>
-                                            <PollIcon className="mr-2" /> Poll
-                                        </MenuItem>
-                                    </MenuList>
-                                </ClickAwayListener>
-                            </Paper>
-                        </Grow>
-                    )}
-                </Popper>
+                <form className='flex flex-1'>  
+                    <textarea 
+                        type="text"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className='bg-[#80808045] text-sm flex-1 rounded-s px-2 py-[0.4rem] text-gray-200 resize-none h-8 overflow-hidden focus:outline-none'
+                        placeholder='Enter message'
+                    ></textarea>
+                    <button
+                        type={'button'}
+                        onClick={handleMessageSubmit} 
+                        className={`text-sm py-1 px-3 rounded-e cursor-pointer bg-[#8080806e] ${(message || "").trim().length > 0 || inputFile || (pollOptions && pollOptions.length > 0) ? 'text-white' : 'text-gray-500'
+                            }`}
+                    >
+                        <SendOutlinedIcon style={{ fontSize: '1.3rem' }} />
+                    </button>
+                </form>
             </div>
-
-            <button onClick={() => setOpenModal(true)} className='text-gray-500 hover:text-white cursor-pointer'>
-                <SentimentSatisfiedOutlinedIcon />
-            </button>
-            <Modal open={openModal} onClose={() => setOpenModal(false)} aria-labelledby="modal-title">
-                <Box sx={style}>
-                    <EmojiPicker onEmojiClick={handleEmojiClick} />
-                </Box>
-            </Modal>
-
-            <form className='flex flex-1' onSubmit={handleMessageSubmit}>
-                <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className='bg-[#80808045] text-sm flex-1 rounded-s px-2 py-2 text-gray-200'
-                    placeholder='Enter message'
-                />
-                <button
-                    type={message.length === 0 ? 'button' : 'submit'}
-                    className={`text-sm py-1 px-3 rounded-e cursor-pointer bg-[#8080806e] ${message.length === 0 ? 'text-gray-500' : 'text-white'}`}
-                >
-                    <SendOutlinedIcon style={{ fontSize: '1.3rem' }} />
-                </button>
-            </form>
-        </div>
+        </>
     );
 }

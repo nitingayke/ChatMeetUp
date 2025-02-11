@@ -19,10 +19,11 @@ const deleteChatMessage = async (chatId, userId) => {
             chatId,
             userId
         });
-        
+
         return response.data;
     } catch (error) {
         return error.response?.data || { success: false, message: error.message || "Something went wrong" };
     }
 }
+
 export { getChatData, deleteChatMessage };

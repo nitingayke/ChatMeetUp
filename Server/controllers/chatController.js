@@ -54,7 +54,6 @@ const getUserChat = async (req, res) => {
             ])
     ]);
 
-
     const chatData = currChat || groupChat;
 
     if (!chatData) {
@@ -76,6 +75,13 @@ const deleteChatMessage = async (req, res) => {
 
     if (!userId || !chatId) {
         return res.status(httpStatus.BAD_REQUEST).json({ success: false, message: "User ID and Chat ID are required." });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(httpStatus.BAD_REQUEST).json({
+            success: false,
+            message: "Invalid User ID format.",
+        });
     }
 
     const chat = await Chat.findById(chatId);

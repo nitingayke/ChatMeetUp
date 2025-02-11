@@ -26,7 +26,7 @@ const chatSchema = new Schema({
     reactions: [
         {
             user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // store emojis or some other to message
-            type: { type: String, required: true },
+            emoji: { type: String, required: true },
         },
     ],
     readBy: [

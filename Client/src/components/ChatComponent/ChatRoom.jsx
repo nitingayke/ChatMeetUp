@@ -89,7 +89,7 @@ export default function ChatRoom() {
                 )}
             </main>
 
-            <footer className='bg-[#000000d1] p-3 space-x-3 flex w-full'>
+            <footer className='bg-[#000000d1] p-3 space-x-3 w-full'>
                 <ChatFooter />
             </footer>
         </>
