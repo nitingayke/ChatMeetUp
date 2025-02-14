@@ -125,7 +125,7 @@ const getLoginUserData = async (req, res) => {
                     ]
                 }
             ]
-        }).populate('blockUser', 'username image description');
+        });
 
     if (!loginUser) {
         return res.status(httpstatus.NOT_FOUND).json({

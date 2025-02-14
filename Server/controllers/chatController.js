@@ -3,6 +3,7 @@ import Connection from '../models/Connection.js';
 import Group from '../models/Group.js';
 import mongoose from 'mongoose';
 import Chat from '../models/Chat.js';
+import User from '../models/User.js';
 
 
 const getUserChat = async (req, res) => {
@@ -97,4 +98,112 @@ const deleteChatMessage = async (req, res) => {
     return res.status(httpStatus.OK).json({ success: true, message: "Message deleted for you." });
 }
 
-export { getUserChat, deleteChatMessage };
+const updatedBackgroundImage = async (req, res) => {
+
+    const { userId, url } = req.body;
+
+    if (!userId || !url) {
+        return res.status(httpStatus.BAD_REQUEST).json({
+            success: false,
+            message: "User ID and image URL are required.",
+        });
+    }
+
+    const user = await User.findByIdAndUpdate(
+        userId,
+        { backgroundImage: url },
+        { new: true }
+    );
+
+    if (!user) {
+        return res.status(httpStatus.NOT_FOUND).json({
+            success: false,
+            message: "User not found.",
+        });
+    }
+
+    return res.status(httpStatus.OK).json({
+        success: true,
+        message: "Background image updated successfully.",
+        imgUrl: user.backgroundImage,
+    });
+}
+
+const setBlockUser = async (req, res) => {
+
+    const { blockId, userId } = req.body;
+
+    if (!blockId || !userId) {
+        return res.status(httpStatus.BAD_REQUEST).json({
+            success: false,
+            message: "Both blockId and userId are required."
+        });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+        return res.status(httpStatus.NOT_FOUND).json({
+            success: false,
+            message: "User not found.",
+        });
+    }
+
+    if (!user.blockUser.includes(blockId)) {
+        user.blockUser.push(blockId);
+        await user.save();
+    }
+
+    return res.status(httpStatus.OK).json({
+        success: true,
+        blockId,
+        message: "User successfully blocked.",
+    });
+}
+
+const cleanUserChats = async (req, res) => {
+
+    const { chatId, userId } = req.body;
+
+    if (!chatId || !userId) {
+        return res.status(httpStatus.BAD_REQUEST).json({
+            success: false,
+            message: "Chat and User are required.",
+        });
+    }
+
+    const isGroup = await Group.exists({ _id: chatId });
+    const isConnection = await Connection.exists({ _id: chatId });
+
+    if (!isGroup && !isConnection) {
+        return res.status(httpStatus.NOT_FOUND).json({
+            success: false,
+            message: "Chat not found",
+        });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+        return res.status(httpStatus.NOT_FOUND).json({
+            success: false,
+            message: "User not found",
+        });
+    }
+
+    const clearedChatIndex = user.clearedChats.findIndex(cc => cc.chatId.toString() === chatId);
+
+    if (clearedChatIndex !== -1) {
+        user.clearedChats[clearedChatIndex].clearedAt = new Date();
+    } else {
+        user.clearedChats.push({ chatId, clearedAt: new Date() });
+    }
+    await user.save();
+
+    return res.status(httpStatus.OK).json({
+        success: true,
+        message: "Chat cleared successfully",
+        chatId,
+    });
+}
+
+export { getUserChat, deleteChatMessage, updatedBackgroundImage, setBlockUser, cleanUserChats };

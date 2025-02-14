@@ -145,8 +145,6 @@ const connectToSocket = (server) => {
                     uploadedFiles.pdf = uploadedPdf.secure_url;
                 }
 
-
-
                 const newMessage = new Chat({
                     sender: userId,
                     attachments: uploadedFiles,
@@ -180,6 +178,22 @@ const connectToSocket = (server) => {
                 });
             } catch (error) {
                 socket.emit("error-notification", { message: error.message || "Something went wrong, Can't send message. Try again." });
+            }
+        });
+
+        socket.on('mark-messages-read', async ({ chatId, userId, conversationId }) => {
+            try {
+                const user = await User.findById(userId);
+
+                await Chat.updateMany(
+                    { _id: Array.isArray(chatId) ? { $in: chatId } : chatId, readBy: { $ne: userId } },
+                    { $push: { readBy: userId } }
+                );
+
+                const userData = { _id: userId, username: user.username, image: user?.image }
+                io.emit("mark-messages-read-success", { chatId, conversationId, userData });
+            } catch (error) {
+                socket.emit("error-notification", { message: error.message || "Unable to mark messages as read." });
             }
         });
 

@@ -1,13 +1,18 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import LoaderContext from "./LoaderContext";
 
 export default function LoaderContextProvider({ children }) {
-    
+
     const [isMessageProcessing, setIsMessageProcessing] = useState(false);
 
+    const contextValue = useMemo(() => ({
+        isMessageProcessing,
+        setIsMessageProcessing
+    }), [isMessageProcessing, setIsMessageProcessing]);
+
     return (
-        <LoaderContext.Provider value={{ isMessageProcessing, setIsMessageProcessing }} >
-            { children }
+        <LoaderContext.Provider value={ contextValue } >
+            {children}
         </LoaderContext.Provider>
     )
 }

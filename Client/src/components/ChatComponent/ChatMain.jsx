@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import ChatContext from '../../context/ChatContext.js';
 import Avatar from '@mui/material/Avatar';
 import Brightness1Icon from '@mui/icons-material/Brightness1';
@@ -6,77 +6,63 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { formatTime } from '../../utils/helpers.js';
 import UserContext from '../../context/UserContext.js';
-import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import SentimentVerySatisfiedIcon from '@mui/icons-material/SentimentVerySatisfied';
-import { Modal, Box, CircularProgress } from "@mui/material";
+import { Modal, Box, CircularProgress, Tooltip } from "@mui/material";
 import EmojiPicker from 'emoji-picker-react';
 import { socket } from '../../services/socketService.js';
 import { useSnackbar } from 'notistack';
 import { deleteChatMessage } from '../../services/chatService.js';
+import LoaderContext from '../../context/LoaderContext.js';
+import ChatAttachment from './ChatMain/ChatAttachment.jsx';
+import ChatPoll from './ChatMain/ChatPoll.jsx';
+import { Link, useParams } from 'react-router-dom';
+import { isEqual } from "lodash";
 
 export function ChatMain() {
 
+    const { id } = useParams();
+
     const { enqueueSnackbar } = useSnackbar();
+    const { isMessageProcessing, setIsMessageProcessing } = useContext(LoaderContext);
     const { userChat, messageSearchQuery } = useContext(ChatContext);
-    const { loginUser } = useContext(UserContext);
+    const { loginUser, onlineUsers } = useContext(UserContext);
 
     const [localChat, setLocalChat] = useState(userChat || {});
-    const [isLoading, setIsLoading] = useState(false);
     const [openModal, setOpenModal] = useState(false);
     const [chatMessageData, setChatMessageData] = useState(null);
 
-
     useEffect(() => {
-        setLocalChat(userChat);
+        if (!isEqual(localChat, userChat)) {
+            setLocalChat(userChat);
+        }
     }, [userChat]);
 
-    const handlePollOptions = (data, pollIdx) => {
 
-        if (!loginUser) {
-            enqueueSnackbar("User not found. Please log in to continue.");
-            return;
-        }
+    const handlePollVoteSuccess = useCallback(({ conversationId, userId, chatId, pollIdx }) => {
+        if (localChat._id !== conversationId) return;
 
-        if (!data || pollIdx === undefined) {
-            enqueueSnackbar("Chat data not found, please try again.");
-            return;
-        }
+        setLocalChat(prevChat => {
+            const newMessages = prevChat.messages.map(msg => {
+                if (msg._id === chatId) {
+                    const newPoll = [...msg.poll];
 
-        const userAlreadyVoted = data?.poll?.some((option) => option.votes.includes(loginUser?._id));
-        if (userAlreadyVoted) {
-            enqueueSnackbar("User has already voted in this poll.", { variant: "warning" });
-            return;
-        }
-
-        socket.emit('userchat-poll-vote', {
-            conversationId: localChat?._id,
-            userId: loginUser?._id,
-            username: loginUser?.username,
-            chatId: data._id,
-            pollIdx,
-        });
-    }
-
-    const handlePollVoteSuccess = ({ conversationId, userId, username, chatId, pollIdx }) => {
-        if (localChat._id === conversationId) {
-            setLocalChat(prevChat => {
-                const updatedMessages = prevChat.messages.map(msg => {
-                    if (msg._id === chatId) {
-                        const updatedPoll = [...msg.poll];
-
-                        if (!updatedPoll[pollIdx].votes.includes(userId)) {
-                            updatedPoll[pollIdx].votes = [...updatedPoll[pollIdx].votes, userId];
-                        }
-
-                        return { ...msg, poll: updatedPoll };
+                    if (!newPoll[pollIdx].votes.includes(userId)) {
+                        newPoll[pollIdx].votes.push(userId);
                     }
-                    return msg;
-                });
 
-                return { ...prevChat, messages: updatedMessages };
+                    return { ...msg, poll: newPoll };
+                }
+                return msg;
             });
+
+            return isEqual(prevChat.messages, newMessages) ? prevChat : { ...prevChat, messages: newMessages };
+        });
+
+        if (loginUser?._id === userId) {
+            setIsMessageProcessing(false);
         }
-    };
+    }, []);
+
 
     const updateMessageReaction = (msg, userId, emoji) => {
 
@@ -109,27 +95,42 @@ export function ChatMain() {
         );
     };
 
-    const handleNewChatMessage = ({ recipientId, data }) => {
-        setLocalChat((prevChat) => {
-            if (prevChat?._id === recipientId) {
-                return {
-                    ...prevChat,
-                    messages: [...(prevChat?.messages || []), data]
-                };
-            }
-            return prevChat;
+    const handleNewChatMessage = useCallback(({ recipientId, data }) => {
+        setLocalChat(prevChat => {
+            if (prevChat?._id !== recipientId) return prevChat;
+
+            const newMessages = [...prevChat.messages, data];
+            return { ...prevChat, messages: newMessages };
         });
+
+        if (loginUser?._id === data?.sender?._id) {
+            setIsMessageProcessing(false);
+        }
+    }, []);
+
+
+    const handleMessageReadSuccess = ({ conversationId, chatId, userData }) => {
+        if (localChat?._id === conversationId) {
+            const updatedMessages = localChat.messages.map((msg) =>
+                msg?._id === chatId && !msg.readBy.some(user => user?._id?.toString() === userData?._id?.toString())
+                    ? { ...msg, readBy: [...msg.readBy, userData] }
+                    : msg
+            );
+            setLocalChat({ ...localChat, messages: updatedMessages });
+        }
     };
 
     useEffect(() => {
         socket.on("poll-vote-success", handlePollVoteSuccess);
         socket.on("chat-reaction-success", handleChatReaction);
         socket.on("add-chat-message-success", handleNewChatMessage);
+        socket.on("mark-messages-read-success", handleMessageReadSuccess);
 
         return () => {
             socket.off("poll-vote-success", handlePollVoteSuccess);
             socket.off("chat-reaction-success", handleChatReaction);
             socket.off("add-chat-message-success", handleNewChatMessage);
+            socket.off("mark-messages-read-success", handleMessageReadSuccess);
         };
     }, []);
 
@@ -141,7 +142,7 @@ export function ChatMain() {
 
         try {
 
-            setIsLoading(true);
+            setIsMessageProcessing(true);
             const response = await deleteChatMessage(data._id, loginUser._id);
 
             if (response.success) {
@@ -163,7 +164,7 @@ export function ChatMain() {
         } catch (error) {
             enqueueSnackbar(error.message || 'Unable to delete, try again.', { variant: 'error' });
         } finally {
-            setIsLoading(false);
+            setIsMessageProcessing(false);
         }
     };
 
@@ -195,28 +196,133 @@ export function ChatMain() {
         }, {});
     };
 
-    const filterUserChat = localChat?.messages?.filter(chatData => chatData?.message?.toLowerCase().includes(messageSearchQuery.toLowerCase()));
+    const chatMessageRefs = useRef([]);
+    const observer = useRef(null);
+
+    const markMessageAsRead = (messageId) => {
+
+        if (!loginUser || !localChat) return;
+
+        const message = localChat.messages.find((msg) => msg._id === messageId);
+        if (!message || message.readBy.some(user => user?._id?.toString() === loginUser._id?.toString())) return;
+
+        socket.emit('mark-messages-read', {
+            conversationId: localChat._id,
+            chatId: messageId,
+            userId: loginUser._id
+        });
+    }
+
+    useEffect(() => {
+        if (!observer.current) {
+            observer.current = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const messageId = entry.target.getAttribute('data-message-id');
+                        markMessageAsRead(messageId);
+                    }
+                });
+            }, { threshold: 0.5 });
+        }
+
+        chatMessageRefs.current.forEach((el) => {
+            if (el) observer.current.observe(el);
+        });
+
+        return () => {
+            chatMessageRefs.current.forEach((el) => {
+                if (el) observer.current.unobserve(el);
+            });
+        };
+    }, [localChat.messages]);
+
+    const getLastReadMessageIndex = () => {
+        if (!loginUser || !localChat) return 0;
+
+        return localChat.messages.findLastIndex(chat =>
+            chat.readBy.some(userData => userData?._id?.toString() === loginUser._id?.toString())
+        );
+    };
+
+    useEffect(() => {
+        if (!localChat?.messages?.length) return;
+
+        const lastReadMsgIdx = getLastReadMessageIndex();
+
+        if (lastReadMsgIdx !== -1 && chatMessageRefs.current[lastReadMsgIdx]) {
+            chatMessageRefs.current[lastReadMsgIdx].scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, [localChat?.messages?.length]);
+
+
+    const isMessageRead = (message) => {
+        if (!message?.readBy || !localChat) return false;
+
+        if (localChat?.user1 && localChat?.user2) {
+            return message.readBy.length === 2;
+        }
+
+        if (localChat?.members) {
+            return message.readBy.length === localChat.members.length;
+        }
+
+        return false;
+    };
+
+    const cleanChat = loginUser.clearedChats.find((data) => data.chatId === id);
+    const filterUserChat = localChat?.messages?.filter(chatData => {
+        let isMessageVisible = true;
+
+        if (cleanChat) {
+            const messageCreatedAt = new Date(chatData.createdAt);
+            const chatClearedAt = new Date(cleanChat.clearedAt);
+
+            if (messageCreatedAt < chatClearedAt) {
+                isMessageVisible = false;
+            }
+        }
+
+        return isMessageVisible && chatData?.message?.toLowerCase().includes(messageSearchQuery.toLowerCase());
+    });
 
 
     if (filterUserChat?.length == 0) {
-        return <div>
-            <p className="text-center mt-5">No messages found</p>
+        return <div className='flex justify-center items-center h-full'>
+            <p className="p-3 bg-[#000000ab] w-fit rounded">No messages found</p>
         </div>
     }
-
 
     return (
         <>
             <ul className='space-y-3 h-full overflow-auto p-3'>
-                {filterUserChat?.map((data) => (
-                    <li key={data?._id ?? 'default-id'} className={`flex ${data?.sender?.username === loginUser?.username ? 'justify-end' : ''}`}>
+                {filterUserChat?.map((data, index) => (
+                    (!loginUser?.clearedChats?.includes(data?._id)) &&
+                    <li key={data?._id ?? 'default-id'}
+                        ref={(el) => (chatMessageRefs.current[index] = el)}
+                        data-message-id={data._id}
+                        className={`flex ${data?.sender?.username === loginUser?.username ? 'justify-end' : ''}`}
+                    >
                         <div className={`group relative flex ${data?.sender?.username === loginUser?.username ? 'flex-row-reverse' : ''}`}>
 
-                            <Avatar
-                                src={data?.sender?.image ?? ''}
-                                className='sticky top-0'
-                                sx={{ position: 'sticky', top: 0 }}
-                            />
+                            {(onlineUsers.includes(data?.sender?._id) && loginUser._id !== data.sender._id) ? (
+                                <Tooltip title="User Online" arrow>
+                                    <div className="relative h-fit cursor-pointer" style={{ position: 'sticky', top: '0' }}>
+                                        <Link to={`/u/profile/${data?.sender?._id}`}>
+                                            <Avatar src={data?.sender?.image ?? ''} />
+                                        </Link>
+                                        <span className="absolute bottom-0 right-0 flex size-3">
+                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="inline-flex size-3 rounded-full bg-red-700"></span>
+                                        </span>
+                                    </div>
+                                </Tooltip>
+                            ) : (
+                                <div className="relative h-fit cursor-pointer" style={{ position: 'sticky', top: '0' }}>
+                                    <Link to={`/u/profile/${data?.sender?._id}`}>
+                                        <Avatar src={data?.sender?.image ?? ''} />
+                                    </Link>
+                                </div>
+                            )}
 
                             <div className={`bg-[#000000c2] p-2 border border-gray-700 mt-4 rounded-b-lg ${loginUser?.username === data?.sender?.username ? 'rounded-s-lg me-2 ms-10' : 'rounded-e-lg me-10 ms-2'}`}>
                                 {data?.deleteBy?.includes(loginUser?._id) ? (
@@ -235,103 +341,11 @@ export function ChatMain() {
                                         {/* Message Content */}
                                         {data?.message && <p className='whitespace-pre-line pt-3 text-gray-200'>{data.message}</p>}
 
-                                        {/* Video Attachment */}
-                                        {data?.attachments?.video && (
-                                            <div className='mt-5 relative'>
-                                                <iframe
-                                                    title={`Video - ${data._id}`}
-                                                    width="100%"
-                                                    height="100%"
-                                                    src={data.attachments.video}
-                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                    allowFullScreen
-                                                ></iframe>
-                                                <a
-                                                    href={`${data.attachments.video}?fl_attachment`}
-                                                    download
-                                                    target='_blank'
-                                                    rel="noopener noreferrer"
-                                                    className="absolute bottom-2 right-2 cursor-pointer bg-[#0000009c] hover:bg-[#00ff3a5c] text-white p-1 rounded-md text-xs"
-                                                >
-                                                    <DownloadOutlinedIcon style={{ fontSize: "1.2rem" }} />
-                                                </a>
-                                            </div>
-                                        )}
-
-                                        {/* PDF Attachment */}
-                                        {data?.attachments?.pdf && (
-                                            <div className='mt-4'>
-                                                {/* PDF Preview (Blurred) */}
-                                                <div className='h-40 overflow-hidden  bg-cover rounded mb-2'
-                                                    style={{ filter: "blur(1px)", transition: "filter 0.3s" }} >
-                                                    <iframe
-                                                        src={`https://docs.google.com/gview?url=${encodeURIComponent(data.attachments.pdf)}&embedded=true`}
-                                                        width="100%"
-                                                        height="500px"
-                                                        title="PDF Preview"
-                                                        style={{ border: 'none' }}
-                                                    ></iframe>
-
-                                                </div>
-
-                                                {/* Download PDF Option */}
-                                                <div className='flex justify-between items-center'>
-                                                    <p className='text-sm'>Download PDF</p>
-                                                    <a href={`${data.attachments.pdf}?fl_attachment`} target='_blank' download className="text-blue-500 hover:text-blue-700 border-3 rounded-full w-7 h-7 flex justify-center items-center">
-                                                        <DownloadOutlinedIcon style={{ fontSize: '1.2rem' }} />
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        )}
-
-
-                                        {/* Image Attachment */}
-                                        {data?.attachments?.image && (
-                                            <div className='mt-5 relative'>
-                                                <img src={data.attachments.image} alt="attachment" className='w-full rounded-lg' />
-                                                <a
-                                                    href={`${data.attachments.image}?fl_attachment`}
-                                                    download
-                                                    target='_blank'
-                                                    rel="noopener noreferrer"
-                                                    className="absolute bottom-2 right-2 bg-[#0000009c] hover:bg-[#00ff3a5c] text-white p-1 rounded-md text-xs"
-                                                >
-                                                    <DownloadOutlinedIcon style={{ fontSize: "1.2rem" }} />
-                                                </a>
-                                            </div>
-                                        )}
+                                        {/* Attachment */}
+                                        <ChatAttachment data={data} />
 
                                         {/* Poll Section */}
-                                        {data?.poll?.length > 0 && (
-                                            <div className='mt-2 space-y-2'>
-                                                {data.poll.map((pollOption, idx) => {
-                                                    const totalMembers = localChat?.members?.length ?? 2;
-                                                    const voteCount = pollOption?.votes?.length ?? 0;
-                                                    const votePercentage = totalMembers > 0 ? Math.min((voteCount / totalMembers) * 100, 100) : 0;
-
-                                                    const hasUserVoted = data.poll.some(option =>
-                                                        option.votes?.some(vote => vote.userId === loginUser?._id)
-                                                    );
-
-                                                    return (
-                                                        <button
-                                                            key={pollOption?.option ?? `poll-option-${idx}`}
-                                                            onClick={() => handlePollOptions(data, idx)}
-                                                            className='px-1 py-2 text-base/3 w-full flex flex-col cursor-pointer rounded hover:bg-[#ffffff15]'>
-                                                            <p className='text-sm flex'>
-                                                                {pollOption?.option ?? 'Option'}
-                                                                <span className='ps-2'>{votePercentage.toFixed(1)}%</span>
-                                                            </p>
-                                                            <div className='rounded h-2 bg-gray-900 w-full mt-1'>
-                                                                <p className="rounded bg-green-500 h-full"
-                                                                    style={{ width: !hasUserVoted ? `${votePercentage}%` : '0%' }}>
-                                                                </p>
-                                                            </div>
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
+                                        <ChatPoll data={data} localChat={localChat} />
 
                                         {/* User Reactions */}
                                         {data?.reactions?.length > 0 && (
@@ -344,11 +358,11 @@ export function ChatMain() {
                                             </div>
                                         )}
 
-                                        {/* User Online/Offline Status */}
+                                        {/* User red message or not */}
                                         {loginUser?.username === data?.sender?.username && (
                                             <div className="absolute right-10 text-base/2">
-                                                {data?.readBy?.length >= 2 ? (
-                                                    <CheckCircleOutlinedIcon className='text-green-500' style={{ fontSize: '0.9rem' }} />
+                                                {isMessageRead(data) ? (
+                                                    <CheckCircleOutlinedIcon className='text-white bg-green-500 rounded-full' style={{ fontSize: '0.9rem' }} />
                                                 ) : (
                                                     <Brightness1Icon className='text-gray-500' style={{ fontSize: '0.9rem' }} />
                                                 )}
@@ -356,16 +370,16 @@ export function ChatMain() {
                                         )}
 
                                         {/* Chat Buttons */}
-                                        <div className={`opacity-0 group-hover:opacity-100 flex flex-col absolute ${(loginUser?.username === data?.sender?.username) ? "left-2" : "right-2"} 
+                                        <div className={`md:opacity-0 group-hover:opacity-100 flex flex-col absolute ${(loginUser?.username === data?.sender?.username) ? "left-2" : "right-2"} 
                                                                 top-1/2 -translate-y-1/2 space-y-1 mt-2`}>
                                             <button
-                                                className='cursor-pointer w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-[#80808045]'
+                                                className='cursor-pointer w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-[#000000ab]'
                                                 onClick={() => handleDeleteMessage(data)}>
                                                 <DeleteOutlineIcon style={{ fontSize: "1.2rem" }} />
                                             </button>
 
                                             <button
-                                                className='cursor-pointer w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-[#80808045]'
+                                                className='cursor-pointer w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-[#000000ab]'
                                                 onClick={() => handleMessageReaction(data)}>
                                                 <SentimentVerySatisfiedIcon style={{ fontSize: "1.2rem" }} />
                                             </button>
@@ -393,7 +407,7 @@ export function ChatMain() {
             </Modal>
 
             {
-                isLoading && <div className='absolute  top-0 left-0 bg-[#00000055] w-full h-full flex justify-center items-center'><CircularProgress sx={{ color: "white" }} /></div>
+                isMessageProcessing && <div className='absolute  top-0 left-0 bg-[#00000055] w-full h-full flex justify-center items-center'><CircularProgress sx={{ color: "white" }} /></div>
             }
         </>
     );

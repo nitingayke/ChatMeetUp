@@ -20,8 +20,11 @@ const userSchema = new Schema({
         type: String,
     },
     description: {
-        type: String, 
+        type: String,
         maxlength: 400,
+    },
+    backgroundImage: {
+        type: String
     },
     connections: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -31,6 +34,18 @@ const userSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Group',
     }],
+    clearedChats: [
+        {
+            chatId: {
+                type: mongoose.Schema.Types.ObjectId,
+                required: true
+            },
+            clearedAt: {
+                type: Date,
+                default: Date.now
+            }
+        }
+    ],
     blockUser: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import LeftSidebar from './components/SidebarLayout/LeftSidebar';
+import LeftSidebar from './components/NetworkList/sidebarLayout/LeftSidebar';
 import ChatContextProvider from './context/ChatContextProvider';
 import ChatPage from './pages/ChatPage';
 import Login from './pages/userAuthentication/Login';
@@ -10,10 +10,14 @@ import { getLoginUser } from './services/authService';
 import UserContext from './context/UserContext';
 import { useSnackbar } from "notistack";
 import { socket } from './services/socketService';
+import LoaderContext from './context/LoaderContext';
+import BackgroundWallpaper from './components/BackgroundWallpaper';
 
 function App() {
+
     const location = useLocation();
     const { loginUser, setLoginUser, setOnlineUsers } = useContext(UserContext);
+    const { setIsMessageProcessing } = useContext(LoaderContext);
     const { enqueueSnackbar } = useSnackbar();
 
     const token = localStorage.getItem('authToken');
@@ -25,7 +29,7 @@ function App() {
 
             try {
                 const response = await getLoginUser();
-                if (response?.status === 200) {
+                if (response.status === 200) {
                     setLoginUser(response.data.user);
                 }
             } catch (error) {
@@ -51,6 +55,8 @@ function App() {
 
         const handleErrorNotification = ({ message }) => {
             enqueueSnackbar(message, { variant: "error" });
+            setIsMessageProcessing(false);
+
         };
 
         socket.on("update-online-users", handleUpdateOnlineUsers);
@@ -77,11 +83,14 @@ function App() {
             <LeftSidebar />
             <ChatContextProvider>
                 <Routes>
-                    <Route path='/u/chatting' element={<ChatPage />} />
-                    <Route path='/u/chatting/:id' element={<ChatPage />} />
+                    <Route path='/u/chatting/:id?' element={<ChatPage />} />
+
+                    <Route path='/playground/wallpaper' element={<BackgroundWallpaper />} />
+
                     <Route path='*' element={<NotFound />} />
                 </Routes>
             </ChatContextProvider>
+
         </div>
     );
 }

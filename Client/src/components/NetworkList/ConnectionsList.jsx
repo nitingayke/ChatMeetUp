@@ -6,12 +6,13 @@ import Avatar from '@mui/material/Avatar';
 import { formatTime } from '../../utils/helpers.js';
 import UserContext from '../../context/UserContext.js';
 import { Link, useNavigate } from 'react-router-dom';
+import ChatContext from '../../context/ChatContext.js';
 
 export default function ConnectionsList({ searchQuery }) {
 
     const navigate = useNavigate();
 
-    const [selectedUser, setSelectedUser] = useState(null);
+    const { selectedUser, setSelectedUser } = useContext(ChatContext);
     const { loginUser, onlineUsers } = useContext(UserContext);
 
     const handleSelectUser = (value) => {
@@ -30,20 +31,28 @@ export default function ConnectionsList({ searchQuery }) {
         );
     }
 
-  
+
+    const blockedUserIds = new Set(loginUser.blockUser.map(id => id.toString())); 
+
     const filteredConnections = loginUser.connections
         .filter(value => {
-            if (!value?.user1 || !value?.user2) return false; 
-            const username = loginUser?.username === value?.user1?.username ? value?.user2?.username : value?.user1?.username;
-            return (username || "").toLowerCase().includes((searchQuery || "").toLowerCase());
-        })
-        .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0)); 
+            if (!value?.user1 || !value?.user2) return false;
 
-    
+            const otherUser = loginUser.username === value.user1.username ? value.user2 : value.user1;
+
+            if (blockedUserIds.has(value._id?.toString())) return false;
+
+            return (otherUser.username || "").toLowerCase().includes((searchQuery || "").toLowerCase());
+        })
+        .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
+
+
+
     if (filteredConnections.length === 0) {
         return (
             <div className='text-center text-gray-500 py-5'>
                 <h1>No user found matching <b className='text-white break-words'>{searchQuery}</b>.</h1>
+                <Link to={'/u/block-users'} className='text-blue-500 text-sm underline hover:text-blue-800'>Blocked Profiles</Link>
             </div>
         );
     }
@@ -53,7 +62,7 @@ export default function ConnectionsList({ searchQuery }) {
             {filteredConnections.map((connection, idx) => {
                 const isUser1 = loginUser?.username === connection?.user1?.username;
                 const otherUser = isUser1 ? connection?.user2 : connection?.user1;
-                const lastMessage = (connection.messages ?? []).at(-1); 
+                const lastMessage = (connection.messages ?? []).at(-1);
 
                 return (
                     <ListItem
@@ -69,7 +78,7 @@ export default function ConnectionsList({ searchQuery }) {
                             <div className='flex-1'>
                                 <div className='flex items-center justify-between'>
                                     <h1 className='font-semibold truncate w-35 mb-1'>{otherUser?.username ?? 'Unknown'}</h1>
-                                    
+
                                     {(onlineUsers?.includes(connection?._id)) ? (
                                         <p className="text-xs text-green-400 flex items-center">Online</p>
                                     ) : (

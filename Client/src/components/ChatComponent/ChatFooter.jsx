@@ -22,6 +22,7 @@ import CreatePoll from '../InputComponent.jsx/CreatePoll.jsx';
 import ImageUpload from '../InputComponent.jsx/ImageUpload.jsx';
 import PdfUpload from '../InputComponent.jsx/PdfUpload.jsx';
 import VideoUpload from '../InputComponent.jsx/VideoUpload.jsx';
+import LoaderContext from '../../context/LoaderContext.js';
 
 
 const style = {
@@ -39,7 +40,7 @@ export default function ChatFooter() {
 
     const [message, setMessage] = useState("");
 
-
+    const { setIsMessageProcessing } = useContext(LoaderContext);
     const { userChat, inputComponent, setInputComponent, pollOptions, setPollOptions, inputFile, setInputFile } = useContext(ChatContext);
     const { loginUser } = useContext(UserContext);
 
@@ -77,6 +78,7 @@ export default function ChatFooter() {
             return;
         }
 
+        setIsMessageProcessing(true);
         socket.emit("add-chat-message", {
             message: (message || "").trim(),
             pollOptions,

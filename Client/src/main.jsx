@@ -6,19 +6,22 @@ import { SnackbarProvider } from 'notistack';
 
 import './index.css';
 import App from './App.jsx';
+import LoaderContextProvider from './context/LoaderContextProvider.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <UserContextProvider>
+    <BrowserRouter>
+      <UserContextProvider>
 
-      <SnackbarProvider maxSnack={3} >
+        <SnackbarProvider maxSnack={3} >
+          <LoaderContextProvider>
 
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+            <App />
 
-      </SnackbarProvider>
+          </LoaderContextProvider>
+        </SnackbarProvider>
 
-    </UserContextProvider>
+      </UserContextProvider>
+    </BrowserRouter>
   </StrictMode>
 );

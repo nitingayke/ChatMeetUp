@@ -9,11 +9,13 @@ import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import Brightness1Icon from '@mui/icons-material/Brightness1';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { Link, useNavigate } from 'react-router-dom';
+import ChatContext from '../../context/ChatContext.js';
 
 export default function GroupList({ searchQuery }) {
-    
+
     const navigate = useNavigate();
-    const [selectedUser, setSelectedUser] = useState(null);
+
+    const { selectedUser, setSelectedUser } = useContext(ChatContext);
     const { loginUser } = useContext(UserContext);
 
     const handleSelectedGroup = (group) => {
@@ -32,19 +34,24 @@ export default function GroupList({ searchQuery }) {
         );
     }
 
+    const blockedUserIds = new Set(loginUser.blockUser.map(id => id.toString()));
 
     const filteredGroups = loginUser.groups
         .filter(group => {
             const groupName = group?.name || '';
-            return (groupName || "").toLowerCase().includes((searchQuery || "").toLowerCase());
-        })
-        .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
 
-    
+            if (blockedUserIds.has(group._id?.toString())) return false;
+
+            return (groupName || "").toLowerCase().includes((searchQuery || "").toLowerCase());
+
+        }).sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
+
+
     if (filteredGroups.length === 0) {
         return (
             <div className='text-center text-gray-500 py-5'>
                 <h1>No group found matching <b className='text-white break-words'>{searchQuery}</b>.</h1>
+                <Link to={'/u/block-users'} className='text-blue-500 text-sm underline hover:text-blue-800'>Blocked Profiles</Link>
             </div>
         );
     }
@@ -52,7 +59,7 @@ export default function GroupList({ searchQuery }) {
     return (
         <>
             {filteredGroups.map((group) => {
-                const lastMessage = group.messages?.length ? group.messages.at(-1) : null; 
+                const lastMessage = group.messages?.length ? group.messages.at(-1) : null;
 
                 return (
                     <ListItem
