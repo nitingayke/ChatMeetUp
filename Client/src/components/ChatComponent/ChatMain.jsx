@@ -1,22 +1,29 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import ChatContext from '../../context/ChatContext.js';
+import { Link, useParams } from 'react-router-dom';
+
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Avatar from '@mui/material/Avatar';
 import Brightness1Icon from '@mui/icons-material/Brightness1';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { formatTime } from '../../utils/helpers.js';
-import UserContext from '../../context/UserContext.js';
 import SentimentVerySatisfiedIcon from '@mui/icons-material/SentimentVerySatisfied';
 import { Modal, Box, CircularProgress, Tooltip } from "@mui/material";
+
+import ChatContext from '../../context/ChatContext.js';
+import { formatTime } from '../../utils/helpers.js';
+import UserContext from '../../context/UserContext.js';
+
 import EmojiPicker from 'emoji-picker-react';
+
+
+
 import { socket } from '../../services/socketService.js';
 import { useSnackbar } from 'notistack';
 import { deleteChatMessage } from '../../services/chatService.js';
 import LoaderContext from '../../context/LoaderContext.js';
 import ChatAttachment from './ChatMain/ChatAttachment.jsx';
 import ChatPoll from './ChatMain/ChatPoll.jsx';
-import { Link, useParams } from 'react-router-dom';
-import { isEqual } from "lodash";
+
 
 export function ChatMain() {
 
@@ -24,7 +31,7 @@ export function ChatMain() {
 
     const { enqueueSnackbar } = useSnackbar();
     const { isMessageProcessing, setIsMessageProcessing } = useContext(LoaderContext);
-    const { userChat, messageSearchQuery } = useContext(ChatContext);
+    const { userChat, setUserChat, messageSearchQuery } = useContext(ChatContext);
     const { loginUser, onlineUsers } = useContext(UserContext);
 
     const [localChat, setLocalChat] = useState(userChat || {});
@@ -32,40 +39,54 @@ export function ChatMain() {
     const [chatMessageData, setChatMessageData] = useState(null);
 
     useEffect(() => {
-        if (!isEqual(localChat, userChat)) {
-            setLocalChat(userChat);
-        }
+        setLocalChat(userChat);
     }, [userChat]);
 
+    const handlePollVoteSuccess = ({ conversationId, userId, chatId, pollIdx }) => {
 
-    const handlePollVoteSuccess = useCallback(({ conversationId, userId, chatId, pollIdx }) => {
         if (localChat._id !== conversationId) return;
 
         setLocalChat(prevChat => {
-            const newMessages = prevChat.messages.map(msg => {
+            const updatedMessages = prevChat.messages.map(msg => {
                 if (msg._id === chatId) {
-                    const newPoll = [...msg.poll];
-
-                    if (!newPoll[pollIdx].votes.includes(userId)) {
-                        newPoll[pollIdx].votes.push(userId);
-                    }
-
-                    return { ...msg, poll: newPoll };
+                    const updatedPoll = msg.poll.map((option, index) =>
+                        index === pollIdx && !option.votes.includes(userId)
+                            ? { ...option, votes: [...option.votes, userId] }
+                            : option
+                    );
+                    return { ...msg, poll: updatedPoll };
                 }
                 return msg;
             });
 
-            return isEqual(prevChat.messages, newMessages) ? prevChat : { ...prevChat, messages: newMessages };
+            return { ...prevChat, messages: updatedMessages };
+        });
+
+        setUserChat(prevUserChat => {
+            if (prevUserChat._id !== conversationId) return prevUserChat;
+
+            const updatedMessages = prevUserChat.messages.map(msg => {
+                if (msg._id === chatId) {
+                    const updatedPoll = msg.poll.map((option, index) =>
+                        index === pollIdx && !option.votes.includes(userId)
+                            ? { ...option, votes: [...option.votes, userId] }
+                            : option
+                    );
+                    return { ...msg, poll: updatedPoll };
+                }
+                return msg;
+            });
+
+            return { ...prevUserChat, messages: updatedMessages };
         });
 
         if (loginUser?._id === userId) {
             setIsMessageProcessing(false);
         }
-    }, []);
+    };
 
 
     const updateMessageReaction = (msg, userId, emoji) => {
-
         const updatedReactions = msg.reactions ? [...msg.reactions] : [];
         const existingReactionIndex = updatedReactions.findIndex((r) => r.user === userId);
 
@@ -79,15 +100,25 @@ export function ChatMain() {
     };
 
     const handleChatReaction = ({ chatId, userId, emoji, recipientId }) => {
-
         if (localChat._id !== recipientId) return;
 
-        setLocalChat((prevChat) => ({
-            ...prevChat,
-            messages: prevChat.messages.map((msg) =>
+        setLocalChat(prevChat => {
+            const updatedMessages = prevChat.messages.map(msg =>
                 msg._id === chatId ? updateMessageReaction(msg, userId, emoji) : msg
-            ),
-        }));
+            );
+
+            return { ...prevChat, messages: updatedMessages };
+        });
+
+        setUserChat(prevUserChat => {
+            if (prevUserChat._id !== recipientId) return prevUserChat;
+
+            const updatedMessages = prevUserChat.messages.map(msg =>
+                msg._id === chatId ? updateMessageReaction(msg, userId, emoji) : msg
+            );
+
+            return { ...prevUserChat, messages: updatedMessages };
+        });
 
         enqueueSnackbar(
             loginUser._id === userId ? "You reacted to a message!" : "A user added a reaction.",
@@ -95,29 +126,50 @@ export function ChatMain() {
         );
     };
 
-    const handleNewChatMessage = useCallback(({ recipientId, data }) => {
-        setLocalChat(prevChat => {
-            if (prevChat?._id !== recipientId) return prevChat;
+    const handleNewChatMessage = ({ recipientId, data }) => {
 
-            const newMessages = [...prevChat.messages, data];
-            return { ...prevChat, messages: newMessages };
-        });
+        if (localChat?._id !== recipientId) return;
+
+        setLocalChat(prevChat => ({
+            ...prevChat,
+            messages: [...prevChat.messages, data]
+        }));
+
+        setUserChat(prev => ({
+            ...prev,
+            messages: [...prev.messages, data]
+        }));
 
         if (loginUser?._id === data?.sender?._id) {
             setIsMessageProcessing(false);
         }
-    }, []);
-
+    };
 
     const handleMessageReadSuccess = ({ conversationId, chatId, userData }) => {
-        if (localChat?._id === conversationId) {
-            const updatedMessages = localChat.messages.map((msg) =>
-                msg?._id === chatId && !msg.readBy.some(user => user?._id?.toString() === userData?._id?.toString())
+
+        if (localChat?._id !== conversationId) return;
+        // here is some error. message already read but backend socket is not emiting message 
+        setLocalChat(prevChat => {
+            const updatedMessages = prevChat.messages.map(msg =>
+                msg?._id === chatId && !msg.readBy.some(user => user._id === userData._id)
                     ? { ...msg, readBy: [...msg.readBy, userData] }
                     : msg
             );
-            setLocalChat({ ...localChat, messages: updatedMessages });
-        }
+
+            return { ...prevChat, messages: updatedMessages };
+        });
+
+        setUserChat(prevUserChat => {
+            if (prevUserChat._id !== conversationId) return prevUserChat;
+
+            const updatedMessages = prevUserChat.messages.map(msg =>
+                msg?._id === chatId && !msg.readBy.some(user => user._id === userData._id)
+                    ? { ...msg, readBy: [...msg.readBy, userData] }
+                    : msg
+            );
+
+            return { ...prevUserChat, messages: updatedMessages };
+        });
     };
 
     useEffect(() => {
@@ -234,7 +286,7 @@ export function ChatMain() {
                 if (el) observer.current.unobserve(el);
             });
         };
-    }, [localChat.messages]);
+    }, []); // localChat.messages
 
     const getLastReadMessageIndex = () => {
         if (!loginUser || !localChat) return 0;
@@ -269,6 +321,8 @@ export function ChatMain() {
         return false;
     };
 
+    const remainReadCount = localChat?.messages?.length - getLastReadMessageIndex() - 1;
+
     const cleanChat = loginUser.clearedChats.find((data) => data.chatId === id);
     const filterUserChat = localChat?.messages?.filter(chatData => {
         let isMessageVisible = true;
@@ -284,7 +338,6 @@ export function ChatMain() {
 
         return isMessageVisible && chatData?.message?.toLowerCase().includes(messageSearchQuery.toLowerCase());
     });
-
 
     if (filterUserChat?.length == 0) {
         return <div className='flex justify-center items-center h-full'>
@@ -409,6 +462,10 @@ export function ChatMain() {
             {
                 isMessageProcessing && <div className='absolute  top-0 left-0 bg-[#00000055] w-full h-full flex justify-center items-center'><CircularProgress sx={{ color: "white" }} /></div>
             }
+
+            {remainReadCount > 0 && <span className='absolute right-4 bottom-2 flex items-center text-sm px-3 py-1 rounded-s-full bg-green-500'>
+                {remainReadCount}<ExpandMoreIcon style={{ fontSize: '1.2rem' }} />
+            </span>}
         </>
     );
 }

@@ -42,7 +42,7 @@ export default function ChatPoll({ data, localChat }) {
     if (!data?.poll || data.poll.length === 0) return null;
 
     return (
-        <div className='mt-2 space-y-2 min-w-[18rem]'>
+        <div className='mt-2 space-y-2'>
             {data.poll.map((pollOption, idx) => {
 
                 const totalMembers = localChat?.members?.length ?? 2;
