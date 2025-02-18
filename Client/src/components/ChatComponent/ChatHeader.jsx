@@ -125,12 +125,12 @@ export default function ChatHeader() {
         <>
             <div className='w-full flex items-center space-x-2'>
 
-                <Link to={`/u/profile/${id}`}>
+                <Link to={(userChat?.members?.length >= 1) ? `/community/${id}` : `/u/profile/${remoteUser?.username}`}>
                     <Avatar src={(userChat?.members?.length >= 1) ? userChat.image : remoteUser?.image} className='rounded-0' sx={{ width: 40, height: 40 }} />
                 </Link>
 
-                <div className='pe-5 w-[11rem] md:w-[14rem] lg:flex-1'>
-                    <Link to={`/u/profile/${id}`}>
+                <div className='pe-5 w-[5rem] flex-1'>
+                    <Link to={(userChat?.members?.length >= 1) ? `/community/${id}` : `/u/profile/${remoteUser?.username}`}>
                         <h1 className='text-lg font-semibold m-0 truncate line-clamp-1'>{(userChat?.members?.length >= 1) ? userChat.name : remoteUser?.username}</h1>
                     </Link>
                     {
@@ -143,7 +143,7 @@ export default function ChatHeader() {
                                 {
                                     userChat?.members?.map((joinUser) => (
                                         <li key={uuidv4()}>
-                                            <Link to={`/u/profile/${joinUser._id}`}>{joinUser.user.username}</Link>
+                                            <Link to={`/u/profile/${joinUser?.user?.username}`} className='hover:text-gray-200' >{joinUser.user.username}</Link>
                                         </li>
                                     ))
                                 }

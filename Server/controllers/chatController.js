@@ -1,7 +1,7 @@
 import httpStatus from 'http-status';
+import mongoose from 'mongoose';
 import Connection from '../models/Connection.js';
 import Group from '../models/Group.js';
-import mongoose from 'mongoose';
 import Chat from '../models/Chat.js';
 import User from '../models/User.js';
 
@@ -102,7 +102,7 @@ const updatedBackgroundImage = async (req, res) => {
 
     const { userId, url } = req.body;
 
-    if (!userId || !url) {
+    if (!userId) {
         return res.status(httpStatus.BAD_REQUEST).json({
             success: false,
             message: "User ID and image URL are required.",
@@ -157,7 +157,7 @@ const setBlockUser = async (req, res) => {
     return res.status(httpStatus.OK).json({
         success: true,
         blockId,
-        message: "User successfully blocked.",
+        message: "Successfully blocked.",
     });
 }
 

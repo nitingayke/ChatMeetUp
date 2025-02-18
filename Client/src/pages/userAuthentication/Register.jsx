@@ -3,19 +3,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { userRegisterService } from "../../services/authService";
 import { useSnackbar } from "notistack";
 import CircularProgress from '@mui/material/CircularProgress';
-
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function Register() {
-
     const [formData, setFormData] = useState({
         email: "",
         username: "",
         password: ""
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
 
     const { enqueueSnackbar } = useSnackbar();
-
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -27,9 +26,7 @@ export default function Register() {
 
         try {
             setIsLoading(true);
-
             const { email, username, password } = formData;
-
             const response = await userRegisterService(username, email, password);
 
             if (response.status === 200) {
@@ -37,7 +34,7 @@ export default function Register() {
                 setFormData({ email: "", username: "", password: "" });
                 navigate('/login');
             } else {
-                enqueueSnackbar(response.data?.error || 'Network error, please try again.', { variant: "error" });
+                enqueueSnackbar(response?.error || 'Network error, please try again.', { variant: "error" });
             }
 
         } catch (error) {
@@ -48,9 +45,9 @@ export default function Register() {
     };
 
     return (
-        <div className="text-white h-screen flex items-center justify-center min-h-screen bg-linear-to-r from-black to-gray-800">
+        <div className="text-white h-screen w-full flex items-center justify-center min-h-screen bg-gradient-to-r from-black to-gray-800">
             <div className="m-5 w-full max-w-md shadow-lg rounded-xl">
-                <h2 className="text-3xl font-bold text-center" style={{ fontWeight: '800' }}>Register</h2>
+                <h2 className="text-3xl font-bold text-center">Register</h2>
                 <form className="mt-6" onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <input
@@ -74,16 +71,24 @@ export default function Register() {
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
                         />
                     </div>
-                    <div className="mb-4">
+                    <div className="mb-4 relative">
                         <input
-                            type="password"
+                            type={showPassword ? "text" : "password"} // Toggle input type
                             name="password"
                             placeholder="Password"
                             value={formData.password}
                             onChange={handleChange}
                             required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none pr-10"
                         />
+                        {/* Toggle Password Visibility */}
+                        <button
+                            type="button"
+                            className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                            onClick={() => setShowPassword(!showPassword)}
+                        >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </button>
                     </div>
                     <button
                         type={isLoading ? "button" : "submit"}

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useContext } from 'react';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
@@ -32,7 +32,7 @@ export default function ConnectionsList({ searchQuery }) {
     }
 
 
-    const blockedUserIds = new Set(loginUser.blockUser.map(id => id.toString())); 
+    const blockedUserIds = new Set(loginUser.blockUser.map(id => id.toString()));
 
     const filteredConnections = loginUser.connections
         .filter(value => {
@@ -44,7 +44,18 @@ export default function ConnectionsList({ searchQuery }) {
 
             return (otherUser.username || "").toLowerCase().includes((searchQuery || "").toLowerCase());
         })
-        .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
+        .sort((a, b) => {
+
+            const lastMessageATime = a.messages.length > 0
+                ? new Date(a.messages[a.messages.length - 1].createdAt)
+                : new Date(a.createdAt);
+
+            const lastMessageBTime = b.messages.length > 0
+                ? new Date(b.messages[b.messages.length - 1].createdAt)
+                : new Date(b.createdAt);
+
+            return lastMessageBTime - lastMessageATime;
+        });
 
 
 
@@ -59,7 +70,7 @@ export default function ConnectionsList({ searchQuery }) {
 
     return (
         <>
-            {filteredConnections.map((connection, idx) => {
+            {filteredConnections.map((connection) => {
                 const isUser1 = loginUser?.username === connection?.user1?.username;
                 const otherUser = isUser1 ? connection?.user2 : connection?.user1;
                 const lastMessage = (connection.messages ?? []).at(-1);
@@ -104,6 +115,10 @@ export default function ConnectionsList({ searchQuery }) {
                     </ListItem>
                 );
             })}
+
+            <div className='text-center mt-10'>
+                <Link to={'/u/block-users'} className='text-blue-500 text-sm underline hover:text-blue-800'>Blocked Profiles</Link>
+            </div>
         </>
     );
 }

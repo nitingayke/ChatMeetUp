@@ -42,9 +42,15 @@ export default function GroupList({ searchQuery }) {
 
             if (blockedUserIds.has(group._id?.toString())) return false;
 
-            return (groupName || "").toLowerCase().includes((searchQuery || "").toLowerCase());
+            return groupName.toLowerCase().includes((searchQuery || "").toLowerCase());
+        })
+        .sort((a, b) => {
+            const lastMessageA = a.messages?.length ? new Date(a.messages[a.messages.length - 1].createdAt) : new Date(a.createdAt);
+            const lastMessageB = b.messages?.length ? new Date(b.messages[b.messages.length - 1].createdAt) : new Date(b.createdAt);
 
-        }).sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
+            return lastMessageB - lastMessageA;
+        });
+
 
 
     if (filteredGroups.length === 0) {
@@ -112,6 +118,10 @@ export default function GroupList({ searchQuery }) {
                     </ListItem>
                 );
             })}
+
+            <div className='text-center mt-10'>
+                <Link to={'/u/block-users'} className='text-blue-500 text-sm underline hover:text-blue-800'>Blocked Profiles</Link>
+            </div>
         </>
     );
 }

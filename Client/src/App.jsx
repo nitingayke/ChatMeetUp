@@ -1,6 +1,5 @@
 import React, { useContext, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import LeftSidebar from './components/NetworkList/sidebarLayout/LeftSidebar';
 import ChatContextProvider from './context/ChatContextProvider';
 import ChatPage from './pages/ChatPage';
 import Login from './pages/userAuthentication/Login';
@@ -12,10 +11,13 @@ import { useSnackbar } from "notistack";
 import { socket } from './services/socketService';
 import LoaderContext from './context/LoaderContext';
 import BackgroundWallpaper from './components/BackgroundWallpaper';
+import BlockUserList from './components/NetworkList/BlockUserList';
+import UserProfile from './pages/NetworkProfile.jsx/UserProfile';
+import CommunityProfile from './pages/networkProfile.jsx/CommunityProfile';
+import LeftSidebar from './components/SidebarLayout/LeftSidebar';
 
 function App() {
 
-    const location = useLocation();
     const { loginUser, setLoginUser, setOnlineUsers } = useContext(UserContext);
     const { setIsMessageProcessing } = useContext(LoaderContext);
     const { enqueueSnackbar } = useSnackbar();
@@ -69,21 +71,22 @@ function App() {
 
 
 
-    if (['/login', '/register'].includes(location.pathname)) {
-        return (
-            <Routes>
-                <Route path='/login' element={<Login />} />
-                <Route path='/register' element={<Register />} />
-            </Routes>
-        );
-    }
-
     return (
         <div className='h-full flex'>
-            <LeftSidebar />
             <ChatContextProvider>
                 <Routes>
+
+
+                    <Route path='/sidebar-temp' element={<LeftSidebar/>} />
+
+
+                    <Route path='/login' element={<Login />} />
+                    <Route path='/register' element={<Register />} />
+
                     <Route path='/u/chatting/:id?' element={<ChatPage />} />
+                    <Route path='/u/block-users' element={<BlockUserList />} />
+                    <Route path='/u/profile/:id' element={<UserProfile />} />
+                    <Route path='/community/:id' element={<CommunityProfile />} />
 
                     <Route path='/playground/wallpaper' element={<BackgroundWallpaper />} />
 

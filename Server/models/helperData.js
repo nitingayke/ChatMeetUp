@@ -7,15 +7,15 @@ import Chat from "./Chat.js";
 const insertData = async (req, res) => {
 
     try {
-        const currChat = await Chat.findById('67a1ee38a414b10ea74d481f');
+        const user = await User.findOne({ username: 'patilgaurav' });
 
-        if (!currChat) {
-            return res.json({ "Error": "Chat not found" });
+        if (!user) {
+            return res.json({ "Error": "User not found" });
         }
 
-        currChat.poll[3].votes = [];
+        user.image = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Convex_lens_%28magnifying_glass%29_and_upside-down_image.jpg/341px-Convex_lens_%28magnifying_glass%29_and_upside-down_image.jpg";
 
-        const response = await currChat.save();
+        const response = await user.save();
 
         return res.json({ response });
     } catch (error) {

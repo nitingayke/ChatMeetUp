@@ -26,7 +26,7 @@ const deleteChatMessage = async (chatId, userId) => {
     }
 }
 
-const changeBackgroundWallpaper = async(userId, url) => {
+const changeBackgroundWallpaper = async (userId, url) => {
     try {
         const response = await axios.patch('http://localhost:8989/chatRoute/update-wallpaper', {
             userId,
@@ -38,7 +38,7 @@ const changeBackgroundWallpaper = async(userId, url) => {
     }
 }
 
-const setBlockUser = async(blockId, userId) => {
+const setBlockUser = async (blockId, userId) => {
     try {
         const response = await axios.patch('http://localhost:8989/chatRoute/block-entity', {
             blockId,
@@ -50,7 +50,7 @@ const setBlockUser = async(blockId, userId) => {
     }
 }
 
-const cleanUserChats = async(chatId, userId) => {
+const cleanUserChats = async (chatId, userId) => {
 
     try {
         const response = await axios.patch('http://localhost:8989/chatRoute/clean-chats', {

@@ -306,7 +306,6 @@ export function ChatMain() {
         }
     }, [localChat?.messages?.length]);
 
-
     const isMessageRead = (message) => {
         if (!message?.readBy || !localChat) return false;
 
@@ -360,7 +359,7 @@ export function ChatMain() {
                             {(onlineUsers.includes(data?.sender?._id) && loginUser._id !== data.sender._id) ? (
                                 <Tooltip title="User Online" arrow>
                                     <div className="relative h-fit cursor-pointer" style={{ position: 'sticky', top: '0' }}>
-                                        <Link to={`/u/profile/${data?.sender?._id}`}>
+                                        <Link to={`/u/profile/${data?.sender?.username}`}>
                                             <Avatar src={data?.sender?.image ?? ''} />
                                         </Link>
                                         <span className="absolute bottom-0 right-0 flex size-3">
@@ -371,7 +370,7 @@ export function ChatMain() {
                                 </Tooltip>
                             ) : (
                                 <div className="relative h-fit cursor-pointer" style={{ position: 'sticky', top: '0' }}>
-                                    <Link to={`/u/profile/${data?.sender?._id}`}>
+                                    <Link to={`/u/profile/${data?.sender?.username}`}>
                                         <Avatar src={data?.sender?.image ?? ''} />
                                     </Link>
                                 </div>

@@ -61,7 +61,7 @@ export default function BackgroundWallpaper() {
 
 
     return (
-        <Box sx={{ height: '100%', overflowY: 'scroll' }} className='flex-1'>
+        <Box sx={{ height: '100%', overflowY: 'scroll' }} className='flex-1 relative'>
             <div className="sticky top-0 z-10 pb-2 text-xl text-center text-lg font-semibold bg-black">
                 <p
                     className={`py-3 transition-opacity duration-500 ease-in-out bg-gradient-to-r from-pink-500 to-yellow-500 bg-clip-text text-transparent font-bold ${isVisible ? "opacity-100" : "opacity-0"}`}
@@ -77,26 +77,32 @@ export default function BackgroundWallpaper() {
                 )}
 
             </div>
-            <ImageList variant="masonry" cols={3} gap={30} >
 
-                {itemData.map((item) => (
-                    <ImageListItem key={item.img} className='group relative'>
-                        <img
-                            srcSet={`${item.img}?w=248&fit=crop&auto=format&dpr=2 2x`}
-                            src={`${item.img}?w=248&fit=crop&auto=format`}
-                            className='rounded-lg'
-                            alt=''
-                            loading="lazy"
-                        />
+            <div className='px-4'>
+                <ImageList variant="masonry" cols={3} gap={30}>
 
-                        <button
-                            onClick={() => handleBackgroundImage(item.img)}
-                            className='opacity-0 group-hover:opacity-100 absolute top-2 left-4 hover:opacity-100 text-md bg-[#000000ab] hover:bg-black px-4 py-1 rounded cursor-pointer'>
-                            Set
-                        </button>
-                    </ImageListItem>
-                ))}
-            </ImageList>
+                    {itemData.map((item) => (
+                        <ImageListItem key={item.img} className='group relative'>
+                            <img
+                                srcSet={`${item.img}?w=248&fit=crop&auto=format&dpr=2 2x`}
+                                src={`${item.img}?w=248&fit=crop&auto=format`}
+                                className='rounded-lg'
+                                alt=''
+                                loading="lazy"
+                            />
+
+                            <button
+                                onClick={() => handleBackgroundImage(item.img)}
+                                className='md:opacity-0 group-hover:opacity-100 absolute top-2 left-2 md:left-4 hover:opacity-100 text-md bg-[#000000ab] hover:bg-black px-2 md:px-4 md:py-1 rounded cursor-pointer'>
+                                Set
+                            </button>
+                        </ImageListItem>
+                    ))}
+                </ImageList>
+            </div>
+
+            <button className='sticky bottom-3 left-5 mt-5 z-100 mb-5 px-4 py-1 rounded bg-[#808080cc] hover:bg-[#00ff0285] cursor-pointer' onClick={() => handleBackgroundImage('null')}>Reset</button>
+
         </Box>
     );
 }
