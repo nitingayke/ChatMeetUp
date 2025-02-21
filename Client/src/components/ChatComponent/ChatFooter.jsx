@@ -23,6 +23,7 @@ import ImageUpload from '../InputComponent.jsx/ImageUpload.jsx';
 import PdfUpload from '../InputComponent.jsx/PdfUpload.jsx';
 import VideoUpload from '../InputComponent.jsx/VideoUpload.jsx';
 import LoaderContext from '../../context/LoaderContext.js';
+import { enqueueSnackbar } from 'notistack';
 
 
 const style = {
@@ -179,8 +180,8 @@ export default function ChatFooter() {
                     </Box>
                 </Modal>
 
-                <form className='flex flex-1'>  
-                    <textarea 
+                <form className='flex flex-1'>
+                    <textarea
                         type="text"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
@@ -189,7 +190,7 @@ export default function ChatFooter() {
                     ></textarea>
                     <button
                         type={'button'}
-                        onClick={handleMessageSubmit} 
+                        onClick={handleMessageSubmit}
                         className={`text-sm py-1 px-3 rounded-e cursor-pointer bg-[#8080806e] ${(message || "").trim().length > 0 || inputFile || (pollOptions && pollOptions.length > 0) ? 'text-white' : 'text-gray-500'
                             }`}
                     >

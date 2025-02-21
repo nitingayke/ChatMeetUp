@@ -12,11 +12,12 @@ export default function ConnectionsList({ searchQuery }) {
 
     const navigate = useNavigate();
 
-    const { selectedUser, setSelectedUser } = useContext(ChatContext);
+    const { selectedUser, setSelectedUser, setIsDialogOpen } = useContext(ChatContext);
     const { loginUser, onlineUsers } = useContext(UserContext);
 
     const handleSelectUser = (value) => {
         setSelectedUser(value._id);
+        setIsDialogOpen(true);
         navigate(`/u/chatting/${value._id}`);
     };
 
@@ -25,7 +26,7 @@ export default function ConnectionsList({ searchQuery }) {
             <div className='text-center space-y-2 mt-5 text-sm text-gray-500'>
                 <h1>You have not connected with any users yet</h1>
                 <p>
-                    You can connect with users <Link to={'/join-users'} className='text-blue-500 hover:text-blue-700'>here</Link>.
+                    You can connect with users <Link to={'/u/join-requests'} className='text-blue-500 hover:text-blue-700'>here</Link>.
                 </p>
             </div>
         );

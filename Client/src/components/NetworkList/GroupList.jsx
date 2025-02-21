@@ -15,11 +15,12 @@ export default function GroupList({ searchQuery }) {
 
     const navigate = useNavigate();
 
-    const { selectedUser, setSelectedUser } = useContext(ChatContext);
+    const { selectedUser, setSelectedUser, setIsDialogOpen } = useContext(ChatContext);
     const { loginUser } = useContext(UserContext);
 
     const handleSelectedGroup = (group) => {
         setSelectedUser(group._id);
+        setIsDialogOpen(true);
         navigate(`/u/chatting/${group._id}`);
     }
 
@@ -28,7 +29,7 @@ export default function GroupList({ searchQuery }) {
             <div className='text-center space-y-2 mt-5 text-sm text-gray-500'>
                 <h1>You have not joined any groups yet</h1>
                 <p>
-                    You can join groups <Link to={'/join-groups'} className='text-blue-500 hover:text-blue-700'>here</Link>.
+                    You can join groups <Link to={'/u/join-requests'} className='text-blue-500 hover:text-blue-700'>here</Link>.
                 </p>
             </div>
         );

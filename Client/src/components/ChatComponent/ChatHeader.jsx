@@ -5,7 +5,7 @@ import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
 import MoreVertOutlinedIcon from '@mui/icons-material/MoreVertOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import Menu from '@mui/material/Menu';
-import { Block, Share, Wallpaper, DeleteSweepOutlined } from "@mui/icons-material";
+import { Block, Share, Wallpaper, DeleteSweepOutlined, Close } from "@mui/icons-material";
 import MenuItem from '@mui/material/MenuItem';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
@@ -28,7 +28,7 @@ export default function ChatHeader() {
     const [anchorEl1, setAnchorEl1] = useState(null);
     const open1 = Boolean(anchorEl1);
 
-    const { userChat, messageSearchQuery, setMessageSearchQuery } = useContext(ChatContext);
+    const { userChat, messageSearchQuery, setMessageSearchQuery, isDialogOpen, setIsDialogOpen } = useContext(ChatContext);
     const { loginUser, setLoginUser, onlineUsers } = useContext(UserContext);
     const { setIsMessageProcessing } = useContext(LoaderContext);
 
@@ -156,28 +156,32 @@ export default function ChatHeader() {
                     }
                 </div>
             </div>
-            <div className='flex space-x-3'>
-                <button className='h-8 w-10 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white'>
+            <div className='flex'>
+                {(remoteUser && !isSearchStatus) && <button className='h-8 w-10 me-2 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white'>
                     <VideocamOutlinedIcon />
-                </button>
+                </button>}
                 {
                     (isSearchStatus)
-                        ? <div className='h-8 p-1 rounded bg-[#80808045] flex flex-1 md:min-w-40 lg:min-w-70'>
+                        ? <div className='h-8 p-1 me-2 rounded bg-[#80808045] flex flex-1 md:min-w-40 lg:min-w-70'>
                             <input
                                 type="text"
-                                className='bg-gray-600 p-1 rounded text-sm flex-1'
+                                className='bg-black p-1 rounded text-sm flex-1'
                                 value={messageSearchQuery}
                                 onChange={(e) => setMessageSearchQuery(e.target.value)}
                                 placeholder='Search message' />
                             <button onClick={handleSearchClose} className='ps-2 text-gray-500 hover:text-white cursor-pointer'><CloseOutlinedIcon style={{ fontSize: "1.2rem" }} /></button>
                         </div>
-                        : <button onClick={() => setIsSearchStatus(true)} className='h-8 w-10 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white'>
+                        : <button onClick={() => setIsSearchStatus(true)} className='h-8 w-10 me-2 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white'>
                             <SearchOutlinedIcon />
                         </button>
                 }
-                <button className='h-8 w-10 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white' onClick={(e) => setAnchorEl1(e.currentTarget)}>
-                    <MoreVertOutlinedIcon />
-                </button>
+
+                {
+                    (!isSearchStatus) && <button className='h-8 w-10 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white' onClick={(e) => setAnchorEl1(e.currentTarget)}>
+                        <MoreVertOutlinedIcon />
+                    </button>
+                }
+
                 <Menu anchorEl={anchorEl1} open={open1} onClose={() => setAnchorEl1(null)} className='mt-4 ms-2 '>
                     <MenuItem onClick={handleBlockUser} className='text-gray-100'>
                         <Block fontSize="small" className="mr-1" /> Block
@@ -195,6 +199,12 @@ export default function ChatHeader() {
                         </Link>
                     </MenuItem>
                 </Menu>
+
+                {
+                    (isDialogOpen && !isSearchStatus) && <button className='block md:hidden h-8 w-10 ms-2 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white' onClick={() => setIsDialogOpen(false)}>
+                        <Close />
+                    </button>
+                }
             </div>
         </>
     )

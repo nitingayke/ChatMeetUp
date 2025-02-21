@@ -190,7 +190,7 @@ const cleanUserChats = async (req, res) => {
         });
     }
 
-    const clearedChatIndex = user.clearedChats.findIndex(cc => cc.chatId.toString() === chatId);
+    const clearedChatIndex = user.clearedChats.findIndex(cc => cc.chatId === chatId);
 
     if (clearedChatIndex !== -1) {
         user.clearedChats[clearedChatIndex].clearedAt = new Date();

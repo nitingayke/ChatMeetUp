@@ -92,7 +92,7 @@ export default function ChatRoom() {
         )
     }
 
-    if (loginUser.blockUser.includes(id)) {
+    if (loginUser?.blockUser.includes(id)) {
         return <div className='h-full flex justify-center items-center px-4'>
             <div className='w-fit p-3 rounded bg-[#000000ab] text-center'>
                 <Avatar alt={remoteUser?.username || userChat?.name} src={remoteUser?.image || userChat?.image} sx={{ width: 80, height: 80 }} className='mx-auto my-2' />

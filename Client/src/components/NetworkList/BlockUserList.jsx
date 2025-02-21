@@ -10,6 +10,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import UserContext from '../../context/UserContext';
 import { blockUsersData, setUnblockUser } from '../../services/userchatService';
 import { useSnackbar } from 'notistack';
+import LeftSidebar from '../SidebarLayout/LeftSidebar';
 
 const Transition = forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -31,12 +32,12 @@ export default function BlockUserList() {
         if (!loginUser?.blockUser || loginUser.blockUser.length === 0) {
             enqueueSnackbar("No user blocked", { variant: "info" });
             return;
-        }        
+        }
 
         try {
             setIsLoading(true);
             const response = await blockUsersData(loginUser?.blockUser || [], loginUser._id);
-      
+
             if (response?.success) {
                 setBlockUsers(response.users);
             } else {
@@ -61,7 +62,7 @@ export default function BlockUserList() {
         setSelectedImage(img);
         setOpen(true);
     }
-    
+
     const handleUnblockUser = async (blockUserId) => {
         if (!loginUser) {
             enqueueSnackbar("User not logged in, please login first.", { variant: 'error' });
@@ -72,7 +73,7 @@ export default function BlockUserList() {
             setIsLoading(true);
 
             const response = await setUnblockUser(blockUserId, loginUser._id);
-            
+
             if (response.success) {
                 setBlockUsers((prev) => prev.filter(user => user._id !== response.blockUserId));
                 enqueueSnackbar("User successfully unblocked.", { variant: 'success' });
@@ -94,6 +95,9 @@ export default function BlockUserList() {
 
     return (
         <>
+            <div className='block md:hidden bg-gradient-to-r from-black to-gray-800'>
+                <LeftSidebar />
+            </div>
             <div className='h-screen md:flex flex-col items-center w-full text-white min-h-screen bg-gradient-to-r from-black to-gray-800 overflow-auto'>
 
                 <header className='sm:flex items-center justify-center sticky top-0 w-full p-4 z-10 bg-gradient-to-r from-black to-gray-800 sm:space-x-2'>
@@ -105,6 +109,7 @@ export default function BlockUserList() {
                         <input type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search users..."
                             className='flex-1 p-1 text-sm sm:min-w-[20rem]' />
                         <button className='py-1 px-2 text-gray-500 bg-gray-800 rounded-e hover:bg-gray-700 hover:text-white cursor-pointer'>
                             <SearchIcon sx={{ fontSize: "1.3rem" }} />
@@ -114,7 +119,7 @@ export default function BlockUserList() {
 
                 {(isLoading)
                     ? <div className='mt-16'><CircularProgress sx={{ color: 'white' }} /></div>
-                    : <ul className='md:w-[30rem] p-3 space-y-6'>
+                    : <ul className='md:w-[30rem] p-3 space-y-6 pb-30'>
                         {
                             (filteredUsers.length == 0)
                                 ? <div className="text-center text-gray-400 mt-6">No users found.</div>

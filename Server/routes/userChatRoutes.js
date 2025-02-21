@@ -1,6 +1,16 @@
 import { Router } from "express";
 import wrapAsync from "../utils/wrapAsync.js";
-import { createNewConnection, getBlockUsers, groupProfile, unblockUser, userJoinGroup, userLeaveGroup, userProfile } from "../controllers/userChatController.js";
+import {
+    createNewConnection,
+    getBlockUsers,
+    getLiveUsersData,
+    getNetworkData,
+    groupProfile,
+    unblockUser,
+    userJoinGroup,
+    userLeaveGroup,
+    userProfile
+} from "../controllers/userChatController.js";
 
 const router = Router();
 
@@ -17,5 +27,9 @@ router.post('/create-connection', wrapAsync(createNewConnection));
 router.post('/join-group', wrapAsync(userJoinGroup));
 
 router.delete('/leave-group', wrapAsync(userLeaveGroup));
+
+router.post('/live-users-data', wrapAsync(getLiveUsersData));
+
+router.post('/total-Network', wrapAsync(getNetworkData));
 
 export default router;

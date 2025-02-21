@@ -85,4 +85,40 @@ const leaveGroup = async (groupId, userId) => {
     }
 }
 
-export { blockUsersData, setUnblockUser, getUserProfile, getGroupProfile, connectToUser, joinGroup, leaveGroup };
+const getUsersData = async (usersId) => {
+    try {
+        const response = await axios.post('http://localhost:8989/chat-user/live-users-data', {
+            usersId
+        });
+
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { success: false, message: error.message || "Unable to get live users data." };
+    }
+}
+
+const getTotalConnectionData = async (joinedUsers, joinedGroups) => {
+
+    try {
+        const response = await axios.post('http://localhost:8989/chat-user/total-Network', {
+            joinedUsers,
+            joinedGroups
+        });
+
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { success: false, message: error.message || "Unable to fetch network data." };
+    }
+}
+
+export {
+    blockUsersData,
+    setUnblockUser,
+    getUserProfile,
+    getGroupProfile,
+    connectToUser,
+    joinGroup,
+    leaveGroup,
+    getUsersData,
+    getTotalConnectionData
+};

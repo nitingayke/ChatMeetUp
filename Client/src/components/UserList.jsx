@@ -75,7 +75,7 @@ export default function UserList() {
 
             </div>
 
-            <div className="overflow-y-auto edit-scroll flex-1 px-2">
+            <div className="overflow-y-auto edit-scroll flex-1 px-2 pb-20">
                 <List className="space-y-2">
                     {
                         componentContent()

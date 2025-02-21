@@ -18,7 +18,7 @@ export default function AuthOptions() {
                     <Link to={'/register'}>
                         <Button variant="contained" color="secondary">Register</Button>
                     </Link>
-                    <Link to={'/logout'} className="block">
+                    <Link to={'/chat-meet-up/about'} className="block">
                         <Button variant="outlined" color="inherit">View About</Button>
                     </Link>
                 </div>

@@ -227,6 +227,14 @@ const userJoinGroup = async (req, res) => {
     group.members.push({ user: userId, role: 'member' });
     user.groups.push(groupId);
 
+    const clearedChatIndex = user.clearedChats.findIndex(cc => cc.chatId === groupId);
+
+    if (clearedChatIndex !== -1) {
+        user.clearedChats[clearedChatIndex].clearedAt = new Date();
+    } else {
+        user.clearedChats.push({ chatId: groupId, clearedAt: new Date() });
+    }
+
     await group.save();
     await user.save();
 
@@ -293,5 +301,37 @@ const userLeaveGroup = async (req, res) => {
     });
 };
 
+const getLiveUsersData = async (req, res) => {
+    const { usersId } = req.body;
 
-export { getBlockUsers, unblockUser, userProfile, groupProfile, createNewConnection, userJoinGroup, userLeaveGroup };
+    if (!Array.isArray(usersId) || usersId.length === 0) {
+        return res.status(httpStatus.BAD_REQUEST).json({ message: "Invalid or empty usersId array" });
+    }
+
+    const users = await User.find({ _id: { $in: usersId } }).select('username email image description');
+    return res.status(httpStatus.OK).json({ success: true, users });
+
+}
+
+const getNetworkData = async (req, res) => {
+
+    const { joinedUsers, joinedGroups } = req.body;
+
+    const users = await User.find({ _id: { $nin: joinedUsers } }).select('username email image description');
+
+    const groups = await Group.find({ _id: { $nin: joinedGroups } }).select('name image description members');
+
+    return res.status(httpStatus.OK).json({ success: true, users, groups });
+}
+
+export {
+    getBlockUsers,
+    unblockUser,
+    userProfile,
+    groupProfile,
+    createNewConnection,
+    userJoinGroup,
+    userLeaveGroup,
+    getLiveUsersData,
+    getNetworkData
+};

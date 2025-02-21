@@ -5,18 +5,12 @@ import PublicIcon from '@mui/icons-material/Public';
 import GroupIcon from '@mui/icons-material/Group';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
-import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import Button from '@mui/material/Button';
-import List from '@mui/material/List';
-import Divider from '@mui/material/Divider';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
-
+import SettingsIcon from '@mui/icons-material/Settings';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
 
 import { Link } from 'react-router-dom';
 import UserContext from '../../context/UserContext';
@@ -28,22 +22,15 @@ export default function LeftSidebar() {
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-    const toggleDrawer = (open) => (event) => {
-        if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
-            return;
-        }
-
-        setIsDrawerOpen(open);
-    };
-
     const sections = [
-        { icon: MessageIcon, title: 'Message', redirectLink: '/u/chatting' },
-        { icon: PersonIcon, title: 'Private Status', redirectLink: '/private-status' },
-        { icon: PublicIcon, title: 'Public Status', redirectLink: '/public-status' },
-        { icon: GroupIcon, title: 'Live Users', redirectLink: '/live-users' },
-        { icon: ForumOutlinedIcon, title: 'Global Message', redirectLink: '/global-message' },
-        { icon: PersonIcon, title: 'Profile', redirectLink: `/u/profile/${loginUser?.username}` }
-    ];
+        { icon: MessageIcon, title: "Message", redirectLink: "/u/chatting" },
+        { icon: PersonIcon, title: "Private Status", redirectLink: "/private-status" },
+        { icon: PublicIcon, title: "Public Status", redirectLink: "/public-status" },
+        { icon: GroupIcon, title: "Live Users", redirectLink: "/live-users" },
+        { icon: ForumOutlinedIcon, title: "Global Message", redirectLink: "/global-message" },
+        { icon: GroupAddIcon, title: "Join", redirectLink: "/u/join-requests" },
+        { icon: SettingsIcon, title: "Profile", redirectLink: `/u/profile/${loginUser?.username}` },
+      ];
 
     return (
         <>
@@ -80,38 +67,49 @@ export default function LeftSidebar() {
                 </div>
             </div>
 
-            <div>
-                <div className="text-2xl bg-gradient-to-r from-[#ef4136] to-[#fbb040] bg-clip-text text-transparent">
+            <div className={`md:hidden w-full h-fit flex justify-between items-center px-3 py-2 ${!isDrawerOpen && 'border-b border-orange-500'}`}>
+                <div className="text-2xl py-2 bg-gradient-to-r from-[#ef4136] to-[#fbb040] bg-clip-text text-transparent">
                     <Link to={'/'} className="hover:cursor-pointer z-10" style={{ fontWeight: '900', fontFamily: 'cursive' }} >
                         ChatMeetUp
                     </Link>
                 </div>
 
-                <div className='space-y-2'>
-                    {
-                        sections.map((section, idx) => (
-                            <Link
-                                to={section.redirectLink}
-                                className={`flex text-gray-500 hover:text-white items-center space-x-3 border hover:cursor-pointer`}
-                                key={section.redirectLink}
-                            >
-                                {React.createElement(section.icon, { style: { fontSize: '1.2rem' } })}
-                                <span className={`whitespace-nowrap`}>
-                                    {section.title}
-                                </span>
-                            </Link>
+                {!isDrawerOpen && <Button onClick={() => setIsDrawerOpen(true)} >
+                    <MenuIcon sx={{ fontSize: '2rem', color: 'white' }} />
+                </Button>}
 
-                        ))
-                    }
-                </div>
                 <Drawer
                     anchor={'top'}
                     open={isDrawerOpen}
-                    onClose={() => toggleDrawer(false)}
+                    onClose={() => setIsDrawerOpen(false)}
+                    PaperProps={{
+                        sx: {
+                            backgroundColor: 'transparent',
+                            color: 'gray'
+                        }
+                    }}
                 >
-                    lorem
+                    <div className="relative space-y-5 text-center bg-linear-to-r from-[#1010107d] to-[#ff9a0017] pt-10 border-b-3 border-orange-500">
+                        {
+                            sections.map((section, idx) => (
+                                <Link
+                                    to={section.redirectLink}
+                                    className="flex justify-center items-center space-x-3 hover:text-white"
+                                    key={section.redirectLink}
+                                    onClick={() => setIsDrawerOpen(false)}
+                                >
+                                    {React.createElement(section.icon, { style: { fontSize: '1.2rem' } })}
+                                    <span className="whitespace-nowrap">
+                                        {section.title}
+                                    </span>
+                                </Link>
+                            ))
+                        }
+                        <button onClick={() => setIsDrawerOpen(false)} className='absolute top-4 right-6 text-white p-1 rounded bg-[#ff45003b] cursor-pointer'>
+                            <CloseIcon />
+                        </button>
+                    </div>
                 </Drawer>
-
 
             </div>
         </>

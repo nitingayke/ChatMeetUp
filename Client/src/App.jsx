@@ -14,7 +14,8 @@ import BackgroundWallpaper from './components/BackgroundWallpaper';
 import BlockUserList from './components/NetworkList/BlockUserList';
 import UserProfile from './pages/NetworkProfile.jsx/UserProfile';
 import CommunityProfile from './pages/networkProfile.jsx/CommunityProfile';
-import LeftSidebar from './components/SidebarLayout/LeftSidebar';
+import LiveUserList from './components/NetworkList/LiveUserList';
+import JoinComponent from './components/JoinComponent';
 
 function App() {
 
@@ -31,6 +32,7 @@ function App() {
 
             try {
                 const response = await getLoginUser();
+
                 if (response.status === 200) {
                     setLoginUser(response.data.user);
                 }
@@ -42,7 +44,7 @@ function App() {
         fetchLoginUser();
     }, [token, setLoginUser, enqueueSnackbar]);
 
-
+    
     useEffect(() => {
         if (loginUser) {
             socket.emit('user-online', { userId: loginUser._id });
@@ -72,13 +74,9 @@ function App() {
 
 
     return (
-        <div className='h-full flex'>
+        <div className='h-screen md:flex'>
             <ChatContextProvider>
                 <Routes>
-
-
-                    <Route path='/sidebar-temp' element={<LeftSidebar/>} />
-
 
                     <Route path='/login' element={<Login />} />
                     <Route path='/register' element={<Register />} />
@@ -86,9 +84,13 @@ function App() {
                     <Route path='/u/chatting/:id?' element={<ChatPage />} />
                     <Route path='/u/block-users' element={<BlockUserList />} />
                     <Route path='/u/profile/:id' element={<UserProfile />} />
+                    <Route path='/u/join-requests' element={<JoinComponent />} />
+                    
                     <Route path='/community/:id' element={<CommunityProfile />} />
-
                     <Route path='/playground/wallpaper' element={<BackgroundWallpaper />} />
+
+                    <Route path='/live-users' element={<LiveUserList />} />
+
 
                     <Route path='*' element={<NotFound />} />
                 </Routes>

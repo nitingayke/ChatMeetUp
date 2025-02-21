@@ -19,9 +19,13 @@ const userSchema = new Schema({
     image: {
         type: String,
     },
+    mobileNo: {
+        type: String,
+    },
     description: {
         type: String,
-        maxlength: 400,
+        maxlength: 200,
+        default: 'Excited to be on ChatMeetUp! Looking forward to making new connections.'
     },
     backgroundImage: {
         type: String

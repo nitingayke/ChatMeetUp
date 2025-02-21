@@ -6,6 +6,8 @@ import UserContext from '../../context/UserContext';
 import AuthOptions from '../../components/AuthOptions';
 import { Avatar, CircularProgress, Dialog, DialogContent, Slide } from '@mui/material';
 import { VideoCall, PersonAdd } from "@mui/icons-material";
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import LeftSidebar from '../../components/SidebarLayout/LeftSidebar';
 
 const Transition = forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -23,6 +25,10 @@ export default function UserProfile() {
     const [open, setOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState("");
     const [selectedComponent, setSelectedComponent] = useState("connections");
+    const [isEditOn, setIsEditOn] = useState(false);
+
+    const [description, setDescription] = useState(loginUser?.description || "");
+    const [userMobileNo, setUserMobileNo] = useState(loginUser?.mobileNo || '');
 
     const fetchUserProfile = async () => {
         try {
@@ -45,9 +51,11 @@ export default function UserProfile() {
         fetchUserProfile();
     }, [loginUser]);
 
-    const isUserConnected = loginUser?.connections?.some(
+    const userConnection = loginUser?.connections?.find(
         connection => connection?.user1?.username === id || connection?.user2?.username === id
-    )
+    );
+
+    const isUserConnected = Boolean(userConnection);
 
     const handleConnectUser = async () => {
 
@@ -66,11 +74,29 @@ export default function UserProfile() {
 
             if (response.success) {
                 navigate(`/u/chatting/${response?.connectionId}`);
+                enqueueSnackbar('Connected successfully! Redirecting to chat...', { variant: 'success' });
             } else {
                 enqueueSnackbar(response.message || "Can not connect to user, please try again.", { variant: 'error' });
             }
         } catch (error) {
             enqueueSnackbar(error.message || "Can not connect to user, please try again.", { variant: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    const handleCancelButton = () => {
+        setDescription("");
+        setUserMobileNo();
+        setIsEditOn(false);
+    }
+
+    const handleSaveButton = () => {
+        try {
+            setIsLoading(true);
+            
+        } catch (error) {
+            enqueueSnackbar(error.message || "Unable to edit user data, please try again.", { variant: 'error' });
         } finally {
             setIsLoading(false);
         }
@@ -82,7 +108,7 @@ export default function UserProfile() {
 
     if (!userProfile) {
         return (
-            <div className='border w-full flex justify-center items-center text-gray-500 text-3xl bg-gradient-to-r from-black to-gray-800'>
+            <div className='h-full border w-full flex justify-center items-center text-gray-500 text-3xl bg-gradient-to-r from-black to-gray-800'>
                 User Not Found, please try again.
             </div>
         )
@@ -156,124 +182,162 @@ export default function UserProfile() {
         return component;
     };
 
-
     return (
-        <div className="w-full min-h-screen bg-gradient-to-r from-black to-gray-800 text-white flex flex-col items-center py-10 overflow-auto">
-            {isLoading ? (
-                <div className="flex justify-center items-center h-screen">
-                    <CircularProgress color="inherit" />
-                </div>
-            ) : (
-                userProfile && (
-                    <div className="w-[90%] md:w-[50%]">
+        <div className='w-full h-full overflow-auto bg-gradient-to-r from-black to-gray-800'>
 
-                        <div className="flex justify-center">
-                            <Avatar
-                                src={userProfile.image || "#"}
-                                // alt={userProfile.username}
-                                sx={{ width: "10rem", height: "10rem", cursor: "pointer" }}
-                                className="border-2 border-gray-500 shadow-lg"
-                                onClick={() => {
-                                    setSelectedImage(userProfile.image);
-                                    setOpen(true);
-                                }}
-                            />
-                        </div>
+            <div className='block md:hidden sticky top-0 bg-gradient-to-r from-black to-gray-800 z-10'>
+                <LeftSidebar />
+            </div>
 
-                        <h2 className="text-2xl font-bold text-center mt-4">{userProfile.username}</h2>
-                        <p className="text-center text-gray-400">{userProfile.email}</p>
+            <div className="w-full text-white flex flex-col items-center py-10">
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-screen">
+                        <CircularProgress color="inherit" />
+                    </div>
+                ) : (
+                    userProfile && (
+                        <div className="w-[90%] md:w-[50%]">
 
-                        <div className="grid grid-cols-2 gap-4 mt-6">
-                            <button className="font-bold text-lg py-3 border border-gray-500 rounded flex items-center justify-center gap-2 bg-[#80808023] hover:bg-[#80808050] cursor-pointer">
-                                <VideoCall fontSize="small" /> Call
-                            </button>
+                            <div className="flex justify-center">
+                                <Avatar
+                                    src={userProfile.image || "#"}
+                                    // alt={userProfile.username}
+                                    sx={{ width: "10rem", height: "10rem", cursor: "pointer" }}
+                                    className="border-2 border-gray-500 shadow-lg"
+                                    onClick={() => {
+                                        setSelectedImage(userProfile.image);
+                                        setOpen(true);
+                                    }}
+                                />
+                            </div>
 
-                            {
-                                (isUserConnected) ? <button className="font-bold text-lg py-3 border border-gray-500 rounded flex items-center justify-center gap-2 bg-[#80808023] hover:bg-[#80808050] cursor-pointer">
-                                    <PersonAdd fontSize="small" /> Connected
+                            <h2 className="text-2xl font-bold text-center mt-4">{userProfile.username}</h2>
+                            <p className="text-center text-gray-400">{userProfile.email}</p>
+
+                            {loginUser?._id !== userProfile?._id && <div className="grid grid-cols-2 gap-4 mt-6">
+                                <button className="font-bold text-lg py-3 border border-gray-500 rounded flex items-center justify-center gap-2 bg-[#80808023] hover:bg-[#80808050] cursor-pointer">
+                                    <VideoCall fontSize="small" /> Call
                                 </button>
-                                    : <button onClick={handleConnectUser} className="font-bold text-lg py-3 border border-gray-500 rounded flex items-center justify-center gap-2 bg-[#80808023] hover:bg-[#80808050] cursor-pointer">
-                                        <PersonAdd fontSize="small" /> Join
-                                    </button>
-                            }
-                        </div>
 
-                        <div className='mt-4'>
-                            <p>About: </p>
-                            <p className="text-gray-500 italic">
-                                "{userProfile.description || "none"}"
-                            </p>
-                        </div>
-
-                        <div className='mt-4'>
-                            <p>Mobile No: </p>
-                            <p className="text-gray-500 italic">
-                                {userProfile.mobileNo || 'none'}
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-3 justify-between mt-6 space-x-2">
-                            <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
-                                <p className="text-xl font-bold">{userProfile.connections.length}</p>
-                                <p className="text-gray-400 break-words">Connections</p>
-                            </div>
-                            <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
-                                <p className="text-xl font-bold">{userProfile.groups.length}</p>
-                                <p className="text-gray-400">Join Groups</p>
-                            </div>
-                            <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
-                                <p className="text-xl font-bold">{userProfile.blockUser.length}</p>
-                                <p className="text-gray-400">Blocked</p>
-                            </div>
-                        </div>
-
-                        <div className='mt-5'>
-                            <ul className="flex justify-between w-full space-x-2">
-                                {["connections", "groups"].map((tab) => (
-                                    <li key={tab} className="flex-1">
-                                        <button
-                                            onClick={() => setSelectedComponent(tab)}
-                                            className={`${selectedComponent === tab && 'bg-[#80808023] text-orange-500'} border border-gray-500 px-3 w-full rounded py-1 cursor-pointer`}
-                                        >
-                                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-
-
-                            <div className='mt-2'>
                                 {
-                                    getListComponent()
+                                    (isUserConnected) ? <Link to={`/u/chatting/${userConnection?._id}`} className="font-bold text-lg py-3 border border-gray-500 rounded flex items-center justify-center gap-2 bg-[#80808023] hover:bg-[#80808050] cursor-pointer">
+                                        <VisibilityIcon fontSize="small" /> View
+                                    </Link>
+                                        : <button onClick={handleConnectUser} className="font-bold text-lg py-3 border border-gray-500 rounded flex items-center justify-center gap-2 bg-[#80808023] hover:bg-[#80808050] cursor-pointer">
+                                            <PersonAdd fontSize="small" /> Join
+                                        </button>
+                                }
+                            </div>}
+
+                            <div className='mt-4'>
+                                <p>About: </p>
+                                {
+                                    (isEditOn && loginUser?.username === id)
+                                        ? <div>
+                                            <div className='flex items-center border p-1 rounded border-gray-500'>
+                                                <input
+                                                    type="text"
+                                                    value={description}
+                                                    onChange={(e) => setDescription(e.target.value)}
+                                                    placeholder={`"Hi, I am using ChatMeetUp! Let's connect. 😊"`}
+                                                    className="text-gray-500 flex-1"
+                                                />
+                                                <span className='text-sm ps-2 pe-1'>{200 - description.length}</span>
+                                            </div>
+                                            {(200 - description.length <= 0) && <p className='text-sm text-red-500 pt-1' style={{ fontStyle: 'italic' }}>You crossed the limit.</p>}
+                                        </div>
+                                        : <p className="text-gray-500 italic break-words" style={{ fontStyle: 'italic' }}>"{userProfile.description || "none"}"</p>
                                 }
                             </div>
-                        </div>
-                    </div>
-                )
-            )}
 
-            <Dialog
-                open={open}
-                TransitionComponent={Transition}
-                keepMounted
-                onClose={() => setOpen(false)}
-                aria-describedby="alert-dialog-slide-description"
-                PaperProps={{
-                    sx: { backgroundColor: "transparent", boxShadow: "none" }
-                }}
-            >
-                <DialogContent
-                    className="flex justify-center items-center"
-                    sx={{ backgroundColor: "transparent", padding: 0 }}
+                            <div className='mt-4 mb-3'>
+                                <p>Mobile No: </p>
+                                {
+                                    (isEditOn && loginUser?.username === id)
+                                        ? <input
+                                            type="number"
+                                            value={userMobileNo}
+                                            onChange={(e) => setUserMobileNo(e.target.value)}
+                                            placeholder={'+91 00000 00000'}
+                                            className="text-gray-500 border p-1 rounded"
+                                        />
+                                        : <p className="text-gray-500 italic" style={{ fontStyle: 'italic' }}>
+                                            {userProfile?.mobileNo ?? '+91 00000 00000'}
+                                        </p>
+                                }
+
+                            </div>
+
+                            {isEditOn && <div className='space-x-3'>
+                                <button onClick={handleSaveButton} className='border rounded px-5 py-1 text-green-500 bg-[#00800030] hover:bg-[#00800055] cursor-pointer'>Save</button>
+                                <button onClick={handleCancelButton} className='border rounded px-4 py-1 bg-[#80808030] hover:bg-[#80808055] cursor-pointer'>Cancel</button>
+                            </div>}
+
+                            {(loginUser?.username === id && !isEditOn) && <buttton onClick={() => setIsEditOn(true)} className="border mt-10 rounded px-5 py-1 text-gray-500 cursor-pointer">Edit</buttton>}
+
+                            <div className="grid grid-cols-3 justify-between mt-6 space-x-2">
+                                <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
+                                    <p className="text-xl font-bold">{userProfile.connections.length}</p>
+                                    <p className="text-gray-400 break-words">Connections</p>
+                                </div>
+                                <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
+                                    <p className="text-xl font-bold">{userProfile.groups.length}</p>
+                                    <p className="text-gray-400">Join Groups</p>
+                                </div>
+                                <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
+                                    <p className="text-xl font-bold">{userProfile.blockUser.length}</p>
+                                    <p className="text-gray-400">Blocked</p>
+                                </div>
+                            </div>
+
+                            <div className='mt-5'>
+                                <ul className="flex justify-between w-full space-x-2">
+                                    {["connections", "groups"].map((tab) => (
+                                        <li key={tab} className="flex-1">
+                                            <button
+                                                onClick={() => setSelectedComponent(tab)}
+                                                className={`${selectedComponent === tab && 'bg-[#80808023] text-orange-500'} border border-gray-500 px-3 w-full rounded py-1 cursor-pointer`}
+                                            >
+                                                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+
+
+                                <div className='mt-2'>
+                                    {
+                                        getListComponent()
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    )
+                )}
+
+                <Dialog
+                    open={open}
+                    TransitionComponent={Transition}
+                    keepMounted
+                    onClose={() => setOpen(false)}
+                    aria-describedby="alert-dialog-slide-description"
+                    PaperProps={{
+                        sx: { backgroundColor: "transparent", boxShadow: "none" }
+                    }}
                 >
-                    <Avatar
-                        alt="User Image"
-                        src={selectedImage}
-                        className="border-2 border-gray-500 shadow-lg"
-                        sx={{ width: "15rem", height: "15rem" }}
-                    />
-                </DialogContent>
-            </Dialog>
+                    <DialogContent
+                        className="flex justify-center items-center"
+                        sx={{ backgroundColor: "transparent", padding: 0 }}
+                    >
+                        <Avatar
+                            alt="User Image"
+                            src={selectedImage}
+                            className="border-2 border-gray-500 shadow-lg"
+                            sx={{ width: "15rem", height: "15rem" }}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </div>
         </div>
     );
 }

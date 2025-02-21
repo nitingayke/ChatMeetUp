@@ -6,17 +6,19 @@ const UserContextProvider = ({ children }) => {
 
     const [loginUser, setLoginUser] = useState(null);
     const [onlineUsers, setOnlineUsers] = useState([]);
+    const [liveUserData, setLiveUserData] = useState([]);
 
     const contextValue = useMemo(() => ({
         loginUser,
         setLoginUser,
         onlineUsers,
-        setOnlineUsers
+        setOnlineUsers,
+        liveUserData, 
+        setLiveUserData
     }), [
-        loginUser,
-        setLoginUser,
-        onlineUsers,
-        setOnlineUsers
+        loginUser, setLoginUser,
+        onlineUsers, setOnlineUsers,
+        liveUserData, setLiveUserData
     ]);
 
     return (

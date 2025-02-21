@@ -10,6 +10,7 @@ const ChatContextProvider = ({ children }) => {
     const [pollOptions, setPollOptions] = useState([]);
     const [inputFile, setInputFile] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const contextValue = useMemo(() => ({
         userChat,
@@ -23,14 +24,17 @@ const ChatContextProvider = ({ children }) => {
         inputFile,
         setInputFile,
         selectedUser, 
-        setSelectedUser
+        setSelectedUser,
+        isDialogOpen, 
+        setIsDialogOpen
     }), [
         userChat, setUserChat,
         messageSearchQuery, setMessageSearchQuery,
         inputComponent, setInputComponent,
         pollOptions, setPollOptions,
         inputFile, setInputFile,
-        selectedUser, setSelectedUser
+        selectedUser, setSelectedUser,
+        isDialogOpen, setIsDialogOpen
     ]);
 
     return (
