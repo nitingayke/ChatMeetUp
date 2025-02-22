@@ -206,4 +206,10 @@ const cleanUserChats = async (req, res) => {
     });
 }
 
-export { getUserChat, deleteChatMessage, updatedBackgroundImage, setBlockUser, cleanUserChats };
+export { 
+    getUserChat, 
+    deleteChatMessage, 
+    updatedBackgroundImage, 
+    setBlockUser, 
+    cleanUserChats 
+};

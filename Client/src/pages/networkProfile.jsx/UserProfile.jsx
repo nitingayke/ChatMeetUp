@@ -1,13 +1,20 @@
-import React, { useContext, useEffect, useState, forwardRef } from 'react';
+import React, { useContext, useEffect, useState, forwardRef, useRef } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
+
 import { connectToUser, getUserProfile } from '../../services/userchatService';
+import { updateUserData, updateUserProfileImage } from '../../services/userService';
+
 import UserContext from '../../context/UserContext';
+
 import AuthOptions from '../../components/AuthOptions';
-import { Avatar, CircularProgress, Dialog, DialogContent, Slide } from '@mui/material';
-import { VideoCall, PersonAdd } from "@mui/icons-material";
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import LeftSidebar from '../../components/SidebarLayout/LeftSidebar';
+
+import { Avatar, CircularProgress, Dialog, DialogContent, Slide } from '@mui/material';
+
+import { VideoCall, PersonAdd, Edit } from "@mui/icons-material";
+import VisibilityIcon from '@mui/icons-material/Visibility';
+
 
 const Transition = forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -30,6 +37,9 @@ export default function UserProfile() {
     const [description, setDescription] = useState(loginUser?.description || "");
     const [userMobileNo, setUserMobileNo] = useState(loginUser?.mobileNo || '');
 
+    const fileInputRef = useRef(null);
+    const [selectedUpdateImage, setSelectedUpdateImage] = useState(null);
+
     const fetchUserProfile = async () => {
         try {
             setIsLoading(true);
@@ -48,8 +58,10 @@ export default function UserProfile() {
 
     useEffect(() => {
         if (!loginUser || !id) return;
+
         fetchUserProfile();
-    }, [loginUser]);
+        setSelectedUpdateImage(null);
+    }, [loginUser, id]);
 
     const userConnection = loginUser?.connections?.find(
         connection => connection?.user1?.username === id || connection?.user2?.username === id
@@ -91,15 +103,59 @@ export default function UserProfile() {
         setIsEditOn(false);
     }
 
-    const handleSaveButton = () => {
+    const handleSaveButton = async () => {
         try {
             setIsLoading(true);
-            
+            const response = await updateUserData(description, userMobileNo, loginUser?._id);
+
+            if (response.success) {
+                setUserProfile((prev) => ({
+                    ...prev,
+                    description: response.description,
+                    mobileNo: response.mobileNo
+                }));
+                enqueueSnackbar(response.message || "", { variant: 'success' });
+                handleCancelButton();
+            } else {
+                enqueueSnackbar(response.message || "Unable to edit user data, please try again.", { variant: 'error' });
+            }
         } catch (error) {
             enqueueSnackbar(error.message || "Unable to edit user data, please try again.", { variant: 'error' });
         } finally {
             setIsLoading(false);
         }
+    }
+
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const imageUrl = URL.createObjectURL(file);
+
+            setUserProfile(prev => ({ ...prev, image: imageUrl }));
+            setSelectedUpdateImage(file);
+        }
+    }
+
+    const handleUpdateImage = async () => {
+        try {
+            setIsLoading(true);
+            const response = await updateUserProfileImage(selectedUpdateImage, loginUser?._id);
+
+            if (response.success) {
+                setUserProfile((prev) => ({
+                    ...prev,
+                    image: response.imageUrl
+                }));
+                enqueueSnackbar(response.message || 'Profile image updated successfully.', { variant: 'success' });
+            } else {
+                enqueueSnackbar(response.message || 'Error updating profile image:', { variant: 'error' });
+            }
+        } catch (error) {
+            enqueueSnackbar(response.message || 'Something went wrong while updating profile image.', { variant: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+        setSelectedUpdateImage(null);
     }
 
     if (!loginUser) {
@@ -108,8 +164,8 @@ export default function UserProfile() {
 
     if (!userProfile) {
         return (
-            <div className='h-full border w-full flex justify-center items-center text-gray-500 text-3xl bg-gradient-to-r from-black to-gray-800'>
-                User Not Found, please try again.
+            <div className='h-full border w-full flex justify-center items-center text-gray-500 text-2xl bg-gradient-to-r from-black to-gray-800'>
+                User Not Found
             </div>
         )
     }
@@ -139,7 +195,7 @@ export default function UserProfile() {
 
                                     <div className="flex-1">
                                         <h3 className="text-lg font-semibold">{chatUser.username}</h3>
-                                        <p className="text-gray-600 text-sm line-clamp-1">{chatUser.description || "No description available"}</p>
+                                        <p className="text-gray-600 text-sm line-clamp-1">{(chatUser.description || "").length > 0 ? chatUser.description : "No description available"}</p>
                                     </div>
 
                                     <span className="text-sm bg-orange-500 text-white px-2 py-1 rounded-full">
@@ -198,7 +254,7 @@ export default function UserProfile() {
                     userProfile && (
                         <div className="w-[90%] md:w-[50%]">
 
-                            <div className="flex justify-center">
+                            <div className="relative flex justify-center w-fit mx-auto">
                                 <Avatar
                                     src={userProfile.image || "#"}
                                     // alt={userProfile.username}
@@ -209,7 +265,27 @@ export default function UserProfile() {
                                         setOpen(true);
                                     }}
                                 />
+
+                                <input
+                                    type="file"
+                                    accept='image/*'
+                                    ref={fileInputRef}
+                                    className='hidden'
+                                    onChange={handleFileChange} />
+                                {
+                                    (loginUser?.username === id) && <button
+                                        className='absolute bottom-0 right-0 text-gray-500 hover:text-green-500 cursor-pointer'
+                                        onClick={() => fileInputRef.current.click()} >
+                                        <Edit style={{ fontSize: '1.2rem' }} />
+                                    </button>
+                                }
                             </div>
+
+                            {
+                                (selectedUpdateImage) && <div className='flex justify-center mt-2'>
+                                    <button onClick={handleUpdateImage} className='text-sm border rounded px-5 py-1 text-green-500 bg-[#00800030] hover:bg-[#00800055] cursor-pointer'>Update</button>
+                                </div>
+                            }
 
                             <h2 className="text-2xl font-bold text-center mt-4">{userProfile.username}</h2>
                             <p className="text-center text-gray-400">{userProfile.email}</p>
@@ -273,7 +349,7 @@ export default function UserProfile() {
                                 <button onClick={handleCancelButton} className='border rounded px-4 py-1 bg-[#80808030] hover:bg-[#80808055] cursor-pointer'>Cancel</button>
                             </div>}
 
-                            {(loginUser?.username === id && !isEditOn) && <buttton onClick={() => setIsEditOn(true)} className="border mt-10 rounded px-5 py-1 text-gray-500 cursor-pointer">Edit</buttton>}
+                            {(loginUser?.username === id && !isEditOn) && <button onClick={() => setIsEditOn(true)} className="border rounded px-5 py-1 text-gray-500 cursor-pointer">Edit</button>}
 
                             <div className="grid grid-cols-3 justify-between mt-6 space-x-2">
                                 <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">

@@ -21,6 +21,7 @@ const userSchema = new Schema({
     },
     mobileNo: {
         type: String,
+        length: 10,
     },
     description: {
         type: String,

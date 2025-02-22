@@ -85,11 +85,11 @@ export default function LeftSidebar() {
                     PaperProps={{
                         sx: {
                             backgroundColor: 'transparent',
-                            color: 'gray'
+                            color: '#cccccc'
                         }
                     }}
                 >
-                    <div className="relative space-y-5 text-center bg-linear-to-r from-[#1010107d] to-[#ff9a0017] pt-10 border-b-3 border-orange-500">
+                    <div className="relative space-y-5 text-center bg-linear-to-r from-[#101010] to-[#ff9a006b] pt-10 border-b-3 border-orange-500">
                         {
                             sections.map((section, idx) => (
                                 <Link

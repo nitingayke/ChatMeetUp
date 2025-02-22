@@ -7,8 +7,10 @@ import { createServer } from "node:http";
 dotenv.config();
 
 import authRoute from './routes/authRoutes.js';
+import userRoute from './routes/userRoute.js';
 import chatRoute from './routes/chatRoutes.js';
 import userChat from './routes/userChatRoutes.js';
+
 import insertData from './models/helperData.js';
 import { connectToSocket } from './controllers/socketController.js';
 
@@ -26,6 +28,8 @@ app.use(cors({
 }));
 
 app.use('/user', authRoute);
+
+app.use('/user-update', userRoute);
 
 app.use("/chatRoute", chatRoute);
 
