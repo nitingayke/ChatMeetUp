@@ -10,6 +10,7 @@ import authRoute from './routes/authRoutes.js';
 import userRoute from './routes/userRoute.js';
 import chatRoute from './routes/chatRoutes.js';
 import userChat from './routes/userChatRoutes.js';
+import statusRoute from './routes/statusRoutes.js';
 
 import insertData from './models/helperData.js';
 import { connectToSocket } from './controllers/socketController.js';
@@ -34,6 +35,8 @@ app.use('/user-update', userRoute);
 app.use("/chatRoute", chatRoute);
 
 app.use("/chat-user", userChat);
+
+app.use("/status", statusRoute);
 
 app.get('/insertData', insertData);
 

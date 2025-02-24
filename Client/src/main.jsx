@@ -9,11 +9,17 @@ import App from './App.jsx';
 import LoaderContextProvider from './context/LoaderContextProvider.jsx';
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  // <StrictMode>
     <BrowserRouter>
       <UserContextProvider>
 
-        <SnackbarProvider maxSnack={3} >
+        <SnackbarProvider
+          maxSnack={3}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right'
+          }}
+        >
           <LoaderContextProvider>
 
             <App />
@@ -23,5 +29,5 @@ createRoot(document.getElementById('root')).render(
 
       </UserContextProvider>
     </BrowserRouter>
-  </StrictMode>
+  // </StrictMode>
 );

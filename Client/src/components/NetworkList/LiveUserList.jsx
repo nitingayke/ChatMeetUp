@@ -99,6 +99,9 @@ export default function LiveUserList() {
     const filteredUsers = liveUserData?.filter(user => {
         const matchesSearch = user.username.toLowerCase().includes(searchQuery.toLowerCase());
 
+        if (user?.username === loginUser?.username)
+            return false;
+
         if (selectedFilter === "All") {
             return matchesSearch;
         }
@@ -113,6 +116,7 @@ export default function LiveUserList() {
 
         return false;
     });
+
 
     return (
         <>
@@ -175,7 +179,6 @@ export default function LiveUserList() {
                             {filteredUsers?.length > 0 ? (
                                 <ul className="space-y-3 pb-15">
                                     {filteredUsers
-                                        .filter(user => user._id !== loginUser._id) // Exclude logged-in user
                                         .map((user) => (
                                             <li key={user?._id} className="p-3 bg-[#80808012] hover:bg-[#80808024] rounded-lg transition">
 
@@ -188,7 +191,7 @@ export default function LiveUserList() {
 
                                                     <div className="ml-3 flex-1">
                                                         <Link to={`/u/profile/${user?.username}`}>
-                                                            <h2 className="text-lg"  style={{fontWeight: '600'}}>{user?.username}</h2>
+                                                            <h2 className="text-lg" style={{ fontWeight: '600' }}>{user?.username}</h2>
                                                         </Link>
                                                         <p className="text-gray-400 text-sm">{user?.description || "No bio available"}</p>
                                                     </div>

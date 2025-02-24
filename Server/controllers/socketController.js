@@ -17,7 +17,7 @@ cloudinary.config({
     api_secret: CLOUDINARY_API_SECRET
 });
 
-const onlineUsers = new Map(); // {userId, socketId}
+const onlineUsers = new Map();
 
 const connectToSocket = (server) => {
 

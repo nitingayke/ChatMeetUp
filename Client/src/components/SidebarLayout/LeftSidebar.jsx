@@ -24,8 +24,8 @@ export default function LeftSidebar() {
 
     const sections = [
         { icon: MessageIcon, title: "Message", redirectLink: "/u/chatting" },
-        { icon: PersonIcon, title: "Private Status", redirectLink: "/private-status" },
-        { icon: PublicIcon, title: "Public Status", redirectLink: "/public-status" },
+        { icon: PersonIcon, title: "Private Status", redirectLink: "/status/private" },
+        { icon: PublicIcon, title: "Public Status", redirectLink: "/status/public" },
         { icon: GroupIcon, title: "Live Users", redirectLink: "/live-users" },
         { icon: ForumOutlinedIcon, title: "Global Message", redirectLink: "/global-message" },
         { icon: GroupAddIcon, title: "Join", redirectLink: "/u/join-requests" },

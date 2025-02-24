@@ -28,13 +28,13 @@ const ChatContextProvider = ({ children }) => {
         isDialogOpen, 
         setIsDialogOpen
     }), [
-        userChat, setUserChat,
-        messageSearchQuery, setMessageSearchQuery,
-        inputComponent, setInputComponent,
-        pollOptions, setPollOptions,
-        inputFile, setInputFile,
-        selectedUser, setSelectedUser,
-        isDialogOpen, setIsDialogOpen
+        userChat,
+        messageSearchQuery,
+        inputComponent,
+        pollOptions,
+        inputFile,
+        selectedUser,
+        isDialogOpen
     ]);
 
     return (

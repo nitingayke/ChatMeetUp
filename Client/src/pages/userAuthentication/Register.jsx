@@ -23,11 +23,13 @@ export default function Register() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        
         try {
             setIsLoading(true);
             const { email, username, password } = formData;
-            const response = await userRegisterService(username, email, password);
+            const usernameWithoutSpaces = username.replace(/\s/g, "");
+
+            const response = await userRegisterService(usernameWithoutSpaces, email, password);
 
             if (response.status === 200) {
                 enqueueSnackbar(response.data.message || 'User registered successfully.', { variant: "success" });

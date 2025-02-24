@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import ChatContextProvider from './context/ChatContextProvider';
 import ChatPage from './pages/ChatPage';
 import Login from './pages/userAuthentication/Login';
@@ -16,6 +16,7 @@ import UserProfile from './pages/NetworkProfile.jsx/UserProfile';
 import CommunityProfile from './pages/networkProfile.jsx/CommunityProfile';
 import LiveUserList from './components/NetworkList/LiveUserList';
 import JoinComponent from './components/JoinComponent';
+import StatusPage from './pages/StatusPage';
 
 function App() {
 
@@ -90,7 +91,8 @@ function App() {
                     <Route path='/playground/wallpaper' element={<BackgroundWallpaper />} />
 
                     <Route path='/live-users' element={<LiveUserList />} />
-
+                    
+                    <Route path='/status/:id' element={<StatusPage />} />
 
                     <Route path='*' element={<NotFound />} />
                 </Routes>

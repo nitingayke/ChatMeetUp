@@ -69,7 +69,7 @@ export default function ChatRoom() {
 
     if (isWaitingForLogin) {
         return (
-            <div className="h-full flex justify-center items-center">
+            <div className="h-full flex justify-center items-center p-3">
                 <CircularProgress sx={{ color: "white" }} />
                 <p className="text-gray-300 ml-3">Checking login status...</p>
             </div>
@@ -78,15 +78,15 @@ export default function ChatRoom() {
 
     if (!id) {
         return (
-            <div className="flex justify-center h-full items-center">
-                <h1 className="text-3xl font-bold text-gray-300 p-3 rounded bg-[#000000ab]">Please Select Chat</h1>
+            <div className="flex justify-center h-full items-center p-3">
+                <h1 className="text-3xl font-bold text-gray-300 rounded bg-[#000000ab]">Please Select Chat</h1>
             </div>
         );
     }
 
     if (!userChat) {
         return (
-            <div className='h-full flex justify-center text-center items-center'>
+            <div className='h-full flex justify-center text-center items-center p-3'>
                 <h1 className='text-3xl text-red-500 p-3 rounded bg-[#000000ab]'>UserChat not found, please try again!</h1>
             </div>
         )

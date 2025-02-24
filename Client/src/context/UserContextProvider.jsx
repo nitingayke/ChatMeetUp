@@ -16,9 +16,9 @@ const UserContextProvider = ({ children }) => {
         liveUserData, 
         setLiveUserData
     }), [
-        loginUser, setLoginUser,
-        onlineUsers, setOnlineUsers,
-        liveUserData, setLiveUserData
+        loginUser,
+        onlineUsers,
+        liveUserData
     ]);
 
     return (

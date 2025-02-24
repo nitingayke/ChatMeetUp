@@ -8,7 +8,7 @@ export default function LoaderContextProvider({ children }) {
     const contextValue = useMemo(() => ({
         isMessageProcessing,
         setIsMessageProcessing
-    }), [isMessageProcessing, setIsMessageProcessing]);
+    }), [isMessageProcessing]);
 
     return (
         <LoaderContext.Provider value={ contextValue } >
