@@ -1,11 +1,8 @@
 import { Router } from "express";
+import { upload } from '../utils/cloudinaryConfig.js'
 import wrapAsync from "../utils/wrapAsync.js";
-import multer from 'multer';
 
 import { updateUserData, updateUserProfileImage } from '../controllers/userController.js';
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
 
 const router = Router();
 

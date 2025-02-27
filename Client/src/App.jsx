@@ -19,6 +19,7 @@ import LiveUserList from './components/NetworkList/LiveUserList';
 import JoinComponent from './components/JoinComponent';
 import StatusPage from './pages/StatusPage';
 import StatusList from './components/NetworkList/StatusList';
+import AddStatus from './pages/AddStatus';
 
 function App() {
 
@@ -92,6 +93,7 @@ function App() {
                                 <Routes>
                                     <Route path='/:statusType' element={<StatusList />} />
                                     <Route path='/feed/:statusType' element={<StatusPage />} />
+                                    <Route path='/upload' element={<AddStatus />} />
                                 </Routes>
                             </StatusContextProvider>
                         } 

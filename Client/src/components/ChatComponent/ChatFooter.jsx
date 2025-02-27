@@ -79,6 +79,8 @@ export default function ChatFooter() {
             return;
         }
 
+        
+
         setIsMessageProcessing(true);
         socket.emit("add-chat-message", {
             message: (message || "").trim(),

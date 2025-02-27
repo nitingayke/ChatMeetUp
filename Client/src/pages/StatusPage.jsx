@@ -1,15 +1,12 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSnackbar } from 'notistack';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import StatusHeader from '../components/StatusComponent/StatusHeader';
 import StatusView from '../components/StatusComponent/StatusView';
 import StatusFooter from '../components/StatusComponent/StatusFooter'
-import StatusContext from '../context/StatusContext';
 import UserContext from '../context/UserContext';
 import AuthOptions from '../components/AuthOptions';
-import { getTotalStatus } from '../services/statusService';
 
 export default function StatusPage() {
 

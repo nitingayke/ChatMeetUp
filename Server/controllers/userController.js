@@ -59,9 +59,9 @@ const updateUserData = async (req, res) => {
 const updateUserProfileImage = async (req, res) => {
 
     const { userId } = req.body;
-    const file = req.file;
+    const fileUrl = req.file?.url || req.file?.path;
 
-    if (!file) {
+    if (!fileUrl) {
         return res.status(httpStatus.BAD_REQUEST).json({
             success: false,
             message: "No image file provided."
@@ -76,23 +76,13 @@ const updateUserProfileImage = async (req, res) => {
         });
     }
 
-    const uploadedImage = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-            { folder: 'ChatMeetUp_Message_Files', transformation: [{ width: 500, height: 500, crop: "limit" }] },
-            (error, result) => {
-                if (error) return reject(error);
-                resolve(result);
-            }
-        ).end(file.buffer);
-    });
-
-    user.image = uploadedImage.secure_url;
+    user.image = fileUrl;
     await user.save();
 
     return res.status(httpStatus.OK).json({
         success: true,
         message: 'Profile image updated successfully.',
-        imageUrl: uploadedImage.secure_url,
+        imageUrl: fileUrl,
     })
 }
 

@@ -16,7 +16,7 @@ const tempSchema = [
     {
         user: '67a1df8193a029541e029208',
         statusType: 'private',
-        Url: 'https://media.istockphoto.com/id/1317323736/photo/a-view-up-into-the-trees-direction-sky.jpg?s=612x612&w=0&k=20&c=i4HYO7xhao7CkGy7Zc_8XSNX_iqG0vAwNsrH1ERmw2Q=',
+        Url: 'https://img.freepik.com/premium-photo/wide-angle-shot-single-tree-growing-clouded-sky-sunset-surrounded-by-grass_181624-22807.jpg',
         message: 'Never seen such a sunset.',
         viewers: []
     },

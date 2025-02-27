@@ -6,6 +6,7 @@ import Chat from "../models/Chat.js";
 import Group from "../models/Group.js";
 import User from "../models/User.js";
 import Connection from "../models/Connection.js";
+import Status from "../models/Status.js";
 
 dotenv.config();
 
@@ -194,6 +195,26 @@ const connectToSocket = (server) => {
                 io.emit("mark-messages-read-success", { chatId, conversationId, userData });
             } catch (error) {
                 socket.emit("error-notification", { message: error.message || "Unable to mark messages as read." });
+            }
+        });
+
+        socket.on('status-viewed', async ({ statusId, userId }) => {
+
+            try {
+                const updatedStatus = await Status.findByIdAndUpdate(
+                    statusId,
+                    { $addToSet: { viewers: userId } },
+                    { new: true }
+                );
+
+                if(!updatedStatus) {
+                    return socket.emit("error-notification", { message: error.message || "Status not found." });
+                }
+
+                socket.emit('status-view-updated', { statusId, viewers: updatedStatus.viewers });
+
+            } catch (error) {
+                socket.emit("error-notification", { message: error.message || "Error updating status views." });
             }
         });
 

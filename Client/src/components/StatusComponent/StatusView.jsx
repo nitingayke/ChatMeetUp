@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import StatusContext from '../../context/StatusContext';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -9,12 +8,21 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CircularProgress from '@mui/material/CircularProgress';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import StatusContext from '../../context/StatusContext';
+import UserContext from '../../context/UserContext';
+import { socket } from '../../services/socketService';
+
 
 export default function StatusView() {
 
     const { statusType } = useParams();
     const navigate = useNavigate();
-    const { isVideoPlaying, setIsVideoPlaying, isVideoMuted, selectedStatus, selectedStatusIdx, setSelectedStatusIdx, currentPlayingStatus, setCurrentPlayingStatus } = useContext(StatusContext);
+    const { loginUser } = useContext(UserContext);
+    const {
+        isVideoPlaying, setIsVideoPlaying, isVideoMuted,
+        selectedStatus, setSelectedStatus, selectedStatusIdx,
+        setSelectedStatusIdx, setCurrentPlayingStatus
+    } = useContext(StatusContext);
 
     const videoRef = useRef(null);
 
@@ -25,27 +33,43 @@ export default function StatusView() {
     const [isLoading, setIsLoading] = useState(false);
     const [imageTimeout, setImageTimeout] = useState(null);
 
+    const handleStatusViewUpdated = useCallback(({ statusId, viewers }) => {
+        setSelectedStatus((prevStatuses) =>
+            prevStatuses.map((status) =>
+                status._id === statusId ? { ...status, viewers } : status
+            )
+        );
+    }, [setSelectedStatus]);
+
+    useEffect(() => {
+
+        socket.on("status-view-updated", handleStatusViewUpdated);
+
+        return () => {
+            socket.off("status-view-updated", handleStatusViewUpdated);
+        };
+    }, [handleStatusViewUpdated]);
+
+
     useEffect(() => {
         if (videoRef.current) {
-            if (isVideoPlaying) {
-                videoRef.current.play();
-            } else {
-                videoRef.current.pause();
-            }
             videoRef.current.muted = isVideoMuted;
+            isVideoPlaying ? videoRef.current.play() : videoRef.current.pause();
         }
     }, [isVideoMuted, isVideoPlaying]);
 
     useEffect(() => {
-
         if (!selectedStatus || selectedStatusIdx >= selectedStatus.length || selectedStatusIdx < 0) {
-            return navigate(`/status/${statusType}`);
+            navigate(`/status/${statusType}`);
+            return;
         }
 
-        setCurrentPlayingStatus(selectedStatus[selectedStatusIdx]);
-        setLocalStatus(selectedStatus[selectedStatusIdx]);
-
-    }, [selectedStatusIdx]);
+        const newStatus = selectedStatus[selectedStatusIdx];
+        if (localStatus?._id !== newStatus._id) {
+            setCurrentPlayingStatus(newStatus);
+            setLocalStatus(newStatus);
+        }
+    }, [selectedStatusIdx, selectedStatus, navigate, statusType]);
 
     const getMediaType = (url) => {
         if (!url) return "unknown";
@@ -116,6 +140,32 @@ export default function StatusView() {
             videoRef.current.load();
         }
     }
+
+    useEffect(() => {
+        if (!localStatus?._id || !loginUser) return;
+
+        if (!localStatus?.viewers?.includes(loginUser._id)) {
+
+            socket.emit('status-viewed', {
+                statusId: localStatus._id,
+                userId: loginUser._id
+            });
+
+            setSelectedStatus((prevStatuses) =>
+                prevStatuses.map(status =>
+                    status._id === localStatus._id
+                        ? {
+                            ...status,
+                            viewers: status.viewers.includes(loginUser._id)
+                                ? status.viewers
+                                : [...status.viewers, loginUser._id]
+                        }
+                        : status
+                )
+            );
+        }
+
+    }, [localStatus, socket]);
 
     const handlePreviousStatus = () => {
         if (selectedStatusIdx == 0) {
@@ -219,7 +269,7 @@ export default function StatusView() {
             </button>
 
             {
-               (mediaType === 'video') && <button
+                (mediaType === 'video') && <button
                     onClick={() => setIsVideoPlaying(!isVideoPlaying)}
                     className='absolute left-[25%] h-full w-[50%] flex justify-center items-center group cursor-pointer'>
                     <span className="hidden justify-center items-center rounded-full bg-[#80808040] w-12 h-12 group-hover:flex">

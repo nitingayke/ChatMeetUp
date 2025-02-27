@@ -23,10 +23,12 @@ const server = createServer(app);
 connectToSocket(server);
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors({
     origin: ['http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
 }));
+
 
 app.use('/user', authRoute);
 
@@ -46,7 +48,7 @@ app.get('*', (req, res) => {
 
 app.use((err, req, res, next) => {
     return res.status(err.status || 500).json({
-        success: false, 
+        success: false,
         message: err.message || 'Internal Server Error',
     });
 });
@@ -58,7 +60,7 @@ const startServer = async () => {
     } catch (error) {
         console.error('MongoDB connection error:', error);
     }
-    
+
     server.listen(PORT, () => {
         console.log(`App has been listening on port: ${PORT}`);
     });

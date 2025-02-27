@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState, useCallback } from "react";
+import React, { useContext, useEffect, useState, useCallback, useMemo } from "react";
 import SearchIcon from "@mui/icons-material/Search";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import CircularProgress from "@mui/material/CircularProgress";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
@@ -16,11 +16,11 @@ import StatusContext from "../../context/StatusContext";
 import UserContext from "../../context/UserContext";
 import AuthOptions from "../AuthOptions";
 import { getTotalStatus } from "../../services/statusService";
-
 import { useSnackbar } from "notistack";
 
 export default function StatusList() {
-    
+
+    const navigate = useNavigate();
     const { statusType } = useParams();
     const { enqueueSnackbar } = useSnackbar();
 
@@ -28,28 +28,20 @@ export default function StatusList() {
     const { totalStatus, setTotalStatus, setSelectedStatus, setSelectedStatusIdx } = useContext(StatusContext);
 
     const [anchorEl, setAnchorEl] = React.useState(null);
-    const open = Boolean(anchorEl);
-
     const [isLoading, setIsLoading] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState("Missed");
     const [localStatus, setLocalStatus] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
 
-    const handleClose = (filter) => {
-
-        if (filter)
-            setSelectedFilter(filter);
-
-        setAnchorEl(null);
-    };
+    const open = Boolean(anchorEl);
 
     const handleTotalStatus = useCallback(async () => {
         try {
             setIsLoading(true);
 
             const response = await getTotalStatus(statusType);
-            
-            if (response.success) {    
+
+            if (response.success) {
                 setTotalStatus(response.totalStatus);
             } else {
                 enqueueSnackbar(response.message || "Failed to fetch statuses", { variant: "error" });
@@ -64,6 +56,7 @@ export default function StatusList() {
     useEffect(() => {
         if (!loginUser) return;
         handleTotalStatus();
+
     }, [loginUser, statusType, handleTotalStatus]);
 
     useEffect(() => {
@@ -71,16 +64,32 @@ export default function StatusList() {
             const filteredStatus = totalStatus.filter(status => !status?.viewers?.includes(loginUser?._id))
             setLocalStatus(filteredStatus);
             setSelectedStatus(filteredStatus);
-        } else {
+        } else if (selectedFilter === 'Watched') {
             const filteredStatus = totalStatus.filter(status => status?.viewers?.includes(loginUser?._id))
             setLocalStatus(filteredStatus);
             setSelectedStatus(filteredStatus);
         }
     }, [totalStatus, selectedFilter, loginUser]);
 
-    const filteredStatus = localStatus.filter(status => status?.user?.username?.includes(searchQuery)) || [];
+    useEffect(() => {
+        if (selectedFilter === "Upload") {
+            navigate("/status/upload");
+            setSelectedFilter("Missed");
+        }
+    }, [selectedFilter, navigate]);
 
-    if (!statusType || statusType !== "private" && statusType !== "public") {
+    const filteredStatus = useMemo(() => {
+        return localStatus?.filter(status =>
+            status?.user?.username?.toLowerCase().includes(searchQuery.toLowerCase())
+        ) || [];
+    }, [localStatus, searchQuery]);
+
+    const handleClose = (filter) => {
+        if (filter) setSelectedFilter(filter);
+        setAnchorEl(null);
+    };
+
+    if (!statusType || !["private", "public"].includes(statusType)) {
         return (
             <div className="w-full h-full text-gray-300 flex justify-center items-center text-3xl bg-gradient-to-b from-black to-gray-800">
                 <span className="text-red-500 pe-1">404</span> | Not Found
@@ -140,6 +149,7 @@ export default function StatusList() {
                     >
                         <MenuItem onClick={() => handleClose("Watched")}>Watched</MenuItem>
                         <MenuItem onClick={() => handleClose("Missed")}>Missed</MenuItem>
+                        <MenuItem onClick={() => handleClose("Upload")}>Upload</MenuItem>
                     </Menu>
                 </header>
 
@@ -159,7 +169,10 @@ export default function StatusList() {
                                     {
                                         filteredStatus.map((status, idx) => (
                                             <li key={status._id} className="w-full">
-                                                <Link onClick={() => setSelectedStatusIdx(idx)} to={status?._id ? `/status/feed/${statusType}` : "#"} className="w-full flex items-center p-3 rounded bg-[#47474745] hover:bg-[#47474775]">
+                                                <Link onClick={() => {
+                                                    setSelectedStatus(filteredStatus);
+                                                    setSelectedStatusIdx(idx);
+                                                }} to={status?._id ? `/status/feed/${statusType}` : "#"} className="w-full flex items-center p-3 rounded bg-[#47474745] hover:bg-[#47474775]">
                                                     <Avatar
                                                         sx={{ width: 50, height: 50 }}
                                                         className={`me-4 ${!status?.viewers?.includes(loginUser?._id) && 'border-3 border-green-400'}`}
