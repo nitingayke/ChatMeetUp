@@ -21,11 +21,6 @@ export default function StatusFooter() {
             return;
         }
 
-        const newMessage = {
-            status: "sent",
-            message,
-            
-        }
         enqueueSnackbar(`Status: Send, Message: ${message}`, { variant: 'info' });
         setMessage(""); 
     };

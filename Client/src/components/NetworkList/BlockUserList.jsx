@@ -95,9 +95,10 @@ export default function BlockUserList() {
 
     return (
         <>
-            <div className='block md:hidden bg-gradient-to-r from-black to-gray-800'>
+            <div className='bg-gradient-to-r from-black to-gray-800 md:bg-none'>
                 <LeftSidebar />
             </div>
+
             <div className='h-screen md:flex flex-col items-center w-full text-white min-h-screen bg-gradient-to-r from-black to-gray-800 overflow-auto'>
 
                 <header className='sm:flex items-center justify-center sticky top-0 w-full p-4 z-10 bg-gradient-to-r from-black to-gray-800 sm:space-x-2'>

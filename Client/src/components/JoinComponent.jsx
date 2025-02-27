@@ -181,9 +181,10 @@ export default function JoinComponent() {
 
     return (
         <>
-            <div className='block md:hidden bg-gradient-to-r from-black to-gray-800'>
+            <div className='bg-gradient-to-r from-black to-gray-800 md:bg-none'>
                 <LeftSidebar />
             </div>
+
             <div className='flex-1 bg-gradient-to-r from-black to-gray-800 h-full overflow-auto'>
 
                 <header className='h-fit sticky top-0 p-4 md:flex items-center justify-center w-full z-10 bg-gradient-to-r from-black to-gray-800 sm:space-x-2'>
@@ -192,7 +193,7 @@ export default function JoinComponent() {
                             style={{ fontWeight: "800" }}>
                             Join
                         </h1>
-                        <div className='block md:hidden text-gray-300 flex items-center space-x-1'>
+                        <div className='flex md:hidden text-gray-300 items-center space-x-1'>
                             <span className='text-sm'>{filteredData?.length || 0}</span>
                             <GroupIcon sx={{ fontSize: '1.2rem' }} />
                         </div>
@@ -204,7 +205,7 @@ export default function JoinComponent() {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search users..."
-                                className='flex-1 p-1 text-sm md:min-w-[32rem]' />
+                                className='flex-1 p-1 text-sm md:w-[22rem] lg:w-[31rem]' />
                             <button className='py-1 px-2 text-gray-500 bg-gray-800 rounded-e hover:bg-gray-700 hover:text-white cursor-pointer'>
                                 <SearchIcon sx={{ fontSize: "1.3rem" }} />
                             </button>
@@ -237,7 +238,7 @@ export default function JoinComponent() {
                             <CircularProgress size={30} />
                             <span>Loading...</span>
                         </div>
-                        : <div className="p-4 mx-auto flex-1 md:w-190">
+                        : <div className="p-4 mx-auto flex-1 md:w-[37rem] lg:w-[46rem]">
                             {filteredData?.length > 0 ? (
                                 <ul className="space-y-3 pb-15">
                                     {
