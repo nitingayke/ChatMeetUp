@@ -207,7 +207,7 @@ const connectToSocket = (server) => {
                     { new: true }
                 );
 
-                if(!updatedStatus) {
+                if (!updatedStatus) {
                     return socket.emit("error-notification", { message: error.message || "Status not found." });
                 }
 
@@ -215,6 +215,42 @@ const connectToSocket = (server) => {
 
             } catch (error) {
                 socket.emit("error-notification", { message: error.message || "Error updating status views." });
+            }
+        });
+
+        socket.on('status-message', async ({ userId, remoteUserId, message, connectionId }) => {
+
+            try {
+                const newMessage = new Chat({
+                    sender: userId,
+                    message,
+                    type: 'status'
+                });
+
+                await newMessage.save();
+
+                await Connection.findByIdAndUpdate(connectionId, {
+                    $push: { messages: newMessage._id }
+                });
+
+                const toRemoteUserSocketId = onlineUsers.get(remoteUserId);
+
+                if (toRemoteUserSocketId) {
+                    const populatedMessage = await Chat.findById(newMessage._id).populate({
+                        path: 'sender',
+                        select: 'username image description',
+                    });
+
+                    io.to(toRemoteUserSocketId).emit('add-chat-message-success', {
+                        recipientId: connectionId,
+                        data: populatedMessage,
+                    });
+                }
+
+                socket.emit("message-sent", { message: "Message sent successfully:" });
+
+            } catch (error) {
+                socket.emit("error-notification", { message: error.message || "Unable to send message." });
             }
         });
 

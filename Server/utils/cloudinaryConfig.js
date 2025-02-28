@@ -15,7 +15,8 @@ const storage = new CloudinaryStorage({
     cloudinary,
     params: {
         folder: "ChatMeetUp_Message_Files",
-        allowed_formats: ["jpg", "jpeg", "png", "mp4", "mov", "avi", "webm"],
+        allowed_formats: ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "ico",
+            "webp", "mp4", "mov", "avi", "webm", "mkv", "flv", "wmv", "mpeg", "3gp"],
         resource_type: "auto",
     },
 });

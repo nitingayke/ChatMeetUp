@@ -1,14 +1,39 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import EmojiPicker from "emoji-picker-react";
 import { IconButton } from "@mui/material";
 import InsertEmoticonIcon from "@mui/icons-material/InsertEmoticon";
 import SendIcon from "@mui/icons-material/Send";
 import { useSnackbar } from "notistack";
+import UserContext from "../../context/UserContext";
+import StatusContext from "../../context/StatusContext";
+import { useNavigate } from "react-router-dom";
+import { socket } from "../../services/socketService";
 
 export default function StatusFooter() {
+
+    const navigate = useNavigate();
+
     const { enqueueSnackbar } = useSnackbar();
+    const { loginUser } = useContext(UserContext);
+    const { currentPlayingStatus } = useContext(StatusContext);
+
     const [message, setMessage] = useState("");
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+    const handleMessageSend = ({ message }) => {
+        enqueueSnackbar(message, { variant: 'success' });
+    };
+
+    useEffect(() => {
+
+
+        socket.on('message-sent', handleMessageSend);
+
+        return () => {
+            socket.off('message-sent', handleMessageSend);
+        };
+    }, []);
+
 
     const onEmojiClick = (emojiData) => {
         setMessage((prev) => prev + emojiData.emoji);
@@ -16,13 +41,35 @@ export default function StatusFooter() {
     };
 
     const sendMessage = () => {
+
         if (!message.trim()) {
             enqueueSnackbar("Please enter a message", { variant: "warning" });
             return;
         }
 
-        enqueueSnackbar(`Status: Send, Message: ${message}`, { variant: 'info' });
-        setMessage(""); 
+        const connection = loginUser.connections.find(c =>
+            c.user1._id === currentPlayingStatus?.user?._id || c.user2._id === currentPlayingStatus?.user?._id
+        );
+
+        if (!connection) {
+            enqueueSnackbar('You are not connected with this user. Create a new connection.', {
+                variant: 'info'
+            });
+            navigate(`/u/profile/${currentPlayingStatus?.user?.username}`);
+            return
+        }
+
+        socket.emit('status-message', {
+            userId: loginUser._id,
+            remoteUserId: connection.user1._id === loginUser._id
+                ? connection.user2._id
+                : connection.user1._id,
+            message: message,
+            connectionId: connection._id
+        });
+
+
+        setMessage("");
     };
 
     return (
@@ -50,7 +97,7 @@ export default function StatusFooter() {
 
             <IconButton
                 onClick={sendMessage}
-                disabled={!message.trim()} 
+                disabled={!message.trim()}
                 sx={{
                     color: message.trim() ? "#1E88E5" : "#757575",
                     cursor: message.trim() ? "pointer" : "default",

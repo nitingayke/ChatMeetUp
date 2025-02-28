@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -8,14 +8,11 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SentimentVerySatisfiedIcon from '@mui/icons-material/SentimentVerySatisfied';
 import { Modal, Box, CircularProgress, Tooltip } from "@mui/material";
+import EmojiPicker from 'emoji-picker-react';
 
 import ChatContext from '../../context/ChatContext.js';
 import { formatTime } from '../../utils/helpers.js';
 import UserContext from '../../context/UserContext.js';
-
-import EmojiPicker from 'emoji-picker-react';
-
-
 
 import { socket } from '../../services/socketService.js';
 import { useSnackbar } from 'notistack';
@@ -84,7 +81,6 @@ export function ChatMain() {
             setIsMessageProcessing(false);
         }
     };
-
 
     const updateMessageReaction = (msg, userId, emoji) => {
         const updatedReactions = msg.reactions ? [...msg.reactions] : [];
@@ -265,6 +261,7 @@ export function ChatMain() {
         });
     }
 
+    // handle if user read message
     useEffect(() => {
         if (!observer.current) {
             observer.current = new IntersectionObserver((entries) => {
@@ -295,13 +292,14 @@ export function ChatMain() {
             chat.readBy.some(userData => userData?._id?.toString() === loginUser._id?.toString())
         );
     };
-
+ 
+    // scroll those message are already read
     useEffect(() => {
         if (!localChat?.messages?.length) return;
 
         const lastReadMsgIdx = getLastReadMessageIndex();
 
-        if (lastReadMsgIdx !== -1 && chatMessageRefs.current[lastReadMsgIdx]) {
+        if (lastReadMsgIdx >= 0 && chatMessageRefs.current[lastReadMsgIdx]) {
             chatMessageRefs.current[lastReadMsgIdx].scrollIntoView({ behavior: "smooth", block: "start" });
         }
     }, [localChat?.messages?.length]);

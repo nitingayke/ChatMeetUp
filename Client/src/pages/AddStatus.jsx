@@ -1,7 +1,9 @@
 import React, { useContext, useState } from 'react';
 import { Select, MenuItem } from "@mui/material";
 import CircularProgress from '@mui/material/CircularProgress';
+import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
 import { useSnackbar } from 'notistack';
+import EmojiPicker from 'emoji-picker-react';
 
 import { uploadNewUserStatus } from '../services/statusService';
 import UserContext from '../context/UserContext';
@@ -17,9 +19,15 @@ export default function AddStatus() {
   const [message, setMessage] = useState("");
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
+  };
+
+  const handleEmojiClick = (emojiObject) => {
+    setMessage((prevMessage) => prevMessage + emojiObject.emoji);
+    setShowEmojiPicker(false);
   };
 
   const checkFileSize = (file) => {
@@ -116,13 +124,37 @@ export default function AddStatus() {
             <MenuItem value="private">Private</MenuItem>
           </Select>
 
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Enter Message"
-            className="border w-full rounded p-2 text-white bg-transparent focus:outline-none resize-none"
-            rows={3}
-          ></textarea>
+          <div>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Enter Message"
+              className="border w-full rounded p-2 text-white bg-transparent focus:outline-none resize-none"
+              rows={3}
+            ></textarea>
+
+            <button
+              className='text-green-500 py-1 px-2 rounded bg-gray-800 cursor-pointer'
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            >
+              <SentimentSatisfiedAltIcon sx={{ fontSize: '1.5rem' }} />
+            </button>
+
+            {showEmojiPicker && (
+              <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 z-50 p-2">
+                <div className="bg-white p-2 rounded-lg shadow-lg">
+                  <EmojiPicker onEmojiClick={handleEmojiClick} />
+                  <button
+                    className="mt-2 w-full py-1 bg-red-500 text-white rounded"
+                    onClick={() => setShowEmojiPicker(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
 
           <div className='flex justify-center'>
             <button

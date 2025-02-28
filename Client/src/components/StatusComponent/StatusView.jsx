@@ -31,7 +31,6 @@ export default function StatusView() {
     const [localStatus, setLocalStatus] = useState(null);
     const [mediaType, setMediaType] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [imageTimeout, setImageTimeout] = useState(null);
 
     const handleStatusViewUpdated = useCallback(({ statusId, viewers }) => {
         setSelectedStatus((prevStatuses) =>
@@ -49,7 +48,6 @@ export default function StatusView() {
             socket.off("status-view-updated", handleStatusViewUpdated);
         };
     }, [handleStatusViewUpdated]);
-
 
     useEffect(() => {
         if (videoRef.current) {
@@ -109,28 +107,7 @@ export default function StatusView() {
             };
 
             playVideo();
-        } else if (computedMediaType === 'image') {
-
-            setProgress(0);
-            const timeout = setTimeout(() => {
-                handleNextStatus();
-            }, 15000);
-
-            setImageTimeout(timeout);
-
-            const interval = setInterval(() => {
-                setProgress((prev) => {
-                    const newProgress = prev + (100 / 15) * 0.5;
-                    return newProgress >= 100 ? 100 : newProgress;
-                })
-            }, 500);
-
-            return () => {
-                clearTimeout(timeout);
-                clearInterval(interval);
-            }
         }
-
     }, [localStatus?.Url]);
 
     const resetVideo = () => {
@@ -174,7 +151,6 @@ export default function StatusView() {
 
         resetVideo();
         setProgress(0);
-        clearTimeout(imageTimeout);
         setSelectedStatusIdx(prev => prev - 1);
     }
 
@@ -185,7 +161,6 @@ export default function StatusView() {
 
         resetVideo();
         setProgress(0);
-        clearTimeout(imageTimeout);
         setSelectedStatusIdx(prev => prev + 1);
     }
 
@@ -211,6 +186,7 @@ export default function StatusView() {
                     className="rounded-lg"
                     preload='auto'
                     onTimeUpdate={handleVideoTimeUpdate}
+                    muted={isVideoMuted}
                     onEnded={handleNextStatus}
                     autoPlay={isVideoPlaying}
                 >
@@ -268,19 +244,17 @@ export default function StatusView() {
                 </span>
             </button>
 
-            {
-                (mediaType === 'video') && <button
-                    onClick={() => setIsVideoPlaying(!isVideoPlaying)}
-                    className='absolute left-[25%] h-full w-[50%] flex justify-center items-center group cursor-pointer'>
-                    <span className="hidden justify-center items-center rounded-full bg-[#80808040] w-12 h-12 group-hover:flex">
-                        {isVideoPlaying ? (
-                            <PauseIcon sx={{ fontSize: '1.8rem' }} />
-                        ) : (
-                            <PlayArrowIcon sx={{ fontSize: '1.8rem' }} />
-                        )}
-                    </span>
-                </button>
-            }
+            <button
+                onClick={() => setIsVideoPlaying(!isVideoPlaying)}
+                className='absolute left-[25%] h-full w-[50%] flex justify-center items-center group cursor-pointer'>
+                <span className="hidden justify-center items-center rounded-full bg-[#80808040] w-12 h-12 group-hover:flex">
+                    {isVideoPlaying ? (
+                        <PauseIcon sx={{ fontSize: '1.8rem' }} />
+                    ) : (
+                        <PlayArrowIcon sx={{ fontSize: '1.8rem' }} />
+                    )}
+                </span>
+            </button>
 
             <button
                 onClick={handleNextStatus}

@@ -6,6 +6,11 @@ const chatSchema = new Schema({
         ref: 'User',
         required: true,
     },
+    type: {
+        type: String,
+        enum: ['chat', 'status'],
+        default: 'chat', 
+    },
     attachments: {
         image: { type: String },
         pdf: { type: String },
