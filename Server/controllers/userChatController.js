@@ -227,7 +227,9 @@ const userJoinGroup = async (req, res) => {
     group.members.push({ user: userId, role: 'member' });
     user.groups.push(groupId);
 
-    const clearedChatIndex = user.clearedChats.findIndex(cc => cc.chatId === groupId);
+    const clearedChatIndex = user.clearedChats.findIndex(cc =>
+        cc.chatId.toString() === groupId.toString()
+    );
 
     if (clearedChatIndex !== -1) {
         user.clearedChats[clearedChatIndex].clearedAt = new Date();

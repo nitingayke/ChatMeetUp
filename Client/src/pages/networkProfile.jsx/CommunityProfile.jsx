@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useState, forwardRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { PersonAdd } from "@mui/icons-material";
+import { PersonAdd, GroupAdd, ExitToApp, Close } from "@mui/icons-material";
 import UserContext from '../../context/UserContext';
 import AuthOptions from '../../components/AuthOptions';
-import { Avatar, CircularProgress, Dialog, DialogContent, Slide } from '@mui/material';
-import { GroupAdd, ExitToApp } from "@mui/icons-material";
+import { Avatar, CircularProgress, Dialog, DialogContent, DialogActions, DialogTitle, Button, Slide } from '@mui/material';
 import { connectToUser, getGroupProfile, joinGroup, leaveGroup } from '../../services/userchatService';
 import LeftSidebar from '../../components/SidebarLayout/LeftSidebar';
+import { userExitGroup } from '../../services/chatService';
 
 const Transition = forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -24,6 +24,9 @@ export default function CommunityProfile() {
     const [isLoading, setIsLoading] = useState(false);
     const [open, setOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState("");
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [deleteUser, setDeleteUser] = useState(null);
 
     const fetchGroupProfile = async () => {
         try {
@@ -31,6 +34,11 @@ export default function CommunityProfile() {
             const response = await getGroupProfile(id);
             if (response.success) {
                 setGroupProfile(response.group);
+                const member = response?.group?.members.find(member => member.user._id === loginUser?._id);
+   
+                if(member) {
+                    setIsAdmin(member?.role === 'admin');
+                }
             } else {
                 enqueueSnackbar(response.message || "Failed to fetch group data", { variant: 'error' });
             }
@@ -44,7 +52,7 @@ export default function CommunityProfile() {
     useEffect(() => {
         if (!loginUser || !id) return;
         fetchGroupProfile();
-    }, [loginUser]);
+    }, [loginUser || id]);
 
     const isUserInGroup = groupProfile?.members?.some(member => member?.user?._id === loginUser?._id);
     const connectedUsersId = loginUser?.connections?.map(connection => {
@@ -56,7 +64,7 @@ export default function CommunityProfile() {
         if (connectedUsersId.includes(remoteId)) {
             enqueueSnackbar('User are already joined.', { variant: 'info' });
             const userConnection = loginUser?.connections?.find(
-                connection => connection?.user1?.username === id || connection?.user2?.username === id
+                connection => connection?.user1?._id === remoteId || connection?.user2?._id === remoteId
             );
             navigate(`/u/chatting/${userConnection?._id}`);
             return;
@@ -111,6 +119,8 @@ export default function CommunityProfile() {
                     ...prev,
                     members: prev.members.filter(member => member?.user._id !== response?.userId),
                 }));
+
+                setIsAdmin(false);
                 enqueueSnackbar(`You left '${groupProfile?.name}' successfully.`, { variant: 'success' });
             } else {
                 enqueueSnackbar(response.message || 'Failed to leave the group.', { variant: 'error' });
@@ -122,6 +132,38 @@ export default function CommunityProfile() {
         }
     };
 
+    const handleNotifyDeleteUser = async (user) => {
+        setDeleteUser(user);
+        setIsDialogOpen(true);
+    }
+
+    const handleUserRemove = async () => {
+
+        if (!deleteUser?.user || !groupProfile?._id) {
+            enqueueSnackbar("Invalid user or group data.", { variant: "error" });
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            const response = await userExitGroup(groupProfile?._id, deleteUser?.user?._id);
+
+            if (response.success) {
+                setGroupProfile((prev) => ({
+                    ...prev,
+                    members: prev?.members?.filter((member) => member?.user?._id !== deleteUser?.user?._id)
+                }));
+                enqueueSnackbar("Successfully removed user from the group.", { variant: "success" });
+            } else {
+                enqueueSnackbar(response.message || "Failed to exit the group.", { variant: "error" });
+            }
+        } catch (error) {
+            enqueueSnackbar("Something went wrong. Please try again.", { variant: "error" });
+        } finally {
+            setIsLoading(false);
+            setIsDialogOpen(false);
+        }
+    }
 
     if (!loginUser) {
         return <AuthOptions />;
@@ -129,16 +171,16 @@ export default function CommunityProfile() {
 
     if (!groupProfile) {
         return (
-            <div className='border h-full w-full flex justify-center items-center text-gray-500 text-3xl bg-gradient-to-r from-black to-gray-800'>
-                Group Not Found, please try again.
+            <div className='border h-full w-full flex justify-center items-center p-3 text-gray-500 text-xl text-center bg-gradient-to-r from-black to-gray-800'>
+                <h1>Group Not Found, please try again.</h1>
             </div>
         )
     }
 
     return (
         <div className='w-full overflow-auto h-full bg-gradient-to-r from-black to-gray-800'>
-            <div className='block md:hidden sticky top-0 z-10 bg-gradient-to-r from-black to-gray-800'> 
-                <LeftSidebar/>
+            <div className='block md:hidden sticky top-0 z-10 bg-gradient-to-r from-black to-gray-800'>
+                <LeftSidebar />
             </div>
 
             <div className="w-full p-4 text-white flex flex-col items-center py-10 overflow-auto">
@@ -183,7 +225,7 @@ export default function CommunityProfile() {
                             <div className="mt-6">
                                 <h3 className="text-lg font-semibold">Group Members ({groupProfile.members.length})</h3>
                                 <ul className="mt-3 space-y-2">
-                                    {groupProfile?.members?.slice()?.reverse().map((member) => (
+                                    {groupProfile?.members?.map((member) => (
                                         <li key={member.user._id} className="flex items-center gap-4 p-2 border border-gray-700 rounded-lg shadow-sm">
                                             <Avatar src={member.user.image} alt="User" className="w-10 h-10" />
                                             <div className="flex-1">
@@ -191,14 +233,20 @@ export default function CommunityProfile() {
                                                 <p className={`text-sm ${member.role === 'admin' ? 'text-orange-500' : 'text-gray-400'}`}>
                                                     {member.role}
                                                 </p>
+                                                {
+                                                    (loginUser?._id !== member?.user?._id && isAdmin) && <button onClick={() => handleNotifyDeleteUser(member)} className='text-sm text-red-500 bg-[#ff000020] flex items-center border px-1 mt-1 rounded cursor-pointer'>
+                                                        <Close className='text-sm' sx={{ fontSize: '1rem' }} />
+                                                        <span>Remove</span>
+                                                    </button>
+                                                }
                                             </div>
                                             {
                                                 (loginUser?._id !== member?.user?._id) && ((connectedUsersId?.includes(member.user._id))
-                                                    ? <button className='rounded px-3 py-1 flex items-center cursor-pointer bg-[#80808023]'>
-                                                        <PersonAdd sx={{ fontSize: '1.2rem' }} className='me-1' />Connected
+                                                    ? <button className='rounded px-3 py-2 flex items-center cursor-pointer bg-[#80808023] text-sm'>
+                                                        <PersonAdd sx={{ fontSize: '1rem' }} className='me-1' />Connected
                                                     </button>
-                                                    : <button onClick={() => handleConnectUser(member.user._id)} className='rounded px-3 py-1 flex items-center cursor-pointer bg-green-500 hover:bg-green-600'>
-                                                        <PersonAdd sx={{ fontSize: '1.2rem' }} className='me-1' />Join
+                                                    : <button onClick={() => handleConnectUser(member.user._id)} className='rounded px-3 py-1 flex items-center cursor-pointer bg-green-500 hover:bg-green-600 text-sm'>
+                                                        <PersonAdd sx={{ fontSize: '1rem' }} className='me-1' />Join
                                                     </button>)
                                             }
                                         </li>
@@ -235,6 +283,29 @@ export default function CommunityProfile() {
                             sx={{ width: "15rem", height: "15rem" }}
                         />
                     </DialogContent>
+                </Dialog>
+
+                <Dialog
+                    open={isDialogOpen}
+                    TransitionComponent={Transition}
+                    keepMounted
+                    onClose={() => setIsDialogOpen(false)}
+                    aria-describedby="alert-dialog-slide-description"
+                >
+
+                    <DialogTitle>Remove User from {groupProfile?.name}?</DialogTitle>
+                    <DialogContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <Avatar src={deleteUser?.user?.image} alt={deleteUser?.user?.username} sx={{ width: 50, height: 50 }} />
+                        <span className='text-xl' style={{fontWeight: '800'}}>{deleteUser?.user?.username}</span>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setIsDialogOpen(false)} sx={{ color: "gray", borderColor: "gray" }} variant="outlined">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleUserRemove} sx={{ backgroundColor: "red", color: "white" }} variant="contained">
+                            Delete
+                        </Button>
+                    </DialogActions>
                 </Dialog>
             </div>
         </div>

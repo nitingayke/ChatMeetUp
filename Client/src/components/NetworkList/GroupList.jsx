@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useContext } from 'react';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
@@ -8,6 +8,7 @@ import UserContext from '../../context/UserContext.js';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import Brightness1Icon from '@mui/icons-material/Brightness1';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { Link, useNavigate } from 'react-router-dom';
 import ChatContext from '../../context/ChatContext.js';
 
@@ -22,6 +23,18 @@ export default function GroupList({ searchQuery }) {
         setSelectedUser(group._id);
         setIsDialogOpen(true);
         navigate(`/u/chatting/${group._id}`);
+    }
+
+    const getLastReadMessageIndex = (data) => {
+        if (!loginUser || !data || !data.messages?.length) return 0;
+
+        const clearedChat = loginUser.clearedChats.find(cc => cc?.chatId?.toString() === data?._id?.toString());
+        const clearedAt = clearedChat ? new Date(clearedChat.clearedAt) : null;
+
+        return data.messages.findLastIndex(chat =>
+            chat.readBy.some(userData => userData?._id?.toString() === loginUser._id?.toString()) ||
+            (!clearedAt || new Date(chat.createdAt) < clearedAt)
+        );
     }
 
     if (!loginUser?.groups || loginUser.groups.length === 0) {
@@ -52,8 +65,6 @@ export default function GroupList({ searchQuery }) {
             return lastMessageB - lastMessageA;
         });
 
-
-
     if (filteredGroups.length === 0) {
         return (
             <div className='text-center text-gray-500 py-5'>
@@ -67,6 +78,9 @@ export default function GroupList({ searchQuery }) {
         <>
             {filteredGroups.map((group) => {
                 const lastMessage = group.messages?.length ? group.messages.at(-1) : null;
+                const lastUnreadMsg = getLastReadMessageIndex(group);
+
+                console.log(lastUnreadMsg);
 
                 return (
                     <ListItem
@@ -113,6 +127,13 @@ export default function GroupList({ searchQuery }) {
                                     ) : (
                                         <p className='text-[0.8rem]'>No messages yet</p>
                                     )}
+
+                                    {
+                                        (lastUnreadMsg < group?.messages?.length - 1) && <div className="text-green-500 font-bold space-x-1 mt-1">
+                                            <ChatBubbleOutlineIcon sx={{ fontSize: '1.1rem' }} />
+                                            <span>{group?.messages?.length - lastUnreadMsg - 1}</span>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         </ListItemButton>

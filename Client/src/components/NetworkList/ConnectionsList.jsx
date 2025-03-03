@@ -3,6 +3,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Avatar from '@mui/material/Avatar';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { formatTime } from '../../utils/helpers.js';
 import UserContext from '../../context/UserContext.js';
 import { Link, useNavigate } from 'react-router-dom';
@@ -20,6 +21,14 @@ export default function ConnectionsList({ searchQuery }) {
         setIsDialogOpen(true);
         navigate(`/u/chatting/${value._id}`);
     };
+
+    const getLastReadMEssageIndex = (data) => {
+        if (!loginUser || !data) return 0;
+
+        return data?.messages.findLastIndex(chat =>
+            chat.readBy.some(userData => userData?._id?.toString() === loginUser._id?.toString())
+        );
+    }
 
     if (!loginUser?.connections || loginUser.connections.length === 0) {
         return (
@@ -75,6 +84,7 @@ export default function ConnectionsList({ searchQuery }) {
                 const isUser1 = loginUser?.username === connection?.user1?.username;
                 const otherUser = isUser1 ? connection?.user2 : connection?.user1;
                 const lastMessage = (connection.messages ?? []).at(-1);
+                const lastUnreadMsg = getLastReadMEssageIndex(connection);
 
                 return (
                     <ListItem
@@ -111,6 +121,14 @@ export default function ConnectionsList({ searchQuery }) {
                                         <p className='text-[0.8rem]'>No messages yet</p>
                                     )}
                                 </div>
+
+                                {
+                                    (lastUnreadMsg < connection?.messages?.length - 1) && <div className="text-green-500 font-bold space-x-1 mt-1">
+                                        <ChatBubbleOutlineIcon sx={{ fontSize: '1.1rem' }} />
+                                        <span>{connection?.messages?.length - lastUnreadMsg - 1}</span>
+                                    </div>
+                                }
+
                             </div>
                         </ListItemButton>
                     </ListItem>

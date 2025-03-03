@@ -11,15 +11,16 @@ import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import { v4 as uuidv4 } from 'uuid';
 import UserContext from '../../context/UserContext.js';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { enqueueSnackbar } from 'notistack';
-import { cleanUserChats, setBlockUser } from '../../services/chatService.js';
+import { cleanUserChats, setBlockUser, userExitGroup } from '../../services/chatService.js';
 import LoaderContext from '../../context/LoaderContext.js';
 
 export default function ChatHeader() {
 
     const { id } = useParams();
     const location = useLocation();
+    const navigate = useNavigate();
 
     const currentURL = window.location.origin + location.pathname;
 
@@ -28,7 +29,7 @@ export default function ChatHeader() {
     const [anchorEl1, setAnchorEl1] = useState(null);
     const open1 = Boolean(anchorEl1);
 
-    const { userChat, messageSearchQuery, setMessageSearchQuery, isDialogOpen, setIsDialogOpen } = useContext(ChatContext);
+    const { userChat, messageSearchQuery, setMessageSearchQuery, isDialogOpen, setIsDialogOpen, joinedUsers } = useContext(ChatContext);
     const { loginUser, setLoginUser, onlineUsers } = useContext(UserContext);
     const { setIsMessageProcessing } = useContext(LoaderContext);
 
@@ -121,6 +122,30 @@ export default function ChatHeader() {
         }
     };
 
+    const handleExitGroup = async () => {
+        
+        if (!joinedUsers?.includes(loginUser?._id)) {
+            enqueueSnackbar("You are not a member of this group.", { variant: "error" });
+            return;
+        }
+    
+        try {
+            setIsMessageProcessing(true);
+            const response = await userExitGroup(id, loginUser?._id);
+    
+            if (response.success) {
+                enqueueSnackbar("Successfully exited the group.", { variant: "success" });
+                navigate('/u/chatting');    
+            } else {
+                enqueueSnackbar(response.message || "Failed to exit the group.", { variant: "error" });
+            }
+        } catch (error) {
+            enqueueSnackbar("Something went wrong. Please try again.", { variant: "error" });
+        } finally {
+            setIsMessageProcessing(false);
+        }
+    };    
+
     return (
         <>
             <div className='w-full flex items-center space-x-2'>
@@ -143,7 +168,7 @@ export default function ChatHeader() {
                                 {
                                     userChat?.members?.map((joinUser) => (
                                         <li key={uuidv4()}>
-                                            <Link to={`/u/profile/${joinUser?.user?.username}`} className='hover:text-gray-200' >{joinUser.user.username}</Link>
+                                            <Link to={`/u/profile/${joinUser?.user?.username}`} className={`hover:text-gray-200 ${onlineUsers.includes(joinUser?.user?._id) && 'text-green-500'}`} >{joinUser.user.username}</Link>
                                         </li>
                                     ))
                                 }
@@ -156,6 +181,7 @@ export default function ChatHeader() {
                     }
                 </div>
             </div>
+
             <div className='flex'>
                 {(remoteUser && !isSearchStatus) && <button className='h-8 w-10 me-2 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white'>
                     <VideocamOutlinedIcon />
@@ -198,6 +224,11 @@ export default function ChatHeader() {
                             Wallpaper
                         </Link>
                     </MenuItem>
+                    {
+                        (!remoteUser) && <MenuItem onClick={handleExitGroup} >
+                            <Close fontSize="small" className="mr-1 text-red-500" /> <span className='text-red-500'>Exit</span>
+                        </MenuItem>
+                    }
                 </Menu>
 
                 {

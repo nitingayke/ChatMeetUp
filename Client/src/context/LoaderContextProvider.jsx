@@ -4,14 +4,11 @@ import LoaderContext from "./LoaderContext";
 export default function LoaderContextProvider({ children }) {
 
     const [isMessageProcessing, setIsMessageProcessing] = useState(false);
-    const [selectedSidebarOpt, setSelectedSidebarOpt] = useState();
 
     const contextValue = useMemo(() => ({
         isMessageProcessing,
         setIsMessageProcessing,
-        selectedSidebarOpt, 
-        setSelectedSidebarOpt
-    }), [isMessageProcessing, selectedSidebarOpt]);
+    }), [isMessageProcessing]);
 
     return (
         <LoaderContext.Provider value={ contextValue } >

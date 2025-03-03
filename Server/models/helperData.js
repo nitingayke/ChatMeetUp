@@ -54,8 +54,11 @@ const tempSchema = [
 const insertData = async (req, res) => {
 
     try {
-        const response = await Status.insertMany(tempSchema);
-        return res.json(response);
+        const group = await Group.findById('67a47dcc06c75febb9cccb45');
+        const memberIndex = group.members.findIndex(member => member.user.toString() === "67a1df8193a029541e029208");
+        group.members[memberIndex].role = "admin";
+        const response = await group.save();
+        res.json(response);
     } catch (error) {
         return res.json({ "Error": error.message || "Error occurred" });
     }

@@ -63,4 +63,20 @@ const cleanUserChats = async (chatId, userId) => {
     }
 }
 
-export { getChatData, deleteChatMessage, changeBackgroundWallpaper, setBlockUser, cleanUserChats };
+const userExitGroup = async (groupId, userId) => {
+    try {
+        const response = await axios.delete(`http://localhost:8989/chatRoute/exit-group/${groupId}/${userId}`);
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { success: false, message: error.message || "Something went wrong" };
+    } 
+};
+
+export {
+    getChatData,
+    deleteChatMessage,
+    changeBackgroundWallpaper,
+    setBlockUser,
+    cleanUserChats,
+    userExitGroup
+};

@@ -53,15 +53,16 @@ function App() {
         }
     }, [loginUser]);
 
-    useEffect(() => {
-        const handleUpdateOnlineUsers = (users) => {
-            setOnlineUsers(users);
-        };
+    const handleUpdateOnlineUsers = (users) => {
+        setOnlineUsers(users);
+    };
 
-        const handleErrorNotification = ({ message }) => {
-            enqueueSnackbar(message, { variant: "error" });
-            setIsMessageProcessing(false);
-        };
+    const handleErrorNotification = ({ message }) => {
+        enqueueSnackbar(message, { variant: "error" });
+        setIsMessageProcessing(false);
+    };
+
+    useEffect(() => {
 
         socket.on("update-online-users", handleUpdateOnlineUsers);
         socket.on('error-notification', handleErrorNotification);

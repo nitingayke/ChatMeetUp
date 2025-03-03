@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import dotenv from 'dotenv';
+import dotenv, { populate } from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
 
 import Chat from "../models/Chat.js";
@@ -37,12 +37,16 @@ const connectToSocket = (server) => {
 
         socket.on('user-online', ({ userId }) => {
 
-            onlineUsers.set(userId, socket.id);
+            if (!onlineUsers.has(userId)) {
+                onlineUsers.set(userId, new Set());
+            }
+
+            onlineUsers.get(userId).add(socket.id);
 
             io.emit('update-online-users', Array.from(onlineUsers.keys()));
         });
 
-        socket.on('chat-reaction', async ({ chatId, userId, emoji, recipientId }) => {
+        socket.on('chat-reaction', async ({ chatId, userId, emoji, recipientId, joinedUsers }) => {
 
             try {
                 if (!chatId || !userId || !emoji) {
@@ -69,18 +73,25 @@ const connectToSocket = (server) => {
 
                 await currChat.save();
 
-                io.emit('chat-reaction-success', {
-                    chatId,
-                    userId,
-                    emoji,
-                    recipientId
+                joinedUsers.forEach(joinUserId => {
+                    if (onlineUsers.has(joinUserId)) {
+                        onlineUsers.get(joinUserId).forEach(socketId => {
+                            io.to(socketId).emit('chat-reaction-success', {
+                                chatId,
+                                userId,
+                                emoji,
+                                recipientId
+                            });
+                        });
+                    }
                 });
+
             } catch (error) {
                 socket.emit("error-notification", { message: "Internal server error." });
             }
         });
 
-        socket.on('userchat-poll-vote', async ({ conversationId, userId, username, chatId, pollIdx }) => {
+        socket.on('userchat-poll-vote', async ({ conversationId, userId, username, chatId, pollIdx, joinedUsers }) => {
 
             try {
                 const currChat = await Chat.findById(chatId);
@@ -98,7 +109,15 @@ const connectToSocket = (server) => {
                 if (!userAlreadyVoted) {
                     currChat.poll[pollIdx].votes.push(userId);
                     await currChat.save();
-                    io.emit("poll-vote-success", { conversationId, userId, username, chatId, pollIdx });
+
+                    joinedUsers.forEach(joinUserId => {
+                        if (onlineUsers.has(joinUserId)) {
+                            onlineUsers.get(joinUserId).forEach(toUser => {
+                                io.to(toUser).emit("poll-vote-success", { conversationId, userId, username, chatId, pollIdx });
+                            });
+                        }
+                    });
+
                 } else {
                     socket.emit("error-notification", { message: "User has already voted." });
                 }
@@ -158,12 +177,20 @@ const connectToSocket = (server) => {
                 const group = await Group.findById(recipientId);
                 const connection = await Connection.findById(recipientId);
 
+                let joinUserIds = [];
+
                 if (group) {
                     group.messages.push(newMessage._id);
                     await group.save();
+
+                    joinUserIds = group.members.map(member => member.user.toString());
+
                 } else if (connection) {
                     connection.messages.push(newMessage._id);
                     await connection.save();
+
+                    joinUserIds = [connection.user1.toString(), connection.user2.toString()];
+
                 } else {
                     return socket.emit("error-notification", { message: "Recipient not found." });
                 }
@@ -173,16 +200,23 @@ const connectToSocket = (server) => {
                     select: 'username image description',
                 });
 
-                io.emit('add-chat-message-success', {
-                    recipientId,
-                    data: populatedMessage,
+                joinUserIds.forEach(userId => {
+                    if (onlineUsers.has(userId)) {
+                        onlineUsers.get(userId).forEach(socketId => {
+                            io.to(socketId).emit('add-chat-message-success', {
+                                recipientId,
+                                data: populatedMessage,
+                            });
+                        });
+                    }
                 });
+
             } catch (error) {
                 socket.emit("error-notification", { message: error.message || "Something went wrong, Can't send message. Try again." });
             }
         });
 
-        socket.on('mark-messages-read', async ({ chatId, userId, conversationId }) => {
+        socket.on('mark-messages-read', async ({ chatId, userId, conversationId, joinedUsers }) => {
             try {
                 const user = await User.findById(userId);
 
@@ -192,7 +226,15 @@ const connectToSocket = (server) => {
                 );
 
                 const userData = { _id: userId, username: user.username, image: user?.image }
-                io.emit("mark-messages-read-success", { chatId, conversationId, userData });
+
+                joinedUsers.forEach(joinUserId => {
+                    if (onlineUsers.has(joinUserId)) {
+                        onlineUsers.get(joinUserId).forEach(socketId => {
+                            io.to(socketId).emit("mark-messages-read-success", { chatId, conversationId, userData });
+                        });
+                    }
+                });
+
             } catch (error) {
                 socket.emit("error-notification", { message: error.message || "Unable to mark messages as read." });
             }
@@ -233,17 +275,19 @@ const connectToSocket = (server) => {
                     $push: { messages: newMessage._id }
                 });
 
-                const toRemoteUserSocketId = onlineUsers.get(remoteUserId);
+                const toRemoteUserSocketIds = onlineUsers.get(remoteUserId);
 
-                if (toRemoteUserSocketId) {
+                if (toRemoteUserSocketIds) {
                     const populatedMessage = await Chat.findById(newMessage._id).populate({
                         path: 'sender',
                         select: 'username image description',
                     });
 
-                    io.to(toRemoteUserSocketId).emit('add-chat-message-success', {
-                        recipientId: connectionId,
-                        data: populatedMessage,
+                    toRemoteUserSocketIds.forEach(socketId => {
+                        io.to(socketId).emit('add-chat-message-success', {
+                            recipientId: connectionId,
+                            data: populatedMessage,
+                        });
                     });
                 }
 
@@ -256,14 +300,14 @@ const connectToSocket = (server) => {
 
         socket.on("disconnect", () => {
 
-            const userId = [...onlineUsers.entries()].find(([uId, socketId]) => socketId === socket.id)?.[0];
+            onlineUsers.forEach((socketSet, userId) => {
+                socketSet.delete(socket.id);
+                if (socketSet.size === 0) {
+                    onlineUsers.delete(userId);
+                }
+            });
 
-            if (userId) {
-                onlineUsers.delete(userId);
-
-                io.emit('update-online-users', Array.from(onlineUsers.keys()));
-            }
-            console.log("User disconnected.");
+            io.emit('update-online-users', Array.from(onlineUsers.keys()));
         });
     });
 };

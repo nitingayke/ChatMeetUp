@@ -42,7 +42,7 @@ export default function ChatFooter() {
     const [message, setMessage] = useState("");
 
     const { setIsMessageProcessing } = useContext(LoaderContext);
-    const { userChat, inputComponent, setInputComponent, pollOptions, setPollOptions, inputFile, setInputFile } = useContext(ChatContext);
+    const { userChat, inputComponent, setInputComponent, pollOptions, setPollOptions, inputFile, setInputFile, joinedUsers } = useContext(ChatContext);
     const { loginUser } = useContext(UserContext);
 
     const [menuOpen, setMenuOpen] = useState(false);
@@ -72,14 +72,17 @@ export default function ChatFooter() {
 
     const handleMessageSubmit = () => {
 
+        if (!joinedUsers?.includes(loginUser?._id)) {
+            enqueueSnackbar('You are not a member of this chat.', { variant: 'warning' });
+            return;
+        }
+
         if ((message || "").trim().length === 0 && (!pollOptions || pollOptions.length === 0) && (!inputFile)) {
             enqueueSnackbar("Please enter a message, select a file, or add poll options before sending.", {
                 variant: "warning"
             });
             return;
         }
-
-        
 
         setIsMessageProcessing(true);
         socket.emit("add-chat-message", {

@@ -17,7 +17,7 @@ export default function ChatRoom() {
     const [remoteUser, setRemoteUser] = useState(null);
 
     const { enqueueSnackbar } = useSnackbar();
-    const { userChat, setUserChat } = useContext(ChatContext);
+    const { userChat, setUserChat, joinedUsers, setJoinedUsers } = useContext(ChatContext);
     const { loginUser } = useContext(UserContext);
 
     const { id } = useParams();
@@ -42,15 +42,23 @@ export default function ChatRoom() {
             const response = await getChatData(id);
 
             if (response.success) {
-                setUserChat(response.userChat);
+                let userIds = [];
 
-                if (response.userChat?.user1 && response.userChat?.user2) {
+                if (response.userChat?.members) {
+                    userIds = response.userChat.members.map(member => member.user._id.toString());
+
+                } else if (response.userChat?.user1 && response.userChat?.user2) {
+                    userIds = [response.userChat.user1._id.toString(), response.userChat.user2._id.toString()];
+
                     setRemoteUser(
                         response.userChat.user1?._id === loginUser?._id
                             ? response.userChat?.user2
                             : response.userChat?.user1
                     );
                 }
+
+                setJoinedUsers(userIds);
+                setUserChat(response.userChat);
 
             } else {
                 setUserChat(null);
@@ -79,7 +87,7 @@ export default function ChatRoom() {
     if (!id) {
         return (
             <div className="flex justify-center h-full items-center p-3">
-                <h1 className="text-3xl font-bold text-gray-300 rounded bg-[#000000ab]">Please Select Chat</h1>
+                <h1 className="text-3xl text-center font-bold text-gray-300 rounded bg-[#000000ab] p-2">Please Select Chat</h1>
             </div>
         );
     }
@@ -111,6 +119,19 @@ export default function ChatRoom() {
         </div>
     }
 
+    if (!joinedUsers.includes(loginUser?._id)) {
+        return (
+            <div className='h-full flex justify-center text-center items-center p-3'>
+                <div className='p-3 rounded bg-[#000000ab] space-y-1'>
+                    <h1 className='text-xl'>You have not joined this {remoteUser ? 'user chat' : 'group'}</h1>
+                    <Link to={'/u/join-requests'} className='text-blue-500 hover:text-blue-700'>
+                        Click to join
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+    
     return (
         <>
             <header className='py-2 px-3 bg-[#000000d1] flex justify-between items-center w-full'>

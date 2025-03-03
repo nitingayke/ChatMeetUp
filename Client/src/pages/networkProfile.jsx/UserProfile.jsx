@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState, forwardRef, useRef } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
+import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 
 import { connectToUser, getUserProfile } from '../../services/userchatService';
 import { updateUserData, updateUserProfileImage } from '../../services/userService';
@@ -190,17 +191,34 @@ export default function UserProfile() {
 
                         return (
                             <li key={connection._id}>
-                                <Link to={`/u/chatting/${connection?._id}`} className="flex items-center gap-4 p-3 border border-gray-700 rounded-lg shadow-sm hover:bg-[#80808023] cursor-pointer transition" >
-                                    <Avatar src={chatUser.image} alt={chatUser.username} className="w-12 h-12" />
+                                <Link to={`/u/chatting/${connection?._id}`} className='block p-3 border border-gray-700 rounded-lg shadow-sm hover:bg-[#80808023] cursor-pointer transition'>
+                                    <div className="flex items-center gap-4 ">
+                                        <Avatar src={chatUser.image} alt={chatUser.username} className="w-12 h-12" />
 
-                                    <div className="flex-1">
-                                        <h3 className="text-lg font-semibold">{chatUser.username}</h3>
-                                        <p className="text-gray-600 text-sm line-clamp-1">{(chatUser.description || "").length > 0 ? chatUser.description : "No description available"}</p>
+                                        <div className="flex-1">
+                                            <h3 className="text-lg font-semibold">{chatUser.username}</h3>
+                                            <p className="text-gray-600 text-sm line-clamp-1">{(chatUser.description || "").length > 0 ? chatUser.description : "No description available"}</p>
+                                        </div>
+
+                                        <span className="text-sm bg-orange-500 text-white px-2 py-1 rounded-full">
+                                            {connection.messages.length} Messages
+                                        </span>
                                     </div>
 
-                                    <span className="text-sm bg-orange-500 text-white px-2 py-1 rounded-full">
-                                        {connection.messages.length} Messages
-                                    </span>
+                                    {(loginUser.username === id && loginUser?.blockUser?.includes(connection?._id)) && (
+                                        <button
+                                            className="z-10 text-red-500 text-sm ps-13 flex items-center gap-1 hover:underline cursor-pointer"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                navigate("/u/block-users");
+                                            }}
+                                        >
+                                            <BlockOutlinedIcon className="text-base mb-[0.1rem]" sx={{ fontSize: "1rem" }} />
+                                            <span>Blocked</span>
+                                        </button>
+
+                                    )}
+
                                 </Link>
                             </li>
                         );
@@ -352,18 +370,24 @@ export default function UserProfile() {
                             {(loginUser?.username === id && !isEditOn) && <button onClick={() => setIsEditOn(true)} className="border rounded px-5 py-1 text-gray-500 cursor-pointer">Edit</button>}
 
                             <div className="grid grid-cols-3 justify-between mt-6 space-x-2">
-                                <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
-                                    <p className="text-xl font-bold">{userProfile.connections.length}</p>
-                                    <p className="text-gray-400 break-words">Connections</p>
-                                </div>
-                                <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
-                                    <p className="text-xl font-bold">{userProfile.groups.length}</p>
-                                    <p className="text-gray-400">Join Groups</p>
-                                </div>
-                                <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
-                                    <p className="text-xl font-bold">{userProfile.blockUser.length}</p>
-                                    <p className="text-gray-400">Blocked</p>
-                                </div>
+                                <Link to={'/u/chatting'}>
+                                    <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
+                                        <p className="text-xl font-bold">{userProfile.connections.length}</p>
+                                        <p className="text-gray-400 break-words">Connections</p>
+                                    </div>
+                                </Link>
+                                <Link to={'/u/chatting'}>
+                                    <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
+                                        <p className="text-xl font-bold">{userProfile.groups.length}</p>
+                                        <p className="text-gray-400">Join Groups</p>
+                                    </div>
+                                </Link>
+                                <Link to={'/u/block-users'}>
+                                    <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
+                                        <p className="text-xl font-bold">{userProfile.blockUser.length}</p>
+                                        <p className="text-gray-400">Blocked</p>
+                                    </div>
+                                </Link>
                             </div>
 
                             <div className='mt-5'>

@@ -3,10 +3,12 @@ import UserContext from '../../../context/UserContext';
 import LoaderContext from '../../../context/LoaderContext';
 import { useSnackbar } from 'notistack';
 import { socket } from '../../../services/socketService';
+import ChatContext from '../../../context/ChatContext';
 
 export default function ChatPoll({ data, localChat }) {
 
     const { loginUser } = useContext(UserContext);
+    const { joinedUsers } = useContext(ChatContext);
     const { setIsMessageProcessing } = useContext(LoaderContext);
     const { enqueueSnackbar } = useSnackbar();
 
@@ -36,10 +38,11 @@ export default function ChatPoll({ data, localChat }) {
             username: loginUser?.username,
             chatId: data._id,
             pollIdx,
+            joinedUsers
         });
     }
 
-    if (!data?.poll || data.poll.length === 0) return null;
+    if (!data?.poll || data?.poll?.length === 0) return null;
 
     return (
         <div className='mt-2 space-y-2'>

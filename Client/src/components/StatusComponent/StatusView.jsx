@@ -244,17 +244,19 @@ export default function StatusView() {
                 </span>
             </button>
 
-            <button
-                onClick={() => setIsVideoPlaying(!isVideoPlaying)}
-                className='absolute left-[25%] h-full w-[50%] flex justify-center items-center group cursor-pointer'>
-                <span className="hidden justify-center items-center rounded-full bg-[#80808040] w-12 h-12 group-hover:flex">
-                    {isVideoPlaying ? (
-                        <PauseIcon sx={{ fontSize: '1.8rem' }} />
-                    ) : (
-                        <PlayArrowIcon sx={{ fontSize: '1.8rem' }} />
-                    )}
-                </span>
-            </button>
+            {
+                (mediaType === 'video') && <button
+                    onClick={() => setIsVideoPlaying(!isVideoPlaying)}
+                    className='absolute left-[25%] h-full w-[50%] flex justify-center items-center group cursor-pointer'>
+                    <span className="hidden justify-center items-center rounded-full bg-[#80808040] w-12 h-12 group-hover:flex">
+                        {isVideoPlaying ? (
+                            <PauseIcon sx={{ fontSize: '1.8rem' }} />
+                        ) : (
+                            <PlayArrowIcon sx={{ fontSize: '1.8rem' }} />
+                        )}
+                    </span>
+                </button>
+            }
 
             <button
                 onClick={handleNextStatus}

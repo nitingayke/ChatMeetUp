@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -7,6 +7,7 @@ import Brightness1Icon from '@mui/icons-material/Brightness1';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SentimentVerySatisfiedIcon from '@mui/icons-material/SentimentVerySatisfied';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Modal, Box, CircularProgress, Tooltip } from "@mui/material";
 import EmojiPicker from 'emoji-picker-react';
 
@@ -28,7 +29,7 @@ export function ChatMain() {
 
     const { enqueueSnackbar } = useSnackbar();
     const { isMessageProcessing, setIsMessageProcessing } = useContext(LoaderContext);
-    const { userChat, setUserChat, messageSearchQuery } = useContext(ChatContext);
+    const { userChat, setUserChat, messageSearchQuery, joinedUsers } = useContext(ChatContext);
     const { loginUser, onlineUsers } = useContext(UserContext);
 
     const [localChat, setLocalChat] = useState(userChat || {});
@@ -126,6 +127,9 @@ export function ChatMain() {
 
         if (localChat?._id !== recipientId) return;
 
+        const isMessageIn = localChat?.messages?.some(msg => msg._id === data._id);
+        if (isMessageIn) return;
+
         setLocalChat(prevChat => ({
             ...prevChat,
             messages: [...prevChat.messages, data]
@@ -180,7 +184,7 @@ export function ChatMain() {
             socket.off("add-chat-message-success", handleNewChatMessage);
             socket.off("mark-messages-read-success", handleMessageReadSuccess);
         };
-    }, []);
+    }, [localChat, loginUser]);
 
     const handleDeleteMessage = async (data) => {
         if (!data?._id) {
@@ -189,21 +193,18 @@ export function ChatMain() {
         }
 
         try {
-
             setIsMessageProcessing(true);
             const response = await deleteChatMessage(data._id, loginUser._id);
 
             if (response.success) {
-                setLocalChat(prevChat => {
-                    return {
-                        ...prevChat,
-                        messages: prevChat.messages.map(msg =>
-                            msg._id === data._id
-                                ? { ...msg, deleteBy: [...msg.deleteBy, loginUser._id] }
-                                : msg
-                        )
-                    };
-                });
+                setLocalChat(prevChat => ({
+                    ...prevChat,
+                    messages: prevChat.messages.map(msg =>
+                        msg._id === data._id
+                            ? { ...msg, deleteBy: [...msg.deleteBy, loginUser._id] }
+                            : msg
+                    )
+                }));
 
                 enqueueSnackbar(response.message || 'Message deleted successfully for you.', { variant: 'success' });
             } else {
@@ -234,6 +235,7 @@ export function ChatMain() {
             chatId: chatMessageData._id,
             userId: loginUser._id,
             emoji: emojiData.emoji,
+            joinedUsers
         });
     };
 
@@ -243,66 +245,6 @@ export function ChatMain() {
             return acc;
         }, {});
     };
-
-    const chatMessageRefs = useRef([]);
-    const observer = useRef(null);
-
-    const markMessageAsRead = (messageId) => {
-
-        if (!loginUser || !localChat) return;
-
-        const message = localChat.messages.find((msg) => msg._id === messageId);
-        if (!message || message.readBy.some(user => user?._id?.toString() === loginUser._id?.toString())) return;
-
-        socket.emit('mark-messages-read', {
-            conversationId: localChat._id,
-            chatId: messageId,
-            userId: loginUser._id
-        });
-    }
-
-    // handle if user read message
-    useEffect(() => {
-        if (!observer.current) {
-            observer.current = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        const messageId = entry.target.getAttribute('data-message-id');
-                        markMessageAsRead(messageId);
-                    }
-                });
-            }, { threshold: 0.5 });
-        }
-
-        chatMessageRefs.current.forEach((el) => {
-            if (el) observer.current.observe(el);
-        });
-
-        return () => {
-            chatMessageRefs.current.forEach((el) => {
-                if (el) observer.current.unobserve(el);
-            });
-        };
-    }, []); // localChat.messages
-
-    const getLastReadMessageIndex = () => {
-        if (!loginUser || !localChat) return 0;
-
-        return localChat.messages.findLastIndex(chat =>
-            chat.readBy.some(userData => userData?._id?.toString() === loginUser._id?.toString())
-        );
-    };
- 
-    // scroll those message are already read
-    useEffect(() => {
-        if (!localChat?.messages?.length) return;
-
-        const lastReadMsgIdx = getLastReadMessageIndex();
-
-        if (lastReadMsgIdx >= 0 && chatMessageRefs.current[lastReadMsgIdx]) {
-            chatMessageRefs.current[lastReadMsgIdx].scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-    }, [localChat?.messages?.length]);
 
     const isMessageRead = (message) => {
         if (!message?.readBy || !localChat) return false;
@@ -318,23 +260,99 @@ export function ChatMain() {
         return false;
     };
 
-    const remainReadCount = localChat?.messages?.length - getLastReadMessageIndex() - 1;
+    const chatMessageRefs = useRef([]);
+    const observer = useRef(null);
 
-    const cleanChat = loginUser.clearedChats.find((data) => data.chatId === id);
-    const filterUserChat = localChat?.messages?.filter(chatData => {
-        let isMessageVisible = true;
+    const markMessageAsRead = (messageId) => {
+        if (!loginUser || !localChat) return;
 
-        if (cleanChat) {
-            const messageCreatedAt = new Date(chatData.createdAt);
-            const chatClearedAt = new Date(cleanChat.clearedAt);
+        const message = localChat.messages.find((msg) => msg._id === messageId);
+        if (!message || message.readBy.some(user => user?._id?.toString() === loginUser._id?.toString())) return;
 
-            if (messageCreatedAt < chatClearedAt) {
-                isMessageVisible = false;
-            }
+        socket.emit('mark-messages-read', {
+            conversationId: localChat._id,
+            chatId: messageId,
+            userId: loginUser._id,
+            joinedUsers
+        });
+    };
+
+    // handle if user read message
+    useEffect(() => {
+        if (observer.current) {
+            observer.current.disconnect();
         }
 
-        return isMessageVisible && chatData?.message?.toLowerCase().includes(messageSearchQuery.toLowerCase());
-    });
+        observer.current = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const messageId = entry.target.getAttribute('data-message-id');
+                    markMessageAsRead(messageId);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        chatMessageRefs.current.forEach((el) => {
+            if (el) observer.current.observe(el);
+        });
+
+        return () => {
+            if (observer.current) {
+                observer.current.disconnect();
+                observer.current = null;
+            }
+        };
+    }, [localChat?.messages?.length]);
+
+
+    const cleanChat = loginUser.clearedChats.find((data) => data.chatId === id);
+    const filterUserChat = useMemo(() => {
+        if (!localChat?.messages) return [];
+
+        return localChat.messages.filter(chatData => {
+            let isMessageVisible = true;
+
+            if (cleanChat) {
+                const messageCreatedAt = new Date(chatData.createdAt);
+                const chatClearedAt = new Date(cleanChat.clearedAt);
+
+                if (messageCreatedAt < chatClearedAt) {
+                    isMessageVisible = false;
+                }
+            }
+
+            return isMessageVisible && chatData?.message?.toLowerCase().includes(messageSearchQuery.toLowerCase());
+        });
+    }, [localChat?.messages, cleanChat, messageSearchQuery]);
+
+    const getLastReadMessageIndex = useCallback(() => {
+
+        if (!loginUser || !localChat) return 0;
+
+        const clearedChat = loginUser.clearedChats.find(cc => cc?.chatId?.toString() === localChat?._id?.toString());
+        const clearedAt = clearedChat ? new Date(clearedChat.clearedAt) : null;
+
+        return localChat.messages.findLastIndex(chat =>
+            chat.readBy.some(userData => userData?._id?.toString() === loginUser._id?.toString()) ||
+            (!clearedAt || new Date(chat.createdAt) < clearedAt)
+        );
+    }, [loginUser, localChat]);
+
+    // scroll those message are already read
+    useEffect(() => {
+        if (!localChat?.messages?.length) return;
+
+        const lastReadMsgIdx = getLastReadMessageIndex() - 1;
+
+        if (lastReadMsgIdx >= 0 && chatMessageRefs.current[lastReadMsgIdx]) {
+            chatMessageRefs.current[lastReadMsgIdx].scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, []);
+
+    const remainReadCount = useMemo(() => {
+        if (!localChat?.messages) return 0;
+        return localChat.messages.length - getLastReadMessageIndex() - 1;
+    }, [localChat?.messages, getLastReadMessageIndex]);
 
     if (filterUserChat?.length == 0) {
         return <div className='flex justify-center items-center h-full'>
@@ -345,13 +363,16 @@ export function ChatMain() {
     return (
         <>
             <ul className='space-y-3 h-full overflow-auto p-3'>
+
                 {filterUserChat?.map((data, index) => (
+
                     (!loginUser?.clearedChats?.includes(data?._id)) &&
                     <li key={data?._id ?? 'default-id'}
                         ref={(el) => (chatMessageRefs.current[index] = el)}
                         data-message-id={data._id}
                         className={`flex ${data?.sender?.username === loginUser?.username ? 'justify-end' : ''}`}
                     >
+
                         <div className={`group relative flex ${data?.sender?.username === loginUser?.username ? 'flex-row-reverse' : ''}`}>
 
                             {(onlineUsers.includes(data?.sender?._id) && loginUser._id !== data.sender._id) ? (
@@ -387,6 +408,15 @@ export function ChatMain() {
                                             <p>{data?.sender?.username ?? 'Unknown'}</p>
                                             <p className='pe-2'>{formatTime(data?.createdAt) ?? 'Just now'}</p>
                                         </div>
+
+                                        {
+                                            (data.type === 'status') && (
+                                                <div className='text-sm text-white flex items-center gap-2 p-2 rounded bg-linear-to-t from-sky-500 to-indigo-500'>
+                                                    <VisibilityIcon fontSize="small" />
+                                                    <span>Shared a Status</span>
+                                                </div>
+                                            )
+                                        }
 
                                         {/* Message Content */}
                                         {data?.message && <p className='whitespace-pre-line pt-3 text-gray-200'>{data.message}</p>}

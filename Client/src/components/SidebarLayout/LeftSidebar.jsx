@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import MessageIcon from "@mui/icons-material/Message";
 import PersonIcon from "@mui/icons-material/Person";
 import PublicIcon from "@mui/icons-material/Public";
@@ -12,16 +12,19 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import UserContext from "../../context/UserContext";
-import LoaderContext from "../../context/LoaderContext";
 
 export default function LeftSidebar() {
 
-  const navigate = useNavigate();
-  const { selectedSidebarOpt, setSelectedSidebarOpt } = useContext(LoaderContext);
+  const location = useLocation();
   const { loginUser } = useContext(UserContext);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    setSelected(location.pathname);
+  }, [location.pathname]);
 
   const sections = [
     { icon: MessageIcon, title: "Message", redirectLink: "/u/chatting" },
@@ -37,16 +40,10 @@ export default function LeftSidebar() {
     },
     { icon: GroupIcon, title: "Live Users", redirectLink: "/live-users" },
     {
-      icon: ForumOutlinedIcon,
-      title: "Global Message",
-      redirectLink: "/global-message",
+      icon: ForumOutlinedIcon, title: "Global Message", redirectLink: "/global-message",
     },
     { icon: GroupAddIcon, title: "Join", redirectLink: "/u/join-requests" },
-    {
-      icon: SettingsIcon,
-      title: "Profile",
-      redirectLink: `/u/profile/${loginUser?.username}`,
-    },
+    { icon: SettingsIcon, title: "Profile", redirectLink: `/u/profile/${loginUser?.username}`, },
   ];
 
   return (
@@ -68,12 +65,12 @@ export default function LeftSidebar() {
             </div>
           </Link>
 
-          {sections.map((section, idx) => (
+          {sections.map((section) => (
             <Link
               to={section.redirectLink}
-              className={`flex items-center space-x-3 p-[0.65rem] rounded-xl shadow-lg hover:bg-gray-700 ${selectedSidebarOpt === idx ? "bg-blue-600 text-white" : "text-gray-500 bg-[#80808045] hover:text-white"}`}
+              className={`flex items-center space-x-3 p-[0.65rem] rounded-xl shadow-lg ${location.pathname.startsWith(section.redirectLink) ? 'bg-[#80808045] text-blue-500' : 'bg-[#80808023] text-gray-500'} hover:text-white`}
               key={section.redirectLink}
-              onClick={() => setSelectedSidebarOpt(idx)}
+              onClick={() => setSelected(section.redirectLink)}
             >
               {React.createElement(section.icon, {
                 style: { fontSize: "1.2rem" },
