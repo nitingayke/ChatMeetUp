@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import UserList from "../components/UserList";
 import ChatRoom from "../components/ChatComponent/ChatRoom";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import UserContext from "../context/UserContext";
 import ChatContext from "../context/ChatContext";
@@ -15,12 +15,12 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 export default function ChatPage() {
 
+    const { id } = useParams();
     const navigate = useNavigate();
     const { enqueueSnackbar } = useSnackbar();
 
     const { loginUser } = useContext(UserContext);
     const { setSelectedUser, isDialogOpen, setIsDialogOpen } = useContext(ChatContext);
-
 
     useEffect(() => {
         if (!localStorage.getItem("authToken")) {
@@ -30,10 +30,11 @@ export default function ChatPage() {
     }, [enqueueSnackbar, navigate]);
 
     useEffect(() => {
+
         return () => {
             setSelectedUser(null);
         }
-    }, []);
+    }, [id]);
 
     useEffect(() => {
         const handleBackButton = () => {
@@ -60,7 +61,7 @@ export default function ChatPage() {
                     className={`hidden md:flex h-full flex-1 flex-col bg-no-repeat bg-cover bg-gradient-to-bl from-purple-600 to-teal-400`}
                     style={loginUser?.backgroundImage && loginUser?.backgroundImage !== 'null' ? { backgroundImage: `url(${loginUser?.backgroundImage})` } : {}}
                 >
-                    <ChatRoom />
+                    <ChatRoom key={id} />
                 </div>
             </div>
 
@@ -71,7 +72,7 @@ export default function ChatPage() {
                         ? { backgroundImage: `url(${loginUser?.backgroundImage})` }
                         : {}}
                 >
-                    <ChatRoom />
+                    <ChatRoom key={id} />
                 </div>
             </Dialog> 
 

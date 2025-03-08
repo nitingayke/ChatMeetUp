@@ -20,6 +20,8 @@ import JoinComponent from './components/JoinComponent';
 import StatusPage from './pages/StatusPage';
 import StatusList from './components/NetworkList/StatusList';
 import AddStatus from './pages/AddStatus';
+import VideoCall from './pages/VideoCall';
+import CreateGroup from './components/CreateGroup';
 
 function App() {
 
@@ -87,6 +89,8 @@ function App() {
                     <Route path='/playground/wallpaper' element={<BackgroundWallpaper />} />
                     <Route path='/live-users' element={<LiveUserList />} />
 
+                    <Route path='/video-call/:id' element={<VideoCall />} />
+
                     <Route 
                         path='/status/*' 
                         element={
@@ -99,6 +103,8 @@ function App() {
                             </StatusContextProvider>
                         } 
                     />
+
+                    <Route path='/new-group' element={<CreateGroup/>} />
 
                     <Route path='*' element={<NotFound />} />
                 </Routes>

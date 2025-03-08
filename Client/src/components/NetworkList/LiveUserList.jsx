@@ -70,7 +70,6 @@ export default function LiveUserList() {
   useEffect(() => {
     if (onlineUsers?.length <= 1) return;
 
-    console.log(onlineUsers);
     handleLiveUserData();
   }, [onlineUsers]);
 

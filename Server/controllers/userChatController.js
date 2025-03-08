@@ -1,4 +1,5 @@
 import httpStatus from 'http-status';
+import bcrypt from 'bcryptjs';
 import Group from '../models/Group.js';
 import Connection from '../models/Connection.js';
 import User from '../models/User.js';
@@ -87,7 +88,7 @@ const userProfile = async (req, res) => {
             path: 'connections',
             populate: [
                 { path: 'user1', select: 'username image description' },
-                { path: 'user2', select: 'username image description' }
+                { path: 'user2', select: 'username image description' },
             ]
         })
         .populate({
@@ -190,7 +191,7 @@ const createNewConnection = async (req, res) => {
 
 const userJoinGroup = async (req, res) => {
 
-    const { groupId, userId } = req.body;
+    const { groupId, userId, password } = req.body;
 
     if (!groupId || !userId) {
         return res.status(httpStatus.BAD_REQUEST).json({
@@ -216,13 +217,31 @@ const userJoinGroup = async (req, res) => {
         });
     }
 
-    const isAlreadyMember = group.members.some(member => member.user === userId);
+    const isAlreadyMember = group.members.some(member => member.user.toString() === userId);
     if (isAlreadyMember) {
         return res.status(httpStatus.CONFLICT).json({
             success: false,
             message: "User is already a member of this group",
         });
     }
+
+    if (group.password) {
+        if (!password) {
+            return res.status(httpStatus.BAD_REQUEST).json({
+                success: false,
+                message: "Password is required.",
+            });
+        }
+
+        const isPasswordMatch = await bcrypt.compare(password, group.password);
+        if (!isPasswordMatch) {
+            return res.status(httpStatus.UNAUTHORIZED).json({
+                success: false,
+                message: "Wrong password",
+            });
+        }
+    }
+
 
     group.members.push({ user: userId, role: 'member' });
     user.groups.push(groupId);
@@ -321,7 +340,7 @@ const getNetworkData = async (req, res) => {
 
     const users = await User.find({ _id: { $nin: joinedUsers } }).select('username email image description');
 
-    const groups = await Group.find({ _id: { $nin: joinedGroups } }).select('name image description members');
+    const groups = await Group.find({ _id: { $nin: joinedGroups } }).select('name image description members password');
 
     return res.status(httpStatus.OK).json({ success: true, users, groups });
 }

@@ -123,8 +123,8 @@ export default function ConnectionsList({ searchQuery }) {
                                 </div>
 
                                 {
-                                    (lastUnreadMsg < connection?.messages?.length - 1) && <div className="text-green-500 font-bold space-x-1 mt-1">
-                                        <ChatBubbleOutlineIcon sx={{ fontSize: '1.1rem' }} />
+                                    (lastUnreadMsg < connection?.messages?.length - 1) && <div className="text-sm text-green-500 font-bold space-x-1 mt-1">
+                                        <ChatBubbleOutlineIcon sx={{ fontSize: '1rem' }} />
                                         <span>{connection?.messages?.length - lastUnreadMsg - 1}</span>
                                     </div>
                                 }

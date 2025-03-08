@@ -123,19 +123,19 @@ export default function ChatHeader() {
     };
 
     const handleExitGroup = async () => {
-        
+
         if (!joinedUsers?.includes(loginUser?._id)) {
             enqueueSnackbar("You are not a member of this group.", { variant: "error" });
             return;
         }
-    
+
         try {
             setIsMessageProcessing(true);
             const response = await userExitGroup(id, loginUser?._id);
-    
+
             if (response.success) {
                 enqueueSnackbar("Successfully exited the group.", { variant: "success" });
-                navigate('/u/chatting');    
+                navigate('/u/chatting');
             } else {
                 enqueueSnackbar(response.message || "Failed to exit the group.", { variant: "error" });
             }
@@ -144,7 +144,7 @@ export default function ChatHeader() {
         } finally {
             setIsMessageProcessing(false);
         }
-    };    
+    };
 
     return (
         <>
@@ -183,9 +183,13 @@ export default function ChatHeader() {
             </div>
 
             <div className='flex'>
-                {(remoteUser && !isSearchStatus) && <button className='h-8 w-10 me-2 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white'>
-                    <VideocamOutlinedIcon />
-                </button>}
+                {
+                    (remoteUser && !isSearchStatus) && <Link to={`/video-call/${remoteUser?._id}`}>
+                        <button className='h-8 w-10 me-2 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white'>
+                            <VideocamOutlinedIcon />
+                        </button>
+                    </Link>
+                }
                 {
                     (isSearchStatus)
                         ? <div className='h-8 p-1 me-2 rounded bg-[#80808045] flex flex-1 md:min-w-40 lg:min-w-70'>

@@ -1,19 +1,16 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Avatar, CircularProgress } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import React, { useContext, useEffect, useState, forwardRef } from 'react';
 import UserContext from './../context/UserContext';
-import { connectToUser, getTotalConnectionData, getUsersData, joinGroup } from './../services/userchatService';
+import { connectToUser, getTotalConnectionData, joinGroup } from './../services/userchatService';
 import { useSnackbar } from 'notistack';
 import LeftSidebar from './SidebarLayout/LeftSidebar';
 import { Link, useNavigate } from 'react-router-dom';
-import { PersonAdd } from "@mui/icons-material"
 import AuthOptions from './AuthOptions';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Fade from '@mui/material/Fade';
-import GroupIcon from "@mui/icons-material/Group";
+import { PersonAdd, Search, ArrowDropDown, ArrowDropUp, Group, Visibility, VisibilityOff, Lock } from '@mui/icons-material';
+import { Avatar, CircularProgress, Dialog, DialogContent, DialogActions, DialogTitle, Button, Slide, Menu, MenuItem, Fade, Tooltip } from '@mui/material'
+
+const Transition = forwardRef(function Transition(props, ref) {
+    return <Slide direction="up" ref={ref} {...props} />;
+});
 
 export default function JoinComponent() {
 
@@ -22,6 +19,11 @@ export default function JoinComponent() {
 
     const [searchQuery, setSearchQuery] = useState("");
     const [totalConnections, setTotalConnections] = useState([]);
+
+    const [groupJoinId, setGroupJoinId] = useState("");
+    const [passwordDialog, setPasswordDialog] = useState(false);
+    const [groupPassword, setGroupPassword] = useState("");
+    const [isShowPassword, setIsShowPassword] = useState(false);
 
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
@@ -66,21 +68,32 @@ export default function JoinComponent() {
         handleFetchData();
     }, [loginUser]);
 
-    const handleGroupJoin = async (groupId) => {
+    const handleGroupJoinPassword = (groupProfile) => {
+        setGroupJoinId(groupProfile?._id);
+        if (groupProfile?.password) {
+            setPasswordDialog(true);
+        } else {
+            handleGroupJoin();
+        }
+    }
 
-        if (!groupId || !loginUser) {
+    const handleGroupJoin = async () => {
+
+        if (!groupJoinId || !loginUser) {
             enqueueSnackbar('Group not found, please try again.', { variant: 'error' });
             return;
         }
 
         try {
             setIsLoading(true);
-            const response = await joinGroup(groupId, loginUser?._id);
+            setPasswordDialog(false);
+
+            const response = await joinGroup(groupJoinId, loginUser?._id, groupPassword);
 
             if (response?.success) {
                 setTotalConnections((prev) => ({
                     ...prev,
-                    groups: prev.groups.filter((group) => group._id !== groupId),
+                    groups: prev.groups.filter((group) => group._id !== groupJoinId),
                 }));
                 enqueueSnackbar(`Successfully joined the group.`, { variant: 'success' });
             } else {
@@ -89,6 +102,7 @@ export default function JoinComponent() {
         } catch (error) {
             enqueueSnackbar(error?.message || 'An error occurred while joining the group.', { variant: 'error' });
         } finally {
+            setGroupPassword("");
             setIsLoading(false);
         }
     }
@@ -155,17 +169,25 @@ export default function JoinComponent() {
                                     <i className="text-sm text-gray-400" style={{ fontStyle: 'italic' }}>"{item?.description || "No bio available"}"</i>
 
                                     {selectedFilter === "Groups" && (
-                                        <p className="mt-1 text-sm bg-orange-500 text-white px-3 py-1 rounded-lg w-fit">
-                                            <span className='me-2'>
-                                                {item?.members?.length || 1}
-                                            </span>
-                                            Members
-                                        </p>
+                                        <div className='flex items-center space-x-2 mt-1'>
+                                            <p className="text-sm bg-orange-500 text-white px-3 py-1 rounded-lg w-fit">
+                                                <span className='me-2'>
+                                                    {item?.members?.length || 1}
+                                                </span>
+                                                Members
+                                            </p>
+                                            {
+                                                (item?.password) && <Tooltip title="This group is password protected">
+                                                    <Lock className="text-gray-500" sx={{ fontSize: "1.1rem" }} />
+                                                </Tooltip>
+                                            }
+
+                                        </div>
                                     )}
 
                                     <div className="mt-3 flex justify-end">
                                         <button
-                                            onClick={selectedFilter === "Users" ? () => handleUserConnection(item?._id) : () => handleGroupJoin(item?._id)} className="text-sm rounded-lg px-4 py-2 text-gray-300 hover:text-white bg-gray-700 hover:bg-orange-500 transition flex items-center gap-2 cursor-pointer">
+                                            onClick={selectedFilter === "Users" ? () => handleUserConnection(item?._id) : () => handleGroupJoinPassword(item)} className="text-sm rounded-lg px-4 py-2 text-gray-300 hover:text-white bg-gray-700 hover:bg-orange-500 transition flex items-center gap-2 cursor-pointer">
                                             <PersonAdd sx={{ fontSize: "1.2rem" }} />
                                             <span>{selectedFilter === "Users" ? "Connect" : "Join Group"}</span>
                                         </button>
@@ -195,7 +217,7 @@ export default function JoinComponent() {
                         </h1>
                         <div className='flex md:hidden text-gray-300 items-center space-x-1'>
                             <span className='text-sm'>{filteredData?.length || 0}</span>
-                            <GroupIcon sx={{ fontSize: '1.2rem' }} />
+                            <Group sx={{ fontSize: '1.2rem' }} />
                         </div>
                     </div>
 
@@ -207,13 +229,13 @@ export default function JoinComponent() {
                                 placeholder="Search users..."
                                 className='flex-1 p-1 text-sm md:w-[22rem] lg:w-[31rem]' />
                             <button className='py-1 px-2 text-gray-500 bg-gray-800 rounded-e hover:bg-gray-700 hover:text-white cursor-pointer'>
-                                <SearchIcon sx={{ fontSize: "1.3rem" }} />
+                                <Search sx={{ fontSize: "1.3rem" }} />
                             </button>
                         </div>
 
                         <button onClick={(e) => setAnchorEl(e.currentTarget)} className='border px-3 py-1 text-md rounded border-gray-500 cursor-pointer flex flex-nowrap' >
                             <span className='whitespace-nowrap'>{selectedFilter}</span>
-                            {open ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
+                            {open ? <ArrowDropUp /> : <ArrowDropDown />}
                         </button>
                     </div>
                     <Menu
@@ -253,6 +275,60 @@ export default function JoinComponent() {
                         </div>
                 }
             </div>
+
+            <Dialog
+                open={passwordDialog}
+                TransitionComponent={Transition}
+                keepMounted
+                onClose={() => setPasswordDialog(false)}
+                aria-describedby="alert-dialog-slide-description"
+            >
+
+                <DialogTitle className='text-gray-500' >This Group is Password Protected</DialogTitle>
+                <DialogContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <div className="border w-full flex items-center p-1 rounded">
+                        <input
+                            type={isShowPassword ? "text" : "password"}
+                            placeholder="Enter password"
+                            className="flex-1 px-2 py-1 outline-none"
+                            value={groupPassword}
+                            onChange={(e) => setGroupPassword(e.target.value)}
+                            title='Group password'
+                        />
+
+                        <button
+                            type="button"
+                            onClick={() => setIsShowPassword(!isShowPassword)}
+                            className="p-2 cursor-pointer focus:outline-none text-gray-500"
+                            aria-label={isShowPassword ? "Hide password" : "Show password"}
+                        >
+                            {isShowPassword ? <Visibility /> : <VisibilityOff />}
+                        </button>
+                    </div>
+
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setPasswordDialog(false)} sx={{ color: "gray", borderColor: "gray" }} variant="outlined">
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            if (groupPassword.length >= 8 && groupPassword.length <= 30) {
+                                handleGroupJoin();
+                            } else {
+                                enqueueSnackbar("Password must be between 8 and 30 characters", { variant: "info" });
+                            }
+                        }}
+                        sx={{
+                            backgroundColor: groupPassword.length >= 8 && groupPassword.length <= 30 ? "#00c500" : "#d32f2f",
+                            color: "white",
+                        }}
+                        variant="contained"
+                    >
+                        Join
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     )
 }

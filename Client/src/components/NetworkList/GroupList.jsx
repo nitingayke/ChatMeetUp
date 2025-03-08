@@ -80,8 +80,6 @@ export default function GroupList({ searchQuery }) {
                 const lastMessage = group.messages?.length ? group.messages.at(-1) : null;
                 const lastUnreadMsg = getLastReadMessageIndex(group);
 
-                console.log(lastUnreadMsg);
-
                 return (
                     <ListItem
                         key={group._id}
@@ -129,8 +127,8 @@ export default function GroupList({ searchQuery }) {
                                     )}
 
                                     {
-                                        (lastUnreadMsg < group?.messages?.length - 1) && <div className="text-green-500 font-bold space-x-1 mt-1">
-                                            <ChatBubbleOutlineIcon sx={{ fontSize: '1.1rem' }} />
+                                        (lastUnreadMsg < group?.messages?.length - 1) && <div className="text-sm text-green-500 font-bold space-x-1 mt-1">
+                                            <ChatBubbleOutlineIcon sx={{ fontSize: '1rem' }} />
                                             <span>{group?.messages?.length - lastUnreadMsg - 1}</span>
                                         </div>
                                     }

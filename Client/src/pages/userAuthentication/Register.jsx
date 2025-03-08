@@ -23,10 +23,16 @@ export default function Register() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const { email, username, password } = formData;
+
+        if (username.length > 30) {
+            enqueueSnackbar("Username cannot exceed 30 characters.", { variant: "warning" });
+            return;
+        }
+        
         
         try {
             setIsLoading(true);
-            const { email, username, password } = formData;
             const usernameWithoutSpaces = username.replace(/\s/g, "");
 
             const response = await userRegisterService(usernameWithoutSpaces, email, password);

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import ChatHeader from './ChatHeader.jsx';
 import ChatFooter from './ChatFooter.jsx';
 import { ChatMain } from './ChatMain.jsx';
@@ -9,32 +9,112 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useSnackbar } from 'notistack';
 import ChatContext from '../../context/ChatContext.js';
 import UserContext from '../../context/UserContext.js';
+import { socket } from '../../services/socketService.js';
+import LoaderContext from '../../context/LoaderContext.js';
 
 export default function ChatRoom() {
 
     const [isLoading, setIsLoading] = useState(false);
-    const [isWaitingForLogin, setIsWaitingForLogin] = useState(true);
     const [remoteUser, setRemoteUser] = useState(null);
 
     const { enqueueSnackbar } = useSnackbar();
     const { userChat, setUserChat, joinedUsers, setJoinedUsers } = useContext(ChatContext);
+    const { setIsMessageProcessing } = useContext(LoaderContext);
     const { loginUser } = useContext(UserContext);
 
     const { id } = useParams();
 
+    const handleNewChatMessage = useCallback(({ recipientId, data }) => {
+
+        if (userChat?._id !== recipientId) return;
+
+        setUserChat(prev => ({
+            ...prev,
+            messages: [...prev.messages, data]
+        }));
+
+        if (loginUser?._id === data?.sender?._id) {
+            setIsMessageProcessing(false);
+        }
+    }, [userChat, loginUser, setIsMessageProcessing]);
+
+    const handlePollVoteSuccess = useCallback(({ conversationId, userId, chatId, pollIdx }) => {
+        if (userChat._id !== conversationId) return;
+
+        setUserChat(prevUserChat => {
+            if (prevUserChat._id !== conversationId) return prevUserChat;
+
+            const updatedMessages = prevUserChat.messages.map(msg => {
+                if (msg._id === chatId) {
+                    const updatedPoll = msg.poll.map((option, index) =>
+                        index === pollIdx && !option.votes.includes(userId)
+                            ? { ...option, votes: [...option.votes, userId] }
+                            : option
+                    );
+                    return { ...msg, poll: updatedPoll };
+                }
+                return msg;
+            });
+
+            return { ...prevUserChat, messages: updatedMessages };
+        });
+
+        if (loginUser?._id === userId) {
+            setIsMessageProcessing(false);
+        }
+    }, [userChat, loginUser, setIsMessageProcessing]);
+
+    const updateMessageReaction = (msg, userId, emoji) => {
+
+        const updatedReactions = msg.reactions ? [...msg.reactions] : [];
+        const existingReactionIndex = updatedReactions.findIndex((r) => r.user === userId);
+
+        if (existingReactionIndex !== -1) {
+            updatedReactions[existingReactionIndex].emoji = emoji;
+        } else {
+            updatedReactions.push({ user: userId, emoji });
+        }
+
+        return { ...msg, reactions: updatedReactions };
+    };
+
+    const handleChatReaction = useCallback(({ chatId, userId, emoji, recipientId }) => {
+        if (userChat._id !== recipientId) return;
+
+        setUserChat(prevUserChat => {
+            if (prevUserChat._id !== recipientId) return prevUserChat;
+
+            const updatedMessages = prevUserChat.messages.map(msg =>
+                msg._id === chatId ? updateMessageReaction(msg, userId, emoji) : msg
+            );
+
+            return { ...prevUserChat, messages: updatedMessages };
+        });
+
+        enqueueSnackbar(
+            loginUser._id === userId ? "You reacted to a message!" : "A user added a reaction.",
+            { variant: "success" }
+        );
+    }, [userChat, loginUser, enqueueSnackbar]);
 
     useEffect(() => {
-        if (loginUser) {
-            setIsWaitingForLogin(false);
-        } else {
-            const timeout = setTimeout(() => setIsWaitingForLogin(false), 5000); // Wait for 5 seconds
-            return () => clearTimeout(timeout);
-        }
-    }, [loginUser]);
+
+        console.log("connect");
+        socket.on("add-chat-message-success", handleNewChatMessage);
+        socket.on("poll-vote-success", handlePollVoteSuccess);
+        socket.on("chat-reaction-success", handleChatReaction);
+
+        return () => {
+            console.log("disconnect");
+            socket.off("add-chat-message-success", handleNewChatMessage);
+            socket.off("poll-vote-success", handlePollVoteSuccess);
+            socket.off("chat-reaction-success", handleChatReaction);
+        };
+    }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction]);
 
     const getCurrentChatData = async () => {
 
-        if (!id || isWaitingForLogin || !loginUser)
+        if (!id || !loginUser)
             return;
 
         setIsLoading(true);
@@ -72,14 +152,22 @@ export default function ChatRoom() {
     };
 
     useEffect(() => {
-        getCurrentChatData();
-    }, [id, loginUser, isWaitingForLogin]);
+        if(!id || !loginUser) return;
 
-    if (isWaitingForLogin) {
+        getCurrentChatData();
+    }, [id, loginUser]);
+
+    if (!localStorage.getItem('authToken')) {
         return (
             <div className="h-full flex justify-center items-center p-3">
-                <CircularProgress sx={{ color: "white" }} />
-                <p className="text-gray-300 ml-3">Checking login status...</p>
+                <div className='bg-[#000000ab] p-2 rounded'>
+                    <p className="text-gray-300 ml-3">User not logged in. Please login.</p>
+                    <div className='flex justify-center space-x-2 text-blue-300'>
+                        <Link to={'/login'} className='hover:text-blue-600'>Login</Link> 
+                        <span className='text-gray-300'>/</span> 
+                        <Link to={'/register'} className='hover:text-blue-600'>Register</Link>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -87,7 +175,7 @@ export default function ChatRoom() {
     if (!id) {
         return (
             <div className="flex justify-center h-full items-center p-3">
-                <h1 className="text-3xl text-center font-bold text-gray-300 rounded bg-[#000000ab] p-2">Please Select Chat</h1>
+                <h1 className="text-xl text-center font-bold text-gray-300 rounded bg-[#000000ab] p-2">Please Select Chat</h1>
             </div>
         );
     }
@@ -95,7 +183,7 @@ export default function ChatRoom() {
     if (!userChat) {
         return (
             <div className='h-full flex justify-center text-center items-center p-3'>
-                <h1 className='text-3xl text-red-500 p-3 rounded bg-[#000000ab]'>UserChat not found, please try again!</h1>
+                <h1 className='text-xl text-red-500 p-3 rounded bg-[#000000ab]'>UserChat not found, please try again!</h1>
             </div>
         )
     }
@@ -131,7 +219,7 @@ export default function ChatRoom() {
             </div>
         );
     }
-    
+
     return (
         <>
             <header className='py-2 px-3 bg-[#000000d1] flex justify-between items-center w-full'>

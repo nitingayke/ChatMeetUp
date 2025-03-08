@@ -2,16 +2,23 @@ import mongoose, { Schema } from "mongoose";
 
 const groupSchema = new Schema(
     {
-        name: { // group name
+        name: {
             type: String,
             required: true,
+            unique: true,
             trim: true,
         },
-        image: { 
+        image: {
             type: String,
         },
-        description: { // about group
+        description: {
             type: String,
+            maxlength: 300,
+        },
+        password: {
+            type: String,
+            minlength: 8,
+            maxlength: 64,
         },
         members: [
             {

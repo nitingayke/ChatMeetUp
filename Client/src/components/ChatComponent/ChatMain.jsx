@@ -40,115 +40,11 @@ export function ChatMain() {
         setLocalChat(userChat);
     }, [userChat]);
 
-    const handlePollVoteSuccess = ({ conversationId, userId, chatId, pollIdx }) => {
-
-        if (localChat._id !== conversationId) return;
-
-        setLocalChat(prevChat => {
-            const updatedMessages = prevChat.messages.map(msg => {
-                if (msg._id === chatId) {
-                    const updatedPoll = msg.poll.map((option, index) =>
-                        index === pollIdx && !option.votes.includes(userId)
-                            ? { ...option, votes: [...option.votes, userId] }
-                            : option
-                    );
-                    return { ...msg, poll: updatedPoll };
-                }
-                return msg;
-            });
-
-            return { ...prevChat, messages: updatedMessages };
-        });
-
-        setUserChat(prevUserChat => {
-            if (prevUserChat._id !== conversationId) return prevUserChat;
-
-            const updatedMessages = prevUserChat.messages.map(msg => {
-                if (msg._id === chatId) {
-                    const updatedPoll = msg.poll.map((option, index) =>
-                        index === pollIdx && !option.votes.includes(userId)
-                            ? { ...option, votes: [...option.votes, userId] }
-                            : option
-                    );
-                    return { ...msg, poll: updatedPoll };
-                }
-                return msg;
-            });
-
-            return { ...prevUserChat, messages: updatedMessages };
-        });
-
-        if (loginUser?._id === userId) {
-            setIsMessageProcessing(false);
-        }
-    };
-
-    const updateMessageReaction = (msg, userId, emoji) => {
-        const updatedReactions = msg.reactions ? [...msg.reactions] : [];
-        const existingReactionIndex = updatedReactions.findIndex((r) => r.user === userId);
-
-        if (existingReactionIndex !== -1) {
-            updatedReactions[existingReactionIndex].emoji = emoji;
-        } else {
-            updatedReactions.push({ user: userId, emoji });
-        }
-
-        return { ...msg, reactions: updatedReactions };
-    };
-
-    const handleChatReaction = ({ chatId, userId, emoji, recipientId }) => {
-        if (localChat._id !== recipientId) return;
-
-        setLocalChat(prevChat => {
-            const updatedMessages = prevChat.messages.map(msg =>
-                msg._id === chatId ? updateMessageReaction(msg, userId, emoji) : msg
-            );
-
-            return { ...prevChat, messages: updatedMessages };
-        });
-
-        setUserChat(prevUserChat => {
-            if (prevUserChat._id !== recipientId) return prevUserChat;
-
-            const updatedMessages = prevUserChat.messages.map(msg =>
-                msg._id === chatId ? updateMessageReaction(msg, userId, emoji) : msg
-            );
-
-            return { ...prevUserChat, messages: updatedMessages };
-        });
-
-        enqueueSnackbar(
-            loginUser._id === userId ? "You reacted to a message!" : "A user added a reaction.",
-            { variant: "success" }
-        );
-    };
-
-    const handleNewChatMessage = ({ recipientId, data }) => {
-
-        if (localChat?._id !== recipientId) return;
-
-        const isMessageIn = localChat?.messages?.some(msg => msg._id === data._id);
-        if (isMessageIn) return;
-
-        setLocalChat(prevChat => ({
-            ...prevChat,
-            messages: [...prevChat.messages, data]
-        }));
-
-        setUserChat(prev => ({
-            ...prev,
-            messages: [...prev.messages, data]
-        }));
-
-        if (loginUser?._id === data?.sender?._id) {
-            setIsMessageProcessing(false);
-        }
-    };
 
     const handleMessageReadSuccess = ({ conversationId, chatId, userData }) => {
 
         if (localChat?._id !== conversationId) return;
-        // here is some error. message already read but backend socket is not emiting message 
+
         setLocalChat(prevChat => {
             const updatedMessages = prevChat.messages.map(msg =>
                 msg?._id === chatId && !msg.readBy.some(user => user._id === userData._id)
@@ -173,18 +69,13 @@ export function ChatMain() {
     };
 
     useEffect(() => {
-        socket.on("poll-vote-success", handlePollVoteSuccess);
-        socket.on("chat-reaction-success", handleChatReaction);
-        socket.on("add-chat-message-success", handleNewChatMessage);
+
         socket.on("mark-messages-read-success", handleMessageReadSuccess);
 
         return () => {
-            socket.off("poll-vote-success", handlePollVoteSuccess);
-            socket.off("chat-reaction-success", handleChatReaction);
-            socket.off("add-chat-message-success", handleNewChatMessage);
             socket.off("mark-messages-read-success", handleMessageReadSuccess);
         };
-    }, [localChat, loginUser]);
+    }, [localChat]);
 
     const handleDeleteMessage = async (data) => {
         if (!data?._id) {
@@ -304,8 +195,7 @@ export function ChatMain() {
         };
     }, [localChat?.messages?.length]);
 
-
-    const cleanChat = loginUser.clearedChats.find((data) => data.chatId === id);
+    const cleanChat = loginUser.clearedChats.find((data) => data?.chatId.toString() === id.toString());
     const filterUserChat = useMemo(() => {
         if (!localChat?.messages) return [];
 
@@ -327,20 +217,21 @@ export function ChatMain() {
 
     const getLastReadMessageIndex = useCallback(() => {
 
-        if (!loginUser || !localChat) return 0;
+        if (!loginUser || !filterUserChat) return 0;
+        const isGroup = localChat?.members?.length > 0;
 
         const clearedChat = loginUser.clearedChats.find(cc => cc?.chatId?.toString() === localChat?._id?.toString());
         const clearedAt = clearedChat ? new Date(clearedChat.clearedAt) : null;
 
-        return localChat.messages.findLastIndex(chat =>
+        return filterUserChat?.findLastIndex(chat =>
             chat.readBy.some(userData => userData?._id?.toString() === loginUser._id?.toString()) ||
-            (!clearedAt || new Date(chat.createdAt) < clearedAt)
+            (isGroup && (!clearedAt || new Date(chat.createdAt) < clearedAt))
         );
-    }, [loginUser, localChat]);
+    }, [loginUser, filterUserChat]);
 
     // scroll those message are already read
     useEffect(() => {
-        if (!localChat?.messages?.length) return;
+        if (!filterUserChat?.length) return;
 
         const lastReadMsgIdx = getLastReadMessageIndex() - 1;
 
@@ -350,9 +241,10 @@ export function ChatMain() {
     }, []);
 
     const remainReadCount = useMemo(() => {
-        if (!localChat?.messages) return 0;
-        return localChat.messages.length - getLastReadMessageIndex() - 1;
-    }, [localChat?.messages, getLastReadMessageIndex]);
+        if (!filterUserChat) return 0;
+
+        return filterUserChat.length - getLastReadMessageIndex() - 1;
+    }, [filterUserChat, getLastReadMessageIndex]);
 
     if (filterUserChat?.length == 0) {
         return <div className='flex justify-center items-center h-full'>

@@ -62,11 +62,12 @@ const connectToUser = async (remoteId, userId) => {
     }
 }
 
-const joinGroup = async (groupId, userId) => {
+const joinGroup = async (groupId, userId, password) => {
     try {
         const response = await axios.post('http://localhost:8989/chat-user/join-group', {
             groupId,
-            userId
+            userId,
+            password
         });
         return response.data;
     } catch (error) {

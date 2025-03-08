@@ -13,8 +13,7 @@ import LeftSidebar from '../../components/SidebarLayout/LeftSidebar';
 
 import { Avatar, CircularProgress, Dialog, DialogContent, Slide } from '@mui/material';
 
-import { VideoCall, PersonAdd, Edit } from "@mui/icons-material";
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import { VideoCall, PersonAdd, Edit, Visibility, Group } from "@mui/icons-material";
 
 
 const Transition = forwardRef(function Transition(props, ref) {
@@ -201,7 +200,7 @@ export default function UserProfile() {
                                         </div>
 
                                         <span className="text-sm bg-orange-500 text-white px-2 py-1 rounded-full">
-                                            {connection.messages.length} Messages
+                                            {connection?.messages?.length} Messages
                                         </span>
                                     </div>
 
@@ -231,6 +230,13 @@ export default function UserProfile() {
         } else if (selectedComponent === 'groups') {
             component = joinGroupsFilter.length > 0 ? (
                 <ul className="space-y-3">
+
+                    <li>
+                        <Link to={'/new-group'} className='flex justify-center items-center gap-4 px-3 py-2 border rounded-lg cursor-pointer transition text-green-500 bg-[#00800030] hover:bg-[#00800055]'>
+                            <Group sx={{ fontSize: '1.4rem' }} /> Create New Group
+                        </Link>
+                    </li>
+
                     {joinGroupsFilter.map((group) => (
                         <li key={group._id}>
                             <Link to={`/u/chatting/${group?._id}`} className="flex items-center gap-4 p-3 border border-gray-700 rounded-lg shadow-sm hover:bg-[#80808023] cursor-pointer transition" >
@@ -315,7 +321,7 @@ export default function UserProfile() {
 
                                 {
                                     (isUserConnected) ? <Link to={`/u/chatting/${userConnection?._id}`} className="font-bold text-lg py-3 border border-gray-500 rounded flex items-center justify-center gap-2 bg-[#80808023] hover:bg-[#80808050] cursor-pointer">
-                                        <VisibilityIcon fontSize="small" /> View
+                                        <Visibility fontSize="small" /> View
                                     </Link>
                                         : <button onClick={handleConnectUser} className="font-bold text-lg py-3 border border-gray-500 rounded flex items-center justify-center gap-2 bg-[#80808023] hover:bg-[#80808050] cursor-pointer">
                                             <PersonAdd fontSize="small" /> Join
@@ -371,7 +377,7 @@ export default function UserProfile() {
 
                             <div className="grid grid-cols-3 justify-between mt-6 space-x-2">
                                 <Link to={'/u/chatting'}>
-                                    <div className="text-center border border-gray-500 rounded p-2 bg-[#80808023]">
+                                    <div className="text-center border border-gray-500 rounded py-2 md:px-2 px-1 bg-[#80808023]">
                                         <p className="text-xl font-bold">{userProfile.connections.length}</p>
                                         <p className="text-gray-400 break-words">Connections</p>
                                     </div>

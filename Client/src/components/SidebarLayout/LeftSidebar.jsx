@@ -3,7 +3,6 @@ import MessageIcon from "@mui/icons-material/Message";
 import PersonIcon from "@mui/icons-material/Person";
 import PublicIcon from "@mui/icons-material/Public";
 import GroupIcon from "@mui/icons-material/Group";
-import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import Drawer from "@mui/material/Drawer";
 import Button from "@mui/material/Button";
@@ -28,20 +27,9 @@ export default function LeftSidebar() {
 
   const sections = [
     { icon: MessageIcon, title: "Message", redirectLink: "/u/chatting" },
-    {
-      icon: PersonIcon,
-      title: "Private Status",
-      redirectLink: "/status/private",
-    },
-    {
-      icon: PublicIcon,
-      title: "Public Status",
-      redirectLink: "/status/public",
-    },
+    { icon: PersonIcon, title: "Private Status", redirectLink: "/status/private" },
+    { icon: PublicIcon, title: "Public Status", redirectLink: "/status/public" },
     { icon: GroupIcon, title: "Live Users", redirectLink: "/live-users" },
-    {
-      icon: ForumOutlinedIcon, title: "Global Message", redirectLink: "/global-message",
-    },
     { icon: GroupAddIcon, title: "Join", redirectLink: "/u/join-requests" },
     { icon: SettingsIcon, title: "Profile", redirectLink: `/u/profile/${loginUser?.username}`, },
   ];
