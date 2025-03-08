@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import dotenv, { populate } from 'dotenv';
+import dotenv from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
 
 import Chat from "../models/Chat.js";

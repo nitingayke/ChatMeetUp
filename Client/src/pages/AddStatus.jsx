@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Select, MenuItem } from "@mui/material";
+import { Select, MenuItem, Dialog } from "@mui/material";
 import CircularProgress from '@mui/material/CircularProgress';
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
 import { useSnackbar } from 'notistack';
@@ -141,17 +141,12 @@ export default function AddStatus() {
             </button>
 
             {showEmojiPicker && (
-              <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 z-50 p-2">
-                <div className="bg-white p-2 rounded-lg shadow-lg">
-                  <EmojiPicker onEmojiClick={handleEmojiClick} />
-                  <button
-                    className="mt-2 w-full py-1 bg-red-500 text-white rounded"
-                    onClick={() => setShowEmojiPicker(false)}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
+              <Dialog
+                onClose={() => setShowEmojiPicker(false)}
+                open={showEmojiPicker}
+              >
+                <EmojiPicker onEmojiClick={handleEmojiClick} />
+              </Dialog>
             )}
 
           </div>

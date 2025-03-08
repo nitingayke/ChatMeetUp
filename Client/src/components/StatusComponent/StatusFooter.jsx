@@ -47,6 +47,11 @@ export default function StatusFooter() {
             return;
         }
 
+        if (loginUser?._id === currentPlayingStatus?.user?._id) {
+            enqueueSnackbar("You cannot send a message to your own status.", { variant: 'info' });
+            return;
+        }
+
         const connection = loginUser.connections.find(c =>
             c.user1._id === currentPlayingStatus?.user?._id || c.user2._id === currentPlayingStatus?.user?._id
         );
@@ -60,7 +65,7 @@ export default function StatusFooter() {
         }
 
         socket.emit('status-message', {
-            userId: loginUser._id,
+            userId: loginUser?._id,
             remoteUserId: connection.user1._id === loginUser._id
                 ? connection.user2._id
                 : connection.user1._id,

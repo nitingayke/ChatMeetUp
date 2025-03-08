@@ -48,7 +48,36 @@ const uploadNewStatus = async (req, res) => {
     return res.status(201).json({ success: true, message: "Status uploaded successfully" });
 }
 
+const deleteUserStatus = async (req, res) => {
+
+    const { statusId } = req.params;
+
+    if (!statusId) {
+        return res.status(httpStatus.BAD_REQUEST).json({
+            success: false,
+            message: "Status ID is required.",
+        });
+    }
+
+    const status = await Status.findById(statusId);
+    if (!status) {
+        return res.status(httpStatus.NOT_FOUND).json({
+            success: false,
+            message: "Status not found.",
+        });
+    }
+
+    await Status.findByIdAndDelete(statusId);
+
+    return res.status(httpStatus.OK).json({
+        success: true,
+        statusId,
+        message: "Status deleted successfully.",
+    });
+}
+
 export {
     getTotalUserStatus,
-    uploadNewStatus
+    uploadNewStatus,
+    deleteUserStatus
 }

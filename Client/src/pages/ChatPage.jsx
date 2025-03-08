@@ -50,6 +50,10 @@ export default function ChatPage() {
         }
     }, [isDialogOpen, setIsDialogOpen]);
 
+    useEffect(() => {
+        console.log("Well1");
+    }, []);
+
     return (
         <>
             <LeftSidebar />

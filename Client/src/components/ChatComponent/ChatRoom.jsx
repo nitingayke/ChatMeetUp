@@ -110,7 +110,7 @@ export default function ChatRoom() {
             socket.off("poll-vote-success", handlePollVoteSuccess);
             socket.off("chat-reaction-success", handleChatReaction);
         };
-    }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction]);
+    }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction]); 
 
     const getCurrentChatData = async () => {
 
@@ -152,7 +152,7 @@ export default function ChatRoom() {
     };
 
     useEffect(() => {
-        if(!id || !loginUser) return;
+        if (!id || !loginUser) return;
 
         getCurrentChatData();
     }, [id, loginUser]);
@@ -163,8 +163,8 @@ export default function ChatRoom() {
                 <div className='bg-[#000000ab] p-2 rounded'>
                     <p className="text-gray-300 ml-3">User not logged in. Please login.</p>
                     <div className='flex justify-center space-x-2 text-blue-300'>
-                        <Link to={'/login'} className='hover:text-blue-600'>Login</Link> 
-                        <span className='text-gray-300'>/</span> 
+                        <Link to={'/login'} className='hover:text-blue-600'>Login</Link>
+                        <span className='text-gray-300'>/</span>
                         <Link to={'/register'} className='hover:text-blue-600'>Register</Link>
                     </div>
                 </div>

@@ -27,8 +27,20 @@ const uploadNewUserStatus = async (file, message, statusType, userId) => {
     }
 }
 
+const deleteStatus = async (statusId) => {
+    try {
+        const response = await axios.delete(`http://localhost:8989/status/delete/${statusId}`);
+        return response.data;
+    } catch (error) {
+        return {
+            success: false,
+            message: error.response?.data?.message || "Unable to delete status.",
+        };
+    }
+};
 
 export {
     getTotalStatus,
-    uploadNewUserStatus
+    uploadNewUserStatus,
+    deleteStatus
 }

@@ -15,8 +15,10 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import StatusContext from "../../context/StatusContext";
 import UserContext from "../../context/UserContext";
 import AuthOptions from "../AuthOptions";
-import { getTotalStatus } from "../../services/statusService";
+import { deleteStatus, getTotalStatus } from "../../services/statusService";
 import { useSnackbar } from "notistack";
+import { Delete } from "@mui/icons-material";
+import Tooltip from '@mui/material/Tooltip';
 
 export default function StatusList() {
 
@@ -68,6 +70,9 @@ export default function StatusList() {
             const filteredStatus = totalStatus.filter(status => status?.viewers?.includes(loginUser?._id))
             setLocalStatus(filteredStatus);
             setSelectedStatus(filteredStatus);
+        } else if (selectedFilter === 'MyStatus') {
+            const filteredStatus = totalStatus.filter(status => status?.user?._id === loginUser?._id);
+            setLocalStatus(filteredStatus);
         }
     }, [totalStatus, selectedFilter, loginUser]);
 
@@ -88,6 +93,30 @@ export default function StatusList() {
         if (filter) setSelectedFilter(filter);
         setAnchorEl(null);
     };
+
+    const handleDeleteStatus = async (status) => {
+        if (status?.user?._id !== loginUser?._id) {
+            enqueueSnackbar("You are autherize to delete status.", { variant: 'error' });
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            const response = await deleteStatus(status?._id);
+
+            if (response?.success) {
+                const filteredStatus = totalStatus?.filter(prevStatus => prevStatus?._id !== response.statusId);
+                setTotalStatus(filteredStatus);
+                enqueueSnackbar(response.message || "Status deleted successfully!", { variant: 'success' });
+            } else {
+                enqueueSnackbar(response.message || "Failed to delete status.", { variant: 'error' });
+            }
+        } catch (error) {
+            enqueueSnackbar(error.message || "An error occurred.", { variant: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     if (!statusType || !["private", "public"].includes(statusType)) {
         return (
@@ -149,6 +178,7 @@ export default function StatusList() {
                     >
                         <MenuItem onClick={() => handleClose("Watched")}>Watched</MenuItem>
                         <MenuItem onClick={() => handleClose("Missed")}>Missed</MenuItem>
+                        <MenuItem onClick={() => handleClose("MyStatus")}>My Status</MenuItem>
                         <MenuItem onClick={() => handleClose("Upload")}>Upload</MenuItem>
                     </Menu>
                 </header>
@@ -163,7 +193,7 @@ export default function StatusList() {
                             ((filteredStatus || []).length == 0)
                                 ? <div className="h-full flex justify-center items-center text-gray-500">
                                     <p className="w-full text-center">
-                                        No <span className="text-white break-words">{searchQuery || "users"}</span> found.
+                                        No <span className="text-white break-words">{searchQuery || "status"}</span> found.
                                     </p>                                </div>
                                 : <ul className="space-y-2">
                                     {
@@ -172,7 +202,10 @@ export default function StatusList() {
                                                 <Link onClick={() => {
                                                     setSelectedStatus(filteredStatus);
                                                     setSelectedStatusIdx(idx);
-                                                }} to={status?._id ? `/status/feed/${statusType}` : "#"} className="w-full flex items-center p-3 rounded bg-[#47474745] hover:bg-[#47474775]">
+                                                }}
+                                                    to={status?._id ? `/status/feed/${statusType}` : "#"}
+                                                    className="relative w-full flex items-center p-3 rounded bg-[#47474745] hover:bg-[#47474775]"
+                                                >
                                                     <Avatar
                                                         sx={{ width: 50, height: 50 }}
                                                         className={`me-4 ${!status?.viewers?.includes(loginUser?._id) && 'border-3 border-green-400'}`}
@@ -193,6 +226,22 @@ export default function StatusList() {
                                                             <VisibilityOutlinedIcon sx={{ fontSize: "0.9rem" }} />
                                                         </div>
                                                     </div>
+
+                                                    {
+                                                        (status?.user?._id === loginUser?._id) && <Tooltip title="Delete Status" >
+                                                            <button
+                                                                onClick={(event) => {
+                                                                    event.stopPropagation();
+                                                                    event.preventDefault();
+                                                                    handleDeleteStatus(status);
+                                                                }}
+                                                                className="absolute z-50 bottom-1 right-1 w-6 h-6 rounded text-gray-500 hover:text-white hover:bg-gray-500 cursor-pointer"
+
+                                                            >
+                                                                <Delete sx={{ fontSize: '1rem' }} />
+                                                            </button>
+                                                        </Tooltip>
+                                                    }
                                                 </Link>
                                             </li>
                                         ))}
