@@ -349,10 +349,12 @@ export {
     getBlockUsers,
     unblockUser,
     userProfile,
-    groupProfile,
     createNewConnection,
+    
+    groupProfile,
     userJoinGroup,
     userLeaveGroup,
+
     getLiveUsersData,
     getNetworkData
 };

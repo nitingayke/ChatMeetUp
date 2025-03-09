@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState, forwardRef, useRef } from 'reac
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
+import EmojiPicker from 'emoji-picker-react';
 
 import { connectToUser, getUserProfile } from '../../services/userchatService';
 import { updateUserData, updateUserProfileImage } from '../../services/userService';
@@ -13,7 +14,7 @@ import LeftSidebar from '../../components/SidebarLayout/LeftSidebar';
 
 import { Avatar, CircularProgress, Dialog, DialogContent, Slide } from '@mui/material';
 
-import { VideoCall, PersonAdd, Edit, Visibility, Group } from "@mui/icons-material";
+import { VideoCall, PersonAdd, Edit, Visibility, Group, SentimentSatisfiedAlt } from "@mui/icons-material";
 
 
 const Transition = forwardRef(function Transition(props, ref) {
@@ -24,7 +25,7 @@ export default function UserProfile() {
 
     const navigate = useNavigate();
     const { id } = useParams();
-    const { loginUser } = useContext(UserContext);
+    const { loginUser, setLoginUser } = useContext(UserContext);
     const { enqueueSnackbar } = useSnackbar();
 
     const [userProfile, setUserProfile] = useState(null);
@@ -36,6 +37,7 @@ export default function UserProfile() {
 
     const [description, setDescription] = useState(loginUser?.description || "");
     const [userMobileNo, setUserMobileNo] = useState(loginUser?.mobileNo || '');
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     const fileInputRef = useRef(null);
     const [selectedUpdateImage, setSelectedUpdateImage] = useState(null);
@@ -156,6 +158,17 @@ export default function UserProfile() {
             setIsLoading(false);
         }
         setSelectedUpdateImage(null);
+    }
+
+    const handleEmojiClick = (emojiObject) => {
+        setDescription((prevDescription) => prevDescription + emojiObject.emoji);
+        setShowEmojiPicker(false);
+    };
+
+    const handleUserLogout = () => {
+        localStorage.removeItem("authToken");
+        setLoginUser(null);
+        navigate("/login");
     }
 
     if (!loginUser) {
@@ -334,7 +347,7 @@ export default function UserProfile() {
                                 {
                                     (isEditOn && loginUser?.username === id)
                                         ? <div>
-                                            <div className='flex items-center border p-1 rounded border-gray-500'>
+                                            <div className='flex items-center border p-1 rounded border-gray-500 space-x-2'>
                                                 <input
                                                     type="text"
                                                     value={description}
@@ -343,12 +356,22 @@ export default function UserProfile() {
                                                     className="text-gray-500 flex-1"
                                                 />
                                                 <span className='text-sm ps-2 pe-1'>{200 - description.length}</span>
+                                                <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className='bg-[#80808023] w-6 h-6 rounded-e text-gray-400 hover:text-white cursor-pointer'><SentimentSatisfiedAlt sx={{ fontSize: '1.1rem' }} /></button>
                                             </div>
                                             {(200 - description.length <= 0) && <p className='text-sm text-red-500 pt-1' style={{ fontStyle: 'italic' }}>You crossed the limit.</p>}
                                         </div>
                                         : <p className="text-gray-500 italic break-words" style={{ fontStyle: 'italic' }}>"{userProfile.description || "none"}"</p>
                                 }
                             </div>
+
+                            {showEmojiPicker && (
+                                <Dialog
+                                    onClose={() => setShowEmojiPicker(false)}
+                                    open={showEmojiPicker}
+                                >
+                                    <EmojiPicker onEmojiClick={handleEmojiClick} />
+                                </Dialog>
+                            )}
 
                             <div className='mt-4 mb-3'>
                                 <p>Mobile No: </p>
@@ -373,7 +396,12 @@ export default function UserProfile() {
                                 <button onClick={handleCancelButton} className='border rounded px-4 py-1 bg-[#80808030] hover:bg-[#80808055] cursor-pointer'>Cancel</button>
                             </div>}
 
-                            {(loginUser?.username === id && !isEditOn) && <button onClick={() => setIsEditOn(true)} className="border rounded px-5 py-1 text-gray-500 cursor-pointer">Edit</button>}
+                            {
+                                (loginUser?.username === id && !isEditOn) && <div className='space-x-2'>
+                                    <button onClick={() => setIsEditOn(true)} className="border rounded px-5 py-1 text-gray-500 cursor-pointer">Edit</button>
+                                    <button onClick={handleUserLogout} className="border rounded px-5 py-1 text-red-500 cursor-pointer hover:bg-[#ff000020]">Logout</button>
+                                </div>
+                            }
 
                             <div className="grid grid-cols-3 justify-between mt-6 space-x-2">
                                 <Link to={'/u/chatting'}>

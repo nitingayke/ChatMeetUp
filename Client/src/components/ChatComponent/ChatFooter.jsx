@@ -36,7 +36,6 @@ const style = {
     borderRadius: "10px",
 };
 
-
 export default function ChatFooter() {
 
     const [message, setMessage] = useState("");

@@ -30,7 +30,6 @@ export default function ChatPage() {
     }, [enqueueSnackbar, navigate]);
 
     useEffect(() => {
-
         return () => {
             setSelectedUser(null);
         }
@@ -50,10 +49,6 @@ export default function ChatPage() {
         }
     }, [isDialogOpen, setIsDialogOpen]);
 
-    useEffect(() => {
-        console.log("Well1");
-    }, []);
-
     return (
         <>
             <LeftSidebar />
@@ -65,7 +60,7 @@ export default function ChatPage() {
                     className={`hidden md:flex h-full flex-1 flex-col bg-no-repeat bg-cover bg-gradient-to-bl from-purple-600 to-teal-400`}
                     style={loginUser?.backgroundImage && loginUser?.backgroundImage !== 'null' ? { backgroundImage: `url(${loginUser?.backgroundImage})` } : {}}
                 >
-                    <ChatRoom key={id} />
+                    <ChatRoom />
                 </div>
             </div>
 
@@ -76,7 +71,7 @@ export default function ChatPage() {
                         ? { backgroundImage: `url(${loginUser?.backgroundImage})` }
                         : {}}
                 >
-                    <ChatRoom key={id} />
+                    <ChatRoom />
                 </div>
             </Dialog> 
 

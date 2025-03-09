@@ -109,7 +109,7 @@ export default function LeftSidebar() {
             {sections.map((section, idx) => (
               <Link
                 to={section.redirectLink}
-                className="flex justify-center items-center space-x-3 hover:text-white"
+                className={`flex justify-center items-center space-x-3 hover:text-white ${location.pathname.startsWith(section.redirectLink) && 'text-blue-500' }`}
                 key={section.redirectLink}
                 onClick={() => setIsDrawerOpen(false)}
               >

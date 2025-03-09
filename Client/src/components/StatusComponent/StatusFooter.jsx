@@ -25,8 +25,6 @@ export default function StatusFooter() {
     };
 
     useEffect(() => {
-
-
         socket.on('message-sent', handleMessageSend);
 
         return () => {

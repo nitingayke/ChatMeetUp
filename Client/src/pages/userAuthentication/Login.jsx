@@ -28,8 +28,8 @@ export default function Login() {
         try {
             setIsLoading(true);
             const response = await userLoginService(username, password);
-       
-            if (response.status === 200) {
+
+            if (response?.status === 200) {
                 localStorage.setItem('authToken', response.data.token);
                 enqueueSnackbar(response.data.message || 'User login successfully.', { variant: "success" });
                 navigate("/");

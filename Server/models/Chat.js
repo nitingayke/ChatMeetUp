@@ -9,21 +9,25 @@ const chatSchema = new Schema({
     type: {
         type: String,
         enum: ['chat', 'status'],
-        default: 'chat', 
+        default: 'chat',
     },
     attachments: {
         image: { type: String },
         pdf: { type: String },
         video: { type: String },
     },
-    message: { type: String },
+    message: {
+        type: String,
+        trim: true
+    },
     poll: [
         {
-            option: { type: String, required: true },
+            option: { type: String, required: true, trim: true },
             votes: [
                 {
                     type: mongoose.Schema.Types.ObjectId,
                     ref: 'User',
+                    unique: true,
                 },
             ],
         },

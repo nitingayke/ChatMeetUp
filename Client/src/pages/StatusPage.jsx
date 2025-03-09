@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -14,7 +14,6 @@ export default function StatusPage() {
     const { loginUser } = useContext(UserContext);
 
     const [isLoading, setIsLoading] = useState(false);
-
  
     if (!statusType || statusType !== "private" && statusType !== "public") {
         return (

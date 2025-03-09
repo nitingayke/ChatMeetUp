@@ -1,12 +1,12 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
-import ChatHeader from './ChatHeader.jsx';
-import ChatFooter from './ChatFooter.jsx';
-import { ChatMain } from './ChatMain.jsx';
+import React, { useCallback, useContext, useEffect, useState, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getChatData } from "../../services/chatService.js";
 import Avatar from '@mui/material/Avatar';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useSnackbar } from 'notistack';
+import ChatHeader from './ChatHeader.jsx';
+import ChatFooter from './ChatFooter.jsx';
+import { ChatMain } from './ChatMain.jsx';
+import { getChatData } from "../../services/chatService.js";
 import ChatContext from '../../context/ChatContext.js';
 import UserContext from '../../context/UserContext.js';
 import { socket } from '../../services/socketService.js';
@@ -14,15 +14,15 @@ import LoaderContext from '../../context/LoaderContext.js';
 
 export default function ChatRoom() {
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [remoteUser, setRemoteUser] = useState(null);
+    const { id } = useParams();
 
     const { enqueueSnackbar } = useSnackbar();
     const { userChat, setUserChat, joinedUsers, setJoinedUsers } = useContext(ChatContext);
     const { setIsMessageProcessing } = useContext(LoaderContext);
     const { loginUser } = useContext(UserContext);
 
-    const { id } = useParams();
+    const [isLoading, setIsLoading] = useState(false);
+    const [remoteUser, setRemoteUser] = useState(null);
 
     const handleNewChatMessage = useCallback(({ recipientId, data }) => {
 
@@ -97,20 +97,39 @@ export default function ChatRoom() {
         );
     }, [userChat, loginUser, enqueueSnackbar]);
 
-    useEffect(() => {
+    const handleNewChatMessageRef = useRef(handleNewChatMessage);
+    const handlePollVoteSuccessRef = useRef(handlePollVoteSuccess);
+    const handleChatReactionRef = useRef(handleChatReaction);
 
-        console.log("connect");
-        socket.on("add-chat-message-success", handleNewChatMessage);
-        socket.on("poll-vote-success", handlePollVoteSuccess);
-        socket.on("chat-reaction-success", handleChatReaction);
+    useEffect(() => {
+        handleNewChatMessageRef.current = handleNewChatMessage;
+        handlePollVoteSuccessRef.current = handlePollVoteSuccess;
+        handleChatReactionRef.current = handleChatReaction;
+    }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction]);
+
+    useEffect(() => {
+        const messageListener = (data) => handleNewChatMessageRef.current(data);
+        const pollVoteListener = (data) => handlePollVoteSuccessRef.current(data);
+        const reactionListener = (data) => handleChatReactionRef.current(data);
+
+        if (!socket.hasListeners("add-chat-message-success")) {
+            socket.on("add-chat-message-success", messageListener);
+        }
+
+        if (!socket.hasListeners("poll-vote-success")) {
+            socket.on("poll-vote-success", pollVoteListener);
+        }
+
+        if (!socket.hasListeners("chat-reaction-success")) {
+            socket.on("chat-reaction-success", reactionListener);
+        }
 
         return () => {
-            console.log("disconnect");
-            socket.off("add-chat-message-success", handleNewChatMessage);
-            socket.off("poll-vote-success", handlePollVoteSuccess);
-            socket.off("chat-reaction-success", handleChatReaction);
+            socket.off("add-chat-message-success", messageListener);
+            socket.off("poll-vote-success", pollVoteListener);
+            socket.off("chat-reaction-success", reactionListener);
         };
-    }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction]); 
+    }, []);
 
     const getCurrentChatData = async () => {
 

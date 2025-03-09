@@ -14,6 +14,7 @@ const groupSchema = new Schema(
         description: {
             type: String,
             maxlength: 300,
+            trim: true
         },
         password: {
             type: String,

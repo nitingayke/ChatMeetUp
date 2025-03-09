@@ -27,6 +27,7 @@ const userSchema = new Schema({
     description: {
         type: String,
         maxlength: 200,
+        trim: true,
         default: 'Excited to be on ChatMeetUp! Looking forward to making new connections.'
     },
     backgroundImage: {

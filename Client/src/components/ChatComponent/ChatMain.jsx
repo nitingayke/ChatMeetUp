@@ -1,6 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Avatar from '@mui/material/Avatar';
 import Brightness1Icon from '@mui/icons-material/Brightness1';
@@ -8,15 +7,13 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SentimentVerySatisfiedIcon from '@mui/icons-material/SentimentVerySatisfied';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Modal, Box, CircularProgress, Tooltip } from "@mui/material";
+import { Modal, Box, CircularProgress, Tooltip, MenuItem, Menu } from "@mui/material";
 import EmojiPicker from 'emoji-picker-react';
-
+import { useSnackbar } from 'notistack';
 import ChatContext from '../../context/ChatContext.js';
 import { formatTime } from '../../utils/helpers.js';
 import UserContext from '../../context/UserContext.js';
-
 import { socket } from '../../services/socketService.js';
-import { useSnackbar } from 'notistack';
 import { deleteChatMessage } from '../../services/chatService.js';
 import LoaderContext from '../../context/LoaderContext.js';
 import ChatAttachment from './ChatMain/ChatAttachment.jsx';
@@ -36,12 +33,14 @@ export function ChatMain() {
     const [openModal, setOpenModal] = useState(false);
     const [chatMessageData, setChatMessageData] = useState(null);
 
+    const [anchorEl, setAnchorEl] = useState(null);
+    const open = Boolean(anchorEl);
+
     useEffect(() => {
         setLocalChat(userChat);
     }, [userChat]);
 
-
-    const handleMessageReadSuccess = ({ conversationId, chatId, userData }) => {
+    const handleMessageReadSuccess = useCallback(({ conversationId, chatId, userData }) => {
 
         if (localChat?._id !== conversationId) return;
 
@@ -66,16 +65,18 @@ export function ChatMain() {
 
             return { ...prevUserChat, messages: updatedMessages };
         });
-    };
+    }, [setLocalChat, setUserChat]);
 
     useEffect(() => {
 
-        socket.on("mark-messages-read-success", handleMessageReadSuccess);
+        if (!socket.hasListeners("mark-messages-read-success")) {
+            socket.on("mark-messages-read-success", handleMessageReadSuccess);
+        }
 
         return () => {
             socket.off("mark-messages-read-success", handleMessageReadSuccess);
         };
-    }, [localChat]);
+    }, [handleMessageReadSuccess]);
 
     const handleDeleteMessage = async (data) => {
         if (!data?._id) {
@@ -84,6 +85,7 @@ export function ChatMain() {
         }
 
         try {
+            setAnchorEl(null);
             setIsMessageProcessing(true);
             const response = await deleteChatMessage(data._id, loginUser._id);
 
@@ -107,6 +109,36 @@ export function ChatMain() {
             setIsMessageProcessing(false);
         }
     };
+
+    const handleDeleteMessageAll = async (data) => {
+
+        setAnchorEl(null);
+        if (!data) {
+            enqueueSnackbar("Invalid message data.", { variant: 'info' });
+            return;
+        }
+
+        if (data?.sender?._id !== loginUser?._id) {
+            enqueueSnackbar("You can only delete your own messages.", { variant: 'info' });
+            return;
+        }
+
+        const createdAt = new Date(data.createdAt); 
+        const currentTime = new Date();
+        const timeDiff = (currentTime - createdAt) / (1000 * 60);
+
+        if (timeDiff > 20) {
+            enqueueSnackbar("Message can no longer be deleted.", { variant: 'warning' });
+            return;
+        }
+
+        setIsMessageProcessing(true);
+        socket.emit('delete-chat-message', {
+            chatId: data?._id,
+            conversationId: localChat?._id,
+            joinedUsers
+        });
+    }
 
     const handleMessageReaction = async (data) => {
         setOpenModal(true);
@@ -168,6 +200,7 @@ export function ChatMain() {
         });
     };
 
+
     // handle if user read message
     useEffect(() => {
         if (observer.current) {
@@ -195,6 +228,7 @@ export function ChatMain() {
         };
     }, [localChat?.messages?.length]);
 
+
     const cleanChat = loginUser.clearedChats.find((data) => data?.chatId.toString() === id.toString());
     const filterUserChat = useMemo(() => {
         if (!localChat?.messages) return [];
@@ -215,6 +249,7 @@ export function ChatMain() {
         });
     }, [localChat?.messages, cleanChat, messageSearchQuery]);
 
+
     const getLastReadMessageIndex = useCallback(() => {
 
         if (!loginUser || !filterUserChat) return 0;
@@ -228,6 +263,7 @@ export function ChatMain() {
             (isGroup && (!clearedAt || new Date(chat.createdAt) < clearedAt))
         );
     }, [loginUser, filterUserChat]);
+
 
     // scroll those message are already read
     useEffect(() => {
@@ -345,10 +381,23 @@ export function ChatMain() {
                                         <div className={`md:opacity-0 group-hover:opacity-100 flex flex-col absolute ${(loginUser?.username === data?.sender?.username) ? "left-2" : "right-2"} 
                                                                 top-1/2 -translate-y-1/2 space-y-1 mt-2`}>
                                             <button
+                                                aria-haspopup="true"
+                                                aria-expanded="false"
+                                                onClick={(e) => setAnchorEl(e.currentTarget)}
                                                 className='cursor-pointer w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-[#000000ab]'
-                                                onClick={() => handleDeleteMessage(data)}>
+                                            >
                                                 <DeleteOutlineIcon style={{ fontSize: "1.2rem" }} />
                                             </button>
+                                            <Menu
+                                                id="basic-menu"
+                                                anchorEl={anchorEl}
+                                                open={open}
+                                                onClose={() => setAnchorEl(null)}
+                                                elevation={0}
+                                            >
+                                                <MenuItem onClick={() => handleDeleteMessage(data)}>Erase for Me</MenuItem>
+                                                <MenuItem onClick={() => handleDeleteMessageAll(data)}>Erase for All</MenuItem>
+                                            </Menu>
 
                                             <button
                                                 className='cursor-pointer w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-[#000000ab]'

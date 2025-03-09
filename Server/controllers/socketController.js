@@ -240,6 +240,47 @@ const connectToSocket = (server) => {
             }
         });
 
+        socket.on('delete-chat-message', async ({ chatId, conversationId, joinedUsers }) => {
+            try {
+                if (!chatId || !conversationId) {
+                    return socket.emit("error-notification", { message: "Invalid chat or conversation ID." });
+                }
+
+                const chatMessage = await Chat.findById(chatId);
+                if (!chatMessage) {
+                    return socket.emit("error-notification", { message: "Message not found." });
+                }
+
+                const connection = await Connection.findById(conversationId);
+                const group = await Group.findById(conversationId);
+
+                if (!connection && !group) {
+                    return socket.emit("error-notification", { message: "Conversation not found." });
+                }
+
+                if (connection) {
+                    connection.messages = connection.messages.filter(msgId => msgId.toString() !== chatId);
+                    await connection.save();
+                } else {
+                    group.messages = group.messages.filter(msgId => msgId.toString() !== chatId);
+                    await group.save();
+                }
+
+                await Chat.findByIdAndDelete(chatId);
+
+                joinedUsers.forEach(joinUserId => {
+                    if (onlineUsers.has(joinUserId)) {
+                        onlineUsers.get(joinUserId).forEach(socketId => {
+                            io.to(socketId).emit("message-deleted", { chatId, conversationId });
+                        });
+                    }
+                });
+
+            } catch (error) {
+                return socket.emit("error-notification", { message: "" });
+            }
+        });
+
         socket.on('status-viewed', async ({ statusId, userId }) => {
 
             try {
