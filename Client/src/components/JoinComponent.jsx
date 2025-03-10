@@ -302,7 +302,7 @@ export default function JoinComponent() {
                             className="p-2 cursor-pointer focus:outline-none text-gray-500"
                             aria-label={isShowPassword ? "Hide password" : "Show password"}
                         >
-                            {isShowPassword ? <Visibility /> : <VisibilityOff />}
+                            {!isShowPassword ? <Visibility /> : <VisibilityOff />}
                         </button>
                     </div>
 

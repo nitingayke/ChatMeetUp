@@ -5,10 +5,7 @@ import {
     getBlockUsers,
     getLiveUsersData,
     getNetworkData,
-    groupProfile,
     unblockUser,
-    userJoinGroup,
-    userLeaveGroup,
     userProfile
 } from "../controllers/userChatController.js";
 
@@ -20,13 +17,7 @@ router.post('/unblock-user', wrapAsync(unblockUser));
 
 router.post('/user-profile', wrapAsync(userProfile));
 
-router.post('/group-profile', wrapAsync(groupProfile));
-
 router.post('/create-connection', wrapAsync(createNewConnection));
-
-router.post('/join-group', wrapAsync(userJoinGroup));
-
-router.delete('/leave-group', wrapAsync(userLeaveGroup));
 
 router.post('/live-users-data', wrapAsync(getLiveUsersData));
 

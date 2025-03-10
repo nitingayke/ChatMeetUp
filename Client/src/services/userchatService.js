@@ -40,7 +40,7 @@ const getUserProfile = async (username) => {
 
 const getGroupProfile = async (id) => {
     try {
-        const response = await axios.post("http://localhost:8989/chat-user/group-profile", {
+        const response = await axios.post("http://localhost:8989/group/group-profile", {
             id
         });
         return response.data;
@@ -64,7 +64,7 @@ const connectToUser = async (remoteId, userId) => {
 
 const joinGroup = async (groupId, userId, password) => {
     try {
-        const response = await axios.post('http://localhost:8989/chat-user/join-group', {
+        const response = await axios.post('http://localhost:8989/group/join-group', {
             groupId,
             userId,
             password
@@ -77,7 +77,7 @@ const joinGroup = async (groupId, userId, password) => {
 
 const leaveGroup = async (groupId, userId) => {
     try {
-        const response = await axios.delete('http://localhost:8989/chat-user/leave-group', {
+        const response = await axios.delete('http://localhost:8989/group/leave-group', {
             params: { groupId, userId }
         });
         return response.data;

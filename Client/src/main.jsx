@@ -15,7 +15,7 @@ createRoot(document.getElementById('root')).render(
 
         <SnackbarProvider
           maxSnack={3}
-          autoHideDuration={2000}
+          autoHideDuration={4000}
           anchorOrigin={{
             vertical: 'top',
             horizontal: 'right'

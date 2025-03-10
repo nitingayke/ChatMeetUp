@@ -206,43 +206,10 @@ const cleanUserChats = async (req, res) => {
     });
 }
 
-const exitGroup = async (req, res) => {
-
-    const { groupId, userId } = req.params;
-
-    if (!groupId || !userId) {
-        return res.status(httpStatus.BAD_REQUEST).json({ success: false, message: "Group ID and User ID are required." });
-    }
-
-    const group = await Group.findById(groupId);
-    if (!group) {
-        return res.status(httpStatus.NOT_FOUND).json({ success: false, message: "Group not found." });
-    }
-
-    const isMember = group.members.some(member => member.user.toString() === userId);
-    if (!isMember) {
-        return res.status(httpStatus.FORBIDDEN).json({ success: false, message: "You are not a member of this group." });
-    }
-
-    group.members = group.members.filter(member => member.user.toString() !== userId);
-    await group.save();
-
-    await User.findByIdAndUpdate(userId, { $pull: { groups: groupId } });
-    
-    if (group.members.length === 0) {
-        await Group.findByIdAndDelete(groupId);
-        return res.status(httpStatus.OK).json({ success: true, message: "Group deleted as no members remain." });
-    }
-
-    return res.status(httpStatus.OK).json({ success: true, message: "Successfully exited the group." });
-}
-
 export {
     getUserChat,
     deleteChatMessage,
     updatedBackgroundImage,
     setBlockUser,
     cleanUserChats,
-    
-    exitGroup
 };

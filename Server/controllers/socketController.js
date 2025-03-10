@@ -240,7 +240,7 @@ const connectToSocket = (server) => {
             }
         });
 
-        socket.on('delete-chat-message', async ({ chatId, conversationId, joinedUsers }) => {
+        socket.on('delete-chat-message', async ({ chatId, conversationId, joinedUsers, userId }) => {
             try {
                 if (!chatId || !conversationId) {
                     return socket.emit("error-notification", { message: "Invalid chat or conversation ID." });
@@ -269,15 +269,15 @@ const connectToSocket = (server) => {
                 await Chat.findByIdAndDelete(chatId);
 
                 joinedUsers.forEach(joinUserId => {
-                    if (onlineUsers.has(joinUserId)) {
+                    if (onlineUsers?.has(joinUserId)) {
                         onlineUsers.get(joinUserId).forEach(socketId => {
-                            io.to(socketId).emit("message-deleted", { chatId, conversationId });
+                            io.to(socketId).emit("chat-message-deleted-success", { chatId, conversationId, userId });
                         });
                     }
                 });
 
             } catch (error) {
-                return socket.emit("error-notification", { message: "" });
+                return socket.emit("error-notification", { message: "An error occurred while deleting the chat message." });
             }
         });
 

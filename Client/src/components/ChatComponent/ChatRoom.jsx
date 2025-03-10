@@ -97,20 +97,39 @@ export default function ChatRoom() {
         );
     }, [userChat, loginUser, enqueueSnackbar]);
 
+    const handleUserChatDelete = useCallback(({ chatId, conversationId, userId }) => {
+
+        if(userChat?._id !== conversationId) return;
+
+        setUserChat(prev => ({
+            ...prev,
+            messages: prev?.messages?.filter(chat => chat?._id !== chatId) || []
+        }));
+
+        if(loginUser?._id === userId) {
+            setIsMessageProcessing(false);
+        }
+
+    }, [userChat, loginUser, setIsMessageProcessing]);
+
     const handleNewChatMessageRef = useRef(handleNewChatMessage);
     const handlePollVoteSuccessRef = useRef(handlePollVoteSuccess);
     const handleChatReactionRef = useRef(handleChatReaction);
+    const handleUserChatDeleteRef = useRef(handleUserChatDelete);
 
     useEffect(() => {
         handleNewChatMessageRef.current = handleNewChatMessage;
         handlePollVoteSuccessRef.current = handlePollVoteSuccess;
         handleChatReactionRef.current = handleChatReaction;
-    }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction]);
+        handleUserChatDeleteRef.current = handleUserChatDelete;
+    }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction, handleUserChatDelete]);
 
     useEffect(() => {
         const messageListener = (data) => handleNewChatMessageRef.current(data);
         const pollVoteListener = (data) => handlePollVoteSuccessRef.current(data);
         const reactionListener = (data) => handleChatReactionRef.current(data);
+        const chatDeleteListener = (data) => handleUserChatDeleteRef.current(data);
+
 
         if (!socket.hasListeners("add-chat-message-success")) {
             socket.on("add-chat-message-success", messageListener);
@@ -124,10 +143,15 @@ export default function ChatRoom() {
             socket.on("chat-reaction-success", reactionListener);
         }
 
+        if(!socket.hasListeners("chat-message-deleted-success")) {
+            socket.on("chat-message-deleted-success", chatDeleteListener);
+        }
+
         return () => {
             socket.off("add-chat-message-success", messageListener);
             socket.off("poll-vote-success", pollVoteListener);
             socket.off("chat-reaction-success", reactionListener);
+            socket.off("chat-message-deleted-success", chatDeleteListener);
         };
     }, []);
 

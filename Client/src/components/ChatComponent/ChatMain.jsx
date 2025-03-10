@@ -123,7 +123,7 @@ export function ChatMain() {
             return;
         }
 
-        const createdAt = new Date(data.createdAt); 
+        const createdAt = new Date(data.createdAt);
         const currentTime = new Date();
         const timeDiff = (currentTime - createdAt) / (1000 * 60);
 
@@ -136,7 +136,8 @@ export function ChatMain() {
         socket.emit('delete-chat-message', {
             chatId: data?._id,
             conversationId: localChat?._id,
-            joinedUsers
+            joinedUsers,
+            userId: loginUser._id
         });
     }
 
@@ -324,89 +325,92 @@ export function ChatMain() {
                             )}
 
                             <div className={`bg-[#000000c2] p-2 border border-gray-700 mt-4 rounded-b-lg ${loginUser?.username === data?.sender?.username ? 'rounded-s-lg me-2 ms-10' : 'rounded-e-lg me-10 ms-2'}`}>
-                                {data?.deleteBy?.includes(loginUser?._id) ? (
-                                    <div className='flex items-center space-x-1 text-red-300'>
-                                        <DeleteOutlineIcon style={{ fontSize: '1rem', marginBottom: '0.2rem' }} />
-                                        <span>Message deleted</span>
-                                    </div>
-                                ) : (
-                                    <>
-                                        {/* Message Header */}
-                                        <div className="text-[0.8rem] space-x-2 flex justify-between border-b border-gray-700 pb-1 text-gray-400">
-                                            <p>{data?.sender?.username ?? 'Unknown'}</p>
-                                            <p className='pe-2'>{formatTime(data?.createdAt) ?? 'Just now'}</p>
-                                        </div>
 
-                                        {
-                                            (data.type === 'status') && (
-                                                <div className='text-sm text-white flex items-center gap-2 p-2 rounded bg-linear-to-t from-sky-500 to-indigo-500'>
-                                                    <VisibilityIcon fontSize="small" />
-                                                    <span>Shared a Status</span>
+                                {/* Message Header */}
+                                <div className="text-[0.8rem] space-x-2 flex justify-between border-b border-gray-700 pb-1 text-gray-400">
+                                    <p>{data?.sender?.username ?? 'Unknown'}</p>
+                                    <p className='pe-2'>{formatTime(data?.createdAt) ?? 'Just now'}</p>
+                                </div>
+
+                                {
+                                    data?.deleteBy?.includes(loginUser?._id) ? (
+                                        <div className='flex items-center space-x-1 text-red-300 pt-1'>
+                                            <DeleteOutlineIcon style={{ fontSize: '1rem', marginBottom: '0.2rem' }} />
+                                            <span className='text-sm'>Message deleted</span>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {
+                                                (data.type === 'status') && (
+                                                    <div className='text-sm text-white flex items-center gap-2 p-2 rounded bg-linear-to-t from-sky-500 to-indigo-500'>
+                                                        <VisibilityIcon fontSize="small" />
+                                                        <span>Shared a Status</span>
+                                                    </div>
+                                                )
+                                            }
+
+                                            {/* Message Content */}
+                                            {data?.message && <p className='whitespace-pre-line pt-3 text-gray-200'>{data.message}</p>}
+
+                                            {/* Attachment */}
+                                            <ChatAttachment data={data} />
+
+                                            {/* Poll Section */}
+                                            <ChatPoll data={data} localChat={localChat} />
+
+                                            {/* User Reactions */}
+                                            {data?.reactions?.length > 0 && (
+                                                <div className="flex space-x-2 mt-2 flex-wrap">
+                                                    {Object.entries(countReactions(data.reactions)).map(([emoji, count]) => (
+                                                        <span key={emoji} className="px-2 py-1 bg-[#3c3c3cc2] rounded-full text-sm flex items-center mb-1">
+                                                            {emoji} <span className="ml-1 text-white">{count}</span>
+                                                        </span>
+                                                    ))}
                                                 </div>
-                                            )
-                                        }
+                                            )}
 
-                                        {/* Message Content */}
-                                        {data?.message && <p className='whitespace-pre-line pt-3 text-gray-200'>{data.message}</p>}
+                                            {/* User red message or not */}
+                                            {loginUser?.username === data?.sender?.username && (
+                                                <div className="absolute right-10 text-base/2">
+                                                    {isMessageRead(data) ? (
+                                                        <CheckCircleOutlinedIcon className='text-white bg-green-500 rounded-full' style={{ fontSize: '0.9rem' }} />
+                                                    ) : (
+                                                        <Brightness1Icon className='text-gray-500' style={{ fontSize: '0.9rem' }} />
+                                                    )}
+                                                </div>
+                                            )}
 
-                                        {/* Attachment */}
-                                        <ChatAttachment data={data} />
-
-                                        {/* Poll Section */}
-                                        <ChatPoll data={data} localChat={localChat} />
-
-                                        {/* User Reactions */}
-                                        {data?.reactions?.length > 0 && (
-                                            <div className="flex space-x-2 mt-2 flex-wrap">
-                                                {Object.entries(countReactions(data.reactions)).map(([emoji, count]) => (
-                                                    <span key={emoji} className="px-2 py-1 bg-[#3c3c3cc2] rounded-full text-sm flex items-center mb-1">
-                                                        {emoji} <span className="ml-1 text-white">{count}</span>
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {/* User red message or not */}
-                                        {loginUser?.username === data?.sender?.username && (
-                                            <div className="absolute right-10 text-base/2">
-                                                {isMessageRead(data) ? (
-                                                    <CheckCircleOutlinedIcon className='text-white bg-green-500 rounded-full' style={{ fontSize: '0.9rem' }} />
-                                                ) : (
-                                                    <Brightness1Icon className='text-gray-500' style={{ fontSize: '0.9rem' }} />
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Chat Buttons */}
-                                        <div className={`md:opacity-0 group-hover:opacity-100 flex flex-col absolute ${(loginUser?.username === data?.sender?.username) ? "left-2" : "right-2"} 
+                                            {/* Chat Buttons */}
+                                            <div className={`md:opacity-0 group-hover:opacity-100 flex flex-col absolute ${(loginUser?.username === data?.sender?.username) ? "left-2" : "right-2"} 
                                                                 top-1/2 -translate-y-1/2 space-y-1 mt-2`}>
-                                            <button
-                                                aria-haspopup="true"
-                                                aria-expanded="false"
-                                                onClick={(e) => setAnchorEl(e.currentTarget)}
-                                                className='cursor-pointer w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-[#000000ab]'
-                                            >
-                                                <DeleteOutlineIcon style={{ fontSize: "1.2rem" }} />
-                                            </button>
-                                            <Menu
-                                                id="basic-menu"
-                                                anchorEl={anchorEl}
-                                                open={open}
-                                                onClose={() => setAnchorEl(null)}
-                                                elevation={0}
-                                            >
-                                                <MenuItem onClick={() => handleDeleteMessage(data)}>Erase for Me</MenuItem>
-                                                <MenuItem onClick={() => handleDeleteMessageAll(data)}>Erase for All</MenuItem>
-                                            </Menu>
+                                                <button
+                                                    aria-haspopup="true"
+                                                    aria-expanded="false"
+                                                    onClick={(e) => setAnchorEl(e.currentTarget)}
+                                                    className='cursor-pointer w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-[#000000ab]'
+                                                >
+                                                    <DeleteOutlineIcon style={{ fontSize: "1.2rem" }} />
+                                                </button>
+                                                <Menu
+                                                    id="basic-menu"
+                                                    anchorEl={anchorEl}
+                                                    open={open}
+                                                    onClose={() => setAnchorEl(null)}
+                                                    elevation={0}
+                                                >
+                                                    <MenuItem onClick={() => handleDeleteMessage(data)}>Erase for Me</MenuItem>
+                                                    <MenuItem onClick={() => handleDeleteMessageAll(data)}>Erase for All</MenuItem>
+                                                </Menu>
 
-                                            <button
-                                                className='cursor-pointer w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-[#000000ab]'
-                                                onClick={() => handleMessageReaction(data)}>
-                                                <SentimentVerySatisfiedIcon style={{ fontSize: "1.2rem" }} />
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
+                                                <button
+                                                    className='cursor-pointer w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-[#000000ab]'
+                                                    onClick={() => handleMessageReaction(data)}>
+                                                    <SentimentVerySatisfiedIcon style={{ fontSize: "1.2rem" }} />
+                                                </button>
+                                            </div>
+                                        </>
+                                    )
+                                }
                             </div>
                         </div>
                     </li>

@@ -65,7 +65,7 @@ const cleanUserChats = async (chatId, userId) => {
 
 const userExitGroup = async (groupId, userId) => {
     try {
-        const response = await axios.delete(`http://localhost:8989/chatRoute/exit-group/${groupId}/${userId}`);
+        const response = await axios.delete(`http://localhost:8989/group/exit-group/${groupId}/${userId}`);
         return response.data;
     } catch (error) {
         return error.response?.data || { success: false, message: error.message || "Something went wrong" };
