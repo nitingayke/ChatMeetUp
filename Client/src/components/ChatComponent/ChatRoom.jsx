@@ -99,14 +99,14 @@ export default function ChatRoom() {
 
     const handleUserChatDelete = useCallback(({ chatId, conversationId, userId }) => {
 
-        if(userChat?._id !== conversationId) return;
+        if (userChat?._id !== conversationId) return;
 
         setUserChat(prev => ({
             ...prev,
             messages: prev?.messages?.filter(chat => chat?._id !== chatId) || []
         }));
 
-        if(loginUser?._id === userId) {
+        if (loginUser?._id === userId) {
             setIsMessageProcessing(false);
         }
 
@@ -143,7 +143,7 @@ export default function ChatRoom() {
             socket.on("chat-reaction-success", reactionListener);
         }
 
-        if(!socket.hasListeners("chat-message-deleted-success")) {
+        if (!socket.hasListeners("chat-message-deleted-success")) {
             socket.on("chat-message-deleted-success", chatDeleteListener);
         }
 

@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import UserContext from '../context/UserContext';
+import VideoHome from '../components/VideoCallComponent/VideoHome';
 
 export default function VideoCall() {
-
     const { id } = useParams();
     const { onlineUsers } = useContext(UserContext);
 
@@ -16,10 +16,8 @@ export default function VideoCall() {
             </div>
         );
     }
-    
+
     return (
-        <div className='w-full bg-gradient-to-r from-black to-gray-800'>
-            
-        </div>
-    )
+        <VideoHome />
+    );
 }

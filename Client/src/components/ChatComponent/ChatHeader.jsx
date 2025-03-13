@@ -15,6 +15,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { enqueueSnackbar } from 'notistack';
 import { cleanUserChats, setBlockUser, userExitGroup } from '../../services/chatService.js';
 import LoaderContext from '../../context/LoaderContext.js';
+import { socket } from '../../services/socketService.js';
 
 export default function ChatHeader() {
 
@@ -38,6 +39,25 @@ export default function ChatHeader() {
             setRemoteUser(userChat?.user1?.username === loginUser?.username ? userChat?.user2 : userChat?.user1);
         }
     }, [userChat]);
+
+    const handleRemoteUserResponse = ({ action, from }) => {
+
+        if (action === 'allow') {
+            navigate(`/video-call/${from}`);
+        } else if (action === "reject") {
+            enqueueSnackbar("Call rejected.", { variant: "error" });
+        } else if (action === "block") {
+            enqueueSnackbar("You have been blocked by the user.", { variant: "error" });
+        }
+    }
+
+    useEffect(() => {
+        socket.on('video-call-invitation-remote-response', handleRemoteUserResponse);
+
+        return () => {
+            socket.off('video-call-invitation-remote-response', handleRemoteUserResponse);
+        }
+    }, []);
 
     const handleSearchClose = () => {
         setIsSearchStatus(false);
@@ -146,6 +166,27 @@ export default function ChatHeader() {
         }
     };
 
+    const handleVideoCall = async () => {
+
+        if (!remoteUser) {
+            enqueueSnackbar("User not found for the call.", { variant: "error" });
+            return;
+        }
+
+        if (!onlineUsers.includes(remoteUser?._id)) {
+            enqueueSnackbar("User is offline or unavailable for a call.", { variant: "warning" });
+            return;
+        }
+
+        enqueueSnackbar("Waiting for response... Please do not navigate away.", { variant: "info", autoHideDuration: 3000 });
+
+        socket.emit('video-call-request', {
+            to: remoteUser._id,
+            username: loginUser.username,
+            userId: loginUser._id
+        });
+    }
+
     return (
         <>
             <div className='w-full flex items-center space-x-2'>
@@ -184,11 +225,9 @@ export default function ChatHeader() {
 
             <div className='flex'>
                 {
-                    (remoteUser && !isSearchStatus) && <Link to={`/video-call/${remoteUser?._id}`}>
-                        <button className='h-8 w-10 me-2 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white'>
-                            <VideocamOutlinedIcon />
-                        </button>
-                    </Link>
+                    (remoteUser && !isSearchStatus) && <button onClick={handleVideoCall} className='h-8 w-10 me-2 rounded bg-[#80808045] cursor-pointer text-gray-500 hover:text-white'>
+                        <VideocamOutlinedIcon />
+                    </button>
                 }
                 {
                     (isSearchStatus)

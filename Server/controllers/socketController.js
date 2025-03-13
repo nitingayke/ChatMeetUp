@@ -19,6 +19,8 @@ cloudinary.config({
 });
 
 const onlineUsers = new Map();
+const blockUsers = new Map();
+const ongoingCalls = new Map();
 
 const connectToSocket = (server) => {
 
@@ -337,6 +339,76 @@ const connectToSocket = (server) => {
             } catch (error) {
                 socket.emit("error-notification", { message: error.message || "Unable to send message." });
             }
+        });
+
+        socket.on('video-call-request', ({ to, username, userId }) => {
+
+            if (blockUsers.get(to)?.has(userId)) {
+                return socket.emit("error-notification", {
+                    message: "You cannot call this user. They have blocked you."
+                });
+            }
+
+            if (!onlineUsers.has(to)) {
+                return socket.emit("error-notification", { message: "User is offline or unavailable for a call." });
+            }
+
+            if (!onlineUsers.has(userId)) {
+                return socket.emit("error-notification", { message: "You are not online. Please reconnect and try again." });
+            }
+
+            if (onlineUsers.get(to).size > 1) {
+                return socket.emit("error-notification", {
+                    message: "User is currently active on multiple devices. Calls can only be made to a single active device."
+                });
+            }
+
+            if (onlineUsers.get(userId).size > 1) {
+                return socket.emit("error-notification", {
+                    message: "You are active on multiple devices. Please use only one device to make a call."
+                });
+            }
+
+            if (ongoingCalls.has(userId) || ongoingCalls.has(to)) {
+                return socket.emit("error-notification", {
+                    message: "One of the users is already in another call."
+                });
+            }
+
+            const userSocketId = onlineUsers.get(to).values().next().value;
+
+            if (!userSocketId) {
+                return socket.emit("error-notification", { message: "User is offline at the moment." });
+            }
+
+            io.to(userSocketId).emit('video-call-invitation', {
+                from: userId,
+                username
+            });
+        });
+
+        socket.on('video-call-invitation-response', ({ from, to, action }) => {
+
+            const userSocketId = onlineUsers.get(to)?.values().next().value;
+
+            if (!userSocketId) {
+                return socket.emit("error-notification", { message: "User is no longer available to receive your response." });
+            }
+
+            if (action === "block") {
+                if (!blockUsers.has(from)) {
+                    blockUsers.set(from, new Set());
+                }
+                blockUsers.get(from).add(to);
+            } else if (action === 'allow') {
+                ongoingCalls.set(from, to);
+                ongoingCalls.set(to, from);
+            }
+
+            io.to(userSocketId).emit('video-call-invitation-remote-response', {
+                action,
+                from
+            });
         });
 
         socket.on("disconnect", () => {

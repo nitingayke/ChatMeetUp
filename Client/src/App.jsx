@@ -1,33 +1,30 @@
-import React, { useContext, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useContext, useEffect, useState } from 'react';
+
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Typography, Slide } from "@mui/material";
+
 import ChatContextProvider from './context/ChatContextProvider';
-import StatusContextProvider from './context/StatusContextProvider';
-import ChatPage from './pages/ChatPage';
-import Login from './pages/userAuthentication/Login';
-import Register from './pages/userAuthentication/Register';
-import NotFound from './pages/NotFound';
 import { getLoginUser } from './services/authService';
 import UserContext from './context/UserContext';
 import { useSnackbar } from "notistack";
 import { socket } from './services/socketService';
 import LoaderContext from './context/LoaderContext';
-import BackgroundWallpaper from './components/BackgroundWallpaper';
-import BlockUserList from './components/NetworkList/BlockUserList';
-import UserProfile from './pages/networkProfile/UserProfile';
-import CommunityProfile from './pages/networkProfile/CommunityProfile';
-import LiveUserList from './components/NetworkList/LiveUserList';
-import JoinComponent from './components/JoinComponent';
-import StatusPage from './pages/StatusPage';
-import StatusList from './components/NetworkList/StatusList';
-import AddStatus from './pages/AddStatus';
-import VideoCall from './pages/VideoCall';
-import CreateGroup from './components/CreateGroup';
+import AppRoutes from './AppRoutes';
+import { useNavigate } from 'react-router-dom';
+
+const Transition = React.forwardRef(function Transition(props, ref) {
+    return <Slide direction="up" ref={ref} {...props} />;
+});
 
 function App() {
+
+    const navigate = useNavigate();
 
     const { loginUser, setLoginUser, setOnlineUsers } = useContext(UserContext);
     const { setIsMessageProcessing } = useContext(LoaderContext);
     const { enqueueSnackbar } = useSnackbar();
+
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [invitationData, setInvitationData] = useState(null);
 
     const token = localStorage.getItem('authToken');
 
@@ -64,51 +61,84 @@ function App() {
         setIsMessageProcessing(false);
     };
 
+    const handleVideoCallInvitation = ({ from, username }) => {
+        setInvitationData({ userId: from, username });
+        setIsDialogOpen(true);
+    }
+
     useEffect(() => {
 
         socket.on("update-online-users", handleUpdateOnlineUsers);
         socket.on('error-notification', handleErrorNotification);
-        
+        socket.on('video-call-invitation', handleVideoCallInvitation);
+
         return () => {
             socket.off("update-online-users", handleUpdateOnlineUsers);
             socket.off('error-notification', handleErrorNotification);
+            socket.off('video-call-invitation', handleVideoCallInvitation);
         };
     }, [setOnlineUsers]);
 
+    const handleCallResponse = (action) => {
+
+        setIsDialogOpen(false);
+
+        if (!loginUser?._id) {
+            enqueueSnackbar("Error processing the call response. Please try again.", { variant: "error" });
+            return;
+        }
+
+        if(action === 'allow') {
+            navigate(`/video-call/${invitationData?.userId}`);
+        } else if (action === "reject") {
+            enqueueSnackbar("Call rejected.", { variant: "warning" });
+        } else if (action === "block") {
+            enqueueSnackbar("User has been blocked. You will no longer receive calls from them.", { variant: "error" });
+        }
+
+        console.log("well known");
+
+        socket.emit('video-call-invitation-response', {
+            from: loginUser?._id,
+            to: invitationData.userId,
+            action
+        });
+    }
+
     return (
         <div className='h-screen md:flex'>
+
             <ChatContextProvider>
-                <Routes>
-                    <Route path='/login' element={<Login />} />
-                    <Route path='/register' element={<Register />} />
-                    <Route path='/u/chatting/:id?' element={<ChatPage />} />
-                    <Route path='/u/block-users' element={<BlockUserList />} />
-                    <Route path='/u/profile/:id' element={<UserProfile />} />
-                    <Route path='/u/join-requests' element={<JoinComponent />} />
-                    <Route path='/community/:id' element={<CommunityProfile />} />
-                    <Route path='/playground/wallpaper' element={<BackgroundWallpaper />} />
-                    <Route path='/live-users' element={<LiveUserList />} />
-
-                    <Route path='/video-call/:id' element={<VideoCall />} />
-
-                    <Route 
-                        path='/status/*' 
-                        element={
-                            <StatusContextProvider>
-                                <Routes>
-                                    <Route path='/:statusType' element={<StatusList />} />
-                                    <Route path='/feed/:statusType' element={<StatusPage />} />
-                                    <Route path='/upload' element={<AddStatus />} />
-                                </Routes>
-                            </StatusContextProvider>
-                        } 
-                    />
-
-                    <Route path='/new-group' element={<CreateGroup/>} />
-
-                    <Route path='*' element={<NotFound />} />
-                </Routes>
+                <AppRoutes />
             </ChatContextProvider>
+
+            <Dialog
+                open={isDialogOpen}
+                TransitionComponent={Transition}
+                disableBackdropClick
+                disableEscapeKeyDown
+            >
+                <DialogTitle>Incoming Video Call</DialogTitle>
+                <DialogContent>
+                    <Typography sx={{ fontSize: '1.1rem' }}>
+                        <span className='text-gray-500' style={{ fontWeight: '800' }}>
+                            {invitationData?.username}
+                        </span> is calling you. Would you like to accept the call?
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => handleCallResponse("allow")} color="primary" variant="contained">
+                        Accept
+                    </Button>
+                    <Button onClick={() => handleCallResponse("reject")} color="secondary" variant="outlined">
+                        Decline
+                    </Button>
+                    <Button onClick={() => handleCallResponse("block")} color="error" variant="contained">
+                        Block
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
         </div>
     );
 }
