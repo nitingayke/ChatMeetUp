@@ -10,16 +10,33 @@ export default function VideoUpload() {
     const handleFileChange = (event) => {
         const file = event.target.files[0];
 
-        if (file && file.type.startsWith("video/")) {
+        if (!file) return;
+
+        if (!file.type.startsWith("video/")) {
+            enqueueSnackbar("Please select a valid video file.", { variant: "error" });
+            return;
+        }
+
+        const video = document.createElement("video");
+        video.preload = "metadata";
+
+        video.onloadedmetadata = () => {
+            window.URL.revokeObjectURL(video.src);
+            if (video.duration > 300) {
+                enqueueSnackbar("Video must not be longer than 5 minutes.", { variant: "error" });
+                return;
+            }
+
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onloadend = () => {
                 setInputFile(reader.result);
-            }
-        } else {
-            enqueueSnackbar("Please select a valid video file.", { variant: "error" });
-        }
+            };
+        };
+
+        video.src = URL.createObjectURL(file);
     };
+
 
     const handleHideComponent = () => {
         setInputComponent(null);

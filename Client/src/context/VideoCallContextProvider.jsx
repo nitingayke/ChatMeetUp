@@ -1,6 +1,6 @@
-import React, { useState, createContext, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 
-const VideoCallContext = createContext();
+import VideoCallContext from './VideoCallContext';
 
 export default function VideoCallContextProvider({ children }) {
 
@@ -9,14 +9,19 @@ export default function VideoCallContextProvider({ children }) {
 
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
+    const peerConnection = useRef(new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    }));
+
 
     const contextValue = useMemo(() => ({
         localMic,
         setLocalMic,
-        localVideo, 
+        localVideo,
         setLocalVideo,
         localVideoRef,
         remoteVideoRef,
+        peerConnection
     }), [localMic, localVideo]);
 
     return (
@@ -26,4 +31,3 @@ export default function VideoCallContextProvider({ children }) {
     );
 }
 
-export { VideoCallContext };

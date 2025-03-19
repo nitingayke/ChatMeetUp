@@ -39,8 +39,21 @@ const deleteStatus = async (statusId) => {
     }
 };
 
+const getStatusViews = async (statusId) => {
+    try {
+        const response = await axios.post(`http://localhost:8989/status/views`, {
+            statusId
+        });
+
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { success: false, message: error.message || "Unable to get status views." };
+    }
+}
+
 export {
     getTotalStatus,
     uploadNewUserStatus,
-    deleteStatus
+    deleteStatus,
+    getStatusViews
 }

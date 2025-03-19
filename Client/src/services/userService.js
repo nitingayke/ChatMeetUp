@@ -17,7 +17,7 @@ const updateUserProfileImage = async (imageFile, userId) => {
     try {
 
         const formData = new FormData();
-        formData.append("image", imageFile); 
+        formData.append("image", imageFile);
         formData.append("userId", userId);
 
         const response = await axios.patch(
@@ -34,4 +34,13 @@ const updateUserProfileImage = async (imageFile, userId) => {
     }
 };
 
-export { updateUserData, updateUserProfileImage };
+const getTotalActiveUsers = async () => {
+    try {
+        const response = await axios.get('http://localhost:8989/user-update/get-active-users');
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { success: false, message: error.message || "Unable to get active users." };
+    }
+}
+
+export { updateUserData, updateUserProfileImage, getTotalActiveUsers };

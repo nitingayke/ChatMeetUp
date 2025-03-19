@@ -322,7 +322,6 @@ export default function CommunityProfile() {
                                 </div>
                             }
 
-
                             {showEmojiPicker && (
                                 <Dialog
                                     open={showEmojiPicker}

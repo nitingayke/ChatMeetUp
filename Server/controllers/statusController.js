@@ -2,6 +2,7 @@ import Status from "../models/Status.js"
 
 import httpStatus from 'http-status';
 import User from "../models/User.js";
+import { response } from "express";
 
 const getTotalUserStatus = async (req, res) => {
 
@@ -76,8 +77,36 @@ const deleteUserStatus = async (req, res) => {
     });
 }
 
+const getTotalStatusViews = async (req, res) => {
+
+    const { statusId } = req.body;
+
+    if (!statusId) {
+        return res.status(httpStatus.BAD_REQUEST).json({
+            success: false,
+            message: 'Status id not found.',
+        });
+    }
+
+    const status = await Status.findById(statusId)
+        .populate("viewers", "username image description");
+
+    if (!status) {
+        return res.status(httpStatus.NOT_FOUND).json({
+            success: false,
+            message: "Status not found.",
+        });
+    }
+
+    return res.status(httpStatus.OK).json({
+        success: true,
+        viewers: status?.viewers,
+    });
+}
+
 export {
     getTotalUserStatus,
     uploadNewStatus,
-    deleteUserStatus
+    deleteUserStatus,
+    getTotalStatusViews
 }

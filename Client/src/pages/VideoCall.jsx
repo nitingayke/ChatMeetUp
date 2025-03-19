@@ -11,7 +11,7 @@ export default function VideoCall() {
         return (
             <div className="w-full h-full p-4 flex justify-center items-center bg-gradient-to-r from-black to-gray-800">
                 <h1 className='p-3 text-xl rounded bg-black/50 text-white text-center shadow-md'>
-                    User is offline and cannot be contacted for a video call.
+                    This user is currently offline and unavailable for a video call.
                 </h1>
             </div>
         );

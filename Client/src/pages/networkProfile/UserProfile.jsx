@@ -12,9 +12,10 @@ import UserContext from '../../context/UserContext';
 import AuthOptions from '../../components/AuthOptions';
 import LeftSidebar from '../../components/SidebarLayout/LeftSidebar';
 
-import { Avatar, CircularProgress, Dialog, DialogContent, Slide } from '@mui/material';
+import { Avatar, CircularProgress, Dialog, DialogContent, Slide, Tooltip } from '@mui/material';
 
 import { VideoCall, PersonAdd, Edit, Visibility, Group, SentimentSatisfiedAlt } from "@mui/icons-material";
+import { socket } from '../../services/socketService';
 
 
 const Transition = forwardRef(function Transition(props, ref) {
@@ -25,7 +26,7 @@ export default function UserProfile() {
 
     const navigate = useNavigate();
     const { id } = useParams();
-    const { loginUser, setLoginUser } = useContext(UserContext);
+    const { loginUser, setLoginUser, onlineUsers } = useContext(UserContext);
     const { enqueueSnackbar } = useSnackbar();
 
     const [userProfile, setUserProfile] = useState(null);
@@ -64,6 +65,31 @@ export default function UserProfile() {
         fetchUserProfile();
         setSelectedUpdateImage(null);
     }, [loginUser, id]);
+
+    const handleRemoteUserResponse = ({ action, from }) => {
+
+        if (action === 'allow') {
+            navigate(`/video-call/${from}`);
+        } else if (action === "reject") {
+            enqueueSnackbar("Call rejected.", { variant: "error" });
+        } else if (action === "block") {
+            enqueueSnackbar("You have been blocked by the user.", { variant: "error" });
+        }
+    }
+
+    useEffect(() => {
+
+        socket.on('clear-call-data-success', () => {
+            enqueueSnackbar('Call data cleared successfully.', { variant: 'success' })
+        });
+
+        socket.on('video-call-invitation-remote-response', handleRemoteUserResponse);
+
+        return () => {
+            socket.off('clear-call-data-success');
+            socket.off('video-call-invitation-remote-response', handleRemoteUserResponse);
+        }
+    }, []);
 
     const userConnection = loginUser?.connections?.find(
         connection => connection?.user1?.username === id || connection?.user2?.username === id
@@ -169,6 +195,31 @@ export default function UserProfile() {
         localStorage.removeItem("authToken");
         setLoginUser(null);
         navigate("/login");
+    }
+
+    const handleClearCallLogs = () => {
+        socket.emit('clear-call-data', { userId: loginUser?._id });
+    }
+
+    const handleVideoCall = () => {
+
+        if (!userProfile) {
+            enqueueSnackbar("User not found for the call.", { variant: "error" });
+            return;
+        }
+
+        if (!onlineUsers.includes(userProfile?._id)) {
+            enqueueSnackbar("User is offline or unavailable for a call.", { variant: "warning" });
+            return;
+        }
+
+        enqueueSnackbar("Waiting for response... Please do not navigate away.", { variant: "info", autoHideDuration: 3000 });
+
+        socket.emit('video-call-request', {
+            to: userProfile._id,
+            username: loginUser.username,
+            userId: loginUser._id
+        });
     }
 
     if (!loginUser) {
@@ -328,7 +379,7 @@ export default function UserProfile() {
                             <p className="text-center text-gray-400">{userProfile.email}</p>
 
                             {loginUser?._id !== userProfile?._id && <div className="grid grid-cols-2 gap-4 mt-6">
-                                <button className="font-bold text-lg py-3 border border-gray-500 rounded flex items-center justify-center gap-2 bg-[#80808023] hover:bg-[#80808050] cursor-pointer">
+                                <button onClick={handleVideoCall} className="font-bold text-lg py-3 border border-gray-500 rounded flex items-center justify-center gap-2 bg-[#80808023] hover:bg-[#80808050] cursor-pointer">
                                     <VideoCall fontSize="small" /> Call
                                 </button>
 
@@ -400,6 +451,12 @@ export default function UserProfile() {
                                 (loginUser?.username === id && !isEditOn) && <div className='space-x-2'>
                                     <button onClick={() => setIsEditOn(true)} className="border rounded px-5 py-1 text-gray-500 cursor-pointer">Edit</button>
                                     <button onClick={handleUserLogout} className="border rounded px-5 py-1 text-red-500 cursor-pointer hover:bg-[#ff000020]">Logout</button>
+                                    <Tooltip title={'Delete all blocked users and clear call logs. If you are on another call, it will be ended.'}>
+                                        <button onClick={handleClearCallLogs} className='border rounded px-5 py-1 text-[#00fff6] cursor-pointer hover:bg-[#00ffff20]'>
+                                            Clear Call Logs
+                                        </button>
+                                    </Tooltip>
+
                                 </div>
                             }
 

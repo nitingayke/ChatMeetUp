@@ -37,7 +37,7 @@ export default function ChatPage() {
 
     useEffect(() => {
         const handleBackButton = () => {
-            if(isDialogOpen) {
+            if (isDialogOpen) {
                 setIsDialogOpen(false);
             }
         }
@@ -64,7 +64,7 @@ export default function ChatPage() {
                 </div>
             </div>
 
-           <Dialog fullScreen open={isDialogOpen} TransitionComponent={Transition} className="block md:hidden" >
+            <Dialog fullScreen open={isDialogOpen} TransitionComponent={Transition} className="block md:hidden" >
                 <div
                     className={`text-white flex h-full flex-1 flex-col bg-no-repeat bg-cover bg-gradient-to-bl from-purple-600 to-teal-400`}
                     style={loginUser?.backgroundImage && loginUser?.backgroundImage !== 'null'
@@ -73,7 +73,7 @@ export default function ChatPage() {
                 >
                     <ChatRoom />
                 </div>
-            </Dialog> 
+            </Dialog>
 
         </>
     )

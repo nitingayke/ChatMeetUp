@@ -15,10 +15,11 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import StatusContext from "../../context/StatusContext";
 import UserContext from "../../context/UserContext";
 import AuthOptions from "../AuthOptions";
-import { deleteStatus, getTotalStatus } from "../../services/statusService";
+import { deleteStatus, getStatusViews, getTotalStatus } from "../../services/statusService";
 import { useSnackbar } from "notistack";
 import { Delete } from "@mui/icons-material";
 import Tooltip from '@mui/material/Tooltip';
+import { Dialog, Divider, List, ListItem, ListItemAvatar, ListItemText, Typography } from "@mui/material";
 
 export default function StatusList() {
 
@@ -34,6 +35,9 @@ export default function StatusList() {
     const [selectedFilter, setSelectedFilter] = useState("Missed");
     const [localStatus, setLocalStatus] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const [statusViewOpen, setStatusViewOpen] = useState(false);
+    const [statusViewUsers, setStatusViewUsers] = useState([]);
+    const [statusViewLoading, setStatusViewLoading] = useState(false);
 
     const open = Boolean(anchorEl);
 
@@ -115,6 +119,30 @@ export default function StatusList() {
             enqueueSnackbar(error.message || "An error occurred.", { variant: 'error' });
         } finally {
             setIsLoading(false);
+        }
+    }
+
+    const handleStatusView = async (status) => {
+
+        if (!status) {
+            enqueueSnackbar("Status not found, please try again.", { variant: "error" });
+            return;
+        }
+
+        setStatusViewOpen(true);
+        try {
+            setStatusViewLoading(true);
+            const response = await getStatusViews(status?._id);
+
+            if (response?.success) {
+                setStatusViewUsers(response.viewers);
+            } else {
+                enqueueSnackbar(response?.message || "Failed to fetch status views.", { variant: "error" });
+            }
+        } catch (error) {
+            enqueueSnackbar("An error occurred while fetching status views.", { variant: "error" });
+        } finally {
+            setStatusViewLoading(false);
         }
     }
 
@@ -224,6 +252,15 @@ export default function StatusList() {
                                                         <div className="text-xs text-gray-400 flex items-center space-x-1 mt-1">
                                                             <p>{(status?.viewers || []).length}</p>
                                                             <VisibilityOutlinedIcon sx={{ fontSize: "0.9rem" }} />
+
+                                                            {
+                                                                (status?.user?._id === loginUser?._id) && <button onClick={(event) => {
+                                                                    event.stopPropagation();
+                                                                    event.preventDefault();
+                                                                    handleStatusView(status);
+                                                                }} className="text-blue-500 hover:text-blue-600 hover:underline cursor-pointer"
+                                                                >Views</button>
+                                                            }
                                                         </div>
                                                     </div>
 
@@ -250,7 +287,43 @@ export default function StatusList() {
                         <br /><br /><br /><br />
                     </div>
                 )}
-            </div>
+            </div >
+
+            <Dialog
+                open={statusViewOpen}
+                onClose={() => setStatusViewOpen(false)}
+            >
+                <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
+                    {
+                        statusViewUsers.map((user) =>
+                            <ListItem alignItems="flex-start" key={user?._id} >
+                                <ListItemAvatar>
+                                    <Avatar alt={user?.username} src={user?.image || "#"} />
+                                </ListItemAvatar>
+                                <ListItemText
+                                    primary={user?.username}
+                                    secondary={
+                                        <Typography
+                                            component="span"
+                                            variant="body2"
+                                            sx={{
+                                                color: 'text.primary',
+                                                display: "-webkit-box",
+                                                WebkitBoxOrient: "vertical",
+                                                WebkitLineClamp: 2,
+                                                overflow: "hidden",
+                                            }}
+                                        >
+                                            {user.description}
+                                        </Typography>
+                                    }
+                                />
+                            </ListItem>
+
+                        )
+                    }
+                </List>
+            </Dialog>
         </>
     );
 }

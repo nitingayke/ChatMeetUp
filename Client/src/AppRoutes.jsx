@@ -17,10 +17,12 @@ import AddStatus from './pages/AddStatus';
 import VideoCall from './pages/VideoCall';
 import CreateGroup from './components/CreateGroup';
 import VideoCallContextProvider from './context/VideoCallContextProvider';
+import HomePage from './pages/HomePage';
 
 export default function AppRoutes() {
     return (
         <Routes>
+            <Route path='/' element={<HomePage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/u/chatting/:id?" element={<ChatPage />} />

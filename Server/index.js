@@ -13,7 +13,6 @@ import userChat from './routes/userChatRoutes.js';
 import statusRoute from './routes/statusRoutes.js';
 import groupRoute from './routes/groupRoutes.js';
 
-import insertData from './models/helperData.js';
 import { connectToSocket } from './controllers/socketController.js';
 
 const app = express();
@@ -42,8 +41,6 @@ app.use("/chatRoute", chatRoute);
 app.use("/chat-user", userChat);
 
 app.use("/status", statusRoute);
-
-app.get('/insertData', insertData);
 
 app.get('*', (req, res) => {
     return res.send({ 'message': 'Router not found, just implemented only one router. so dont worry i will implement remaining route.' });

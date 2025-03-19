@@ -20,7 +20,7 @@ cloudinary.config({
 
 const onlineUsers = new Map();
 const blockUsers = new Map();
-const ongoingCalls = new Map();
+const ongoingCalls = new Set();
 
 const connectToSocket = (server) => {
 
@@ -369,13 +369,13 @@ const connectToSocket = (server) => {
                 });
             }
 
-            if (ongoingCalls.has(userId) || ongoingCalls.has(to)) {
+            if (ongoingCalls.has(to) || ongoingCalls.has(userId)) {
                 return socket.emit("error-notification", {
-                    message: "One of the users is already in another call."
+                    message: "users is already in another call."
                 });
             }
 
-            const userSocketId = onlineUsers.get(to).values().next().value;
+            const userSocketId = onlineUsers.get(to)?.values().next().value;
 
             if (!userSocketId) {
                 return socket.emit("error-notification", { message: "User is offline at the moment." });
@@ -401,14 +401,107 @@ const connectToSocket = (server) => {
                 }
                 blockUsers.get(from).add(to);
             } else if (action === 'allow') {
-                ongoingCalls.set(from, to);
-                ongoingCalls.set(to, from);
+                ongoingCalls.add(from);
+                ongoingCalls.add(to);
             }
 
             io.to(userSocketId).emit('video-call-invitation-remote-response', {
                 action,
                 from
             });
+        });
+
+        socket.on('offer', ({ offer, to }) => {
+            try {
+                if (!to) {
+                    return socket.emit("error-notification", { message: "Invalid recipient for offer." });
+                }
+
+                const userSockets = onlineUsers?.get(to);
+
+                if (!userSockets || userSockets.size === 0) {
+                    return socket.emit("error-notification", { message: "User is offline at the moment." });
+                }
+
+                const userSocketId = userSockets.values().next().value;
+
+                if (!userSocketId) {
+                    return socket.emit("error-notification", { message: "No active connection found for the user." });
+                }
+
+                io.to(userSocketId).emit('offer', { offer, sender: socket.id });
+            } catch (error) {
+                socket.emit("error-notification", { message: "An error occurred while sending the offer." });
+            }
+        });
+
+        socket.on('answer', ({ answer, to }) => {
+            try {
+                if (!to) {
+                    return socket.emit("error-notification", { message: "Invalid recipient for answer." });
+                }
+
+                io.to(to).emit('answer', { answer, sender: socket.id });
+            } catch (error) {
+                socket.emit("error-notification", { message: "An error occurred while sending the answer." });
+            }
+        });
+
+        socket.on('ice-candidate', ({ candidate, to }) => {
+            try {
+                if (!to) {
+                    return socket.emit("error-notification", { message: "Invalid recipient for ICE candidate." });
+                }
+
+                const userSockets = onlineUsers?.get(to);
+
+                if (!userSockets || userSockets.size === 0) {
+                    return socket.emit("error-notification", { message: "User is offline at the moment." });
+                }
+
+                const userSocketId = userSockets.values().next().value;
+
+                if (!userSocketId) {
+                    return socket.emit("error-notification", { message: "No active connection found for the user." });
+                }
+
+                io.to(userSocketId).emit('ice-candidate', { candidate, sender: socket.id });
+            } catch (error) {
+                socket.emit("error-notification", { message: "An error occurred while sending the ICE candidate." });
+            }
+        });
+
+        socket.on('leave-call', ({ from, to }) => {
+
+            if (!ongoingCalls.has(from) && !ongoingCalls.has(to)) {
+                return;
+            }
+        
+            ongoingCalls.delete(from);
+            ongoingCalls.delete(to);
+
+            socket.emit('leave-call');
+
+            const remoteUserSockets = onlineUsers.get(to);
+            
+            if (remoteUserSockets) {
+                remoteUserSockets.forEach((userSocketId) => {
+                    socket.to(userSocketId).emit('leave-call');
+                });
+            }
+        });
+
+        socket.on('clear-call-data', ({ userId }) => {
+
+            if(ongoingCalls.has(userId)) {
+                ongoingCalls.delete(userId);
+            }
+
+            if(blockUsers.has(userId)) {
+                blockUsers.delete(userId);
+            }
+
+            socket.emit('clear-call-data-success');
         });
 
         socket.on("disconnect", () => {

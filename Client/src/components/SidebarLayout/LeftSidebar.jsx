@@ -13,6 +13,7 @@ import GroupAddIcon from "@mui/icons-material/GroupAdd";
 
 import { Link, useLocation } from "react-router-dom";
 import UserContext from "../../context/UserContext";
+import { QuestionAnswerOutlined } from "@mui/icons-material";
 
 export default function LeftSidebar() {
 
@@ -42,9 +43,10 @@ export default function LeftSidebar() {
             to={"/"}
             className="flex items-center space-x-3 mt-1 p-1 transition-all hover:cursor-pointer z-10 sticky top-0 left-0"
           >
-            <span className="border-2 p-1 rounded-full border-orange-500">
-              <PersonAddRoundedIcon className="text-orange-500" />
-            </span>
+            <div className="p-1 w-8 h-8 flex-shrink-0">
+              <img src="https://res-console.cloudinary.com/dnpg99izj/thumbnails/v1/image/upload/v1742393175/Q2hhdE1lZXRVcF9NZXNzYWdlX0ZpbGVzL3FuZXpwdWdxbXd3Nzljb2szdW9y/drilldown" alt="ChatMeetUp Logo" className="w-full h-full object-contain" />
+            </div>
+
             <div
               className="tracking-wide text-2xl bg-gradient-to-r from-[#ef4136] to-[#fbb040] bg-clip-text text-transparent whitespace-nowrap transition-all duration-300 opacity-0 translate-x-[-20px] group-hover:opacity-100 group-hover:translate-x-0"
               style={{ fontWeight: "900", fontFamily: "cursive" }}
@@ -52,6 +54,7 @@ export default function LeftSidebar() {
               ChatMeetUp
             </div>
           </Link>
+
 
           {sections.map((section) => (
             <Link
@@ -109,7 +112,7 @@ export default function LeftSidebar() {
             {sections.map((section, idx) => (
               <Link
                 to={section.redirectLink}
-                className={`flex justify-center items-center space-x-3 hover:text-white ${location.pathname.startsWith(section.redirectLink) && 'text-blue-500' }`}
+                className={`flex justify-center items-center space-x-3 hover:text-white ${location.pathname.startsWith(section.redirectLink) && 'text-blue-500'}`}
                 key={section.redirectLink}
                 onClick={() => setIsDrawerOpen(false)}
               >

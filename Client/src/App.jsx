@@ -96,8 +96,6 @@ function App() {
             enqueueSnackbar("User has been blocked. You will no longer receive calls from them.", { variant: "error" });
         }
 
-        console.log("well known");
-
         socket.emit('video-call-invitation-response', {
             from: loginUser?._id,
             to: invitationData.userId,
@@ -115,8 +113,6 @@ function App() {
             <Dialog
                 open={isDialogOpen}
                 TransitionComponent={Transition}
-                disableBackdropClick
-                disableEscapeKeyDown
             >
                 <DialogTitle>Incoming Video Call</DialogTitle>
                 <DialogContent>

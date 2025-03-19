@@ -73,4 +73,9 @@ const updateUserProfileImage = async (req, res) => {
     })
 }
 
-export { updateUserData, updateUserProfileImage };
+const getActiveUsers = async (req, res) => {
+    const totalUsers = await User.countDocuments();
+    return res.status(httpStatus.OK).json({ success: true, count: totalUsers });
+}
+
+export { updateUserData, updateUserProfileImage, getActiveUsers };

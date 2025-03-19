@@ -2,10 +2,11 @@ import React, { useContext, useState } from 'react';
 import { motion } from 'framer-motion';
 import { MoreVert, Mic, MicOff, Videocam, VideocamOff, Person } from '@mui/icons-material';
 import { Menu, MenuItem } from '@mui/material';
-import { VideoCallContext } from '../../context/VideoCallContextProvider';
+import VideoCallContext from '../../context/VideoCallContext';
 
 export default function LocalUserRoom() {
-    const { localMic, setLocalMic, localVideoRef, localVideo, setLocalVideo } = useContext(VideoCallContext);
+
+    const { localMic, setLocalMic, localVideoRef, localVideo, setLocalVideo, peerConnection } = useContext(VideoCallContext);
     const [anchorEl, setAnchorEl] = useState(null);
     const [position, setPosition] = useState("topRight");
     const open = Boolean(anchorEl);
@@ -13,7 +14,6 @@ export default function LocalUserRoom() {
     const handleMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
     };
-
 
     const handleMenuClose = () => {
         setAnchorEl(null);
@@ -56,20 +56,20 @@ export default function LocalUserRoom() {
 
             <button
                 onClick={handleLocalVideo}
-                className='absolute right-20 top-2 z-50 rounded-full w-7 h-7 flex justify-center items-center bg-[#3f3f3f82] hover:bg-[#3f3f3f] cursor-pointer'
+                className='absolute right-20 top-2 z-40 rounded-full w-7 h-7 flex justify-center items-center bg-[#3f3f3f82] hover:bg-[#3f3f3f] cursor-pointer'
             >
                 {localVideo ? <Videocam sx={{ fontSize: '1.1rem', color: 'white' }} /> : <VideocamOff sx={{ fontSize: '1.1rem', color: 'white' }} />}
             </button>
 
             <button
                 onClick={handleLocalMic}
-                className='absolute right-11 top-2 z-50 rounded-full w-7 h-7 flex justify-center items-center bg-[#3f3f3f82] hover:bg-[#3f3f3f] cursor-pointer'
+                className='absolute right-11 top-2 z-40 rounded-full w-7 h-7 flex justify-center items-center bg-[#3f3f3f82] hover:bg-[#3f3f3f] cursor-pointer'
             >
                 {localMic ? <Mic sx={{ fontSize: '1.1rem', color: 'white' }} /> : <MicOff sx={{ fontSize: '1.1rem', color: 'white' }} />}
             </button>
 
             <button
-                className='absolute right-2 top-2 z-50 rounded-full w-7 h-7 flex justify-center items-center bg-[#3f3f3f82] hover:bg-[#3f3f3f] cursor-pointer'
+                className='absolute right-2 top-2 z-40 rounded-full w-7 h-7 flex justify-center items-center bg-[#3f3f3f82] hover:bg-[#3f3f3f] cursor-pointer'
                 onClick={handleMenuOpen}
             >
                 <MoreVert sx={{ fontSize: '1.1rem', color: 'white' }} />
@@ -79,13 +79,31 @@ export default function LocalUserRoom() {
                 anchorEl={anchorEl}
                 open={open}
                 onClose={handleMenuClose}
-                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "left" }}
             >
-                <MenuItem onClick={() => handlePositionChange("topRight")}>Top Right</MenuItem>
-                <MenuItem onClick={() => handlePositionChange("topLeft")}>Top Left</MenuItem>
-                <MenuItem onClick={() => handlePositionChange("bottomRight")}>Bottom Right</MenuItem>
-                <MenuItem onClick={() => handlePositionChange("bottomLeft")}>Bottom Left</MenuItem>
+                <div className='grid grid-cols-2 gap-2 px-2'>
+                    {["topLeft", "topRight", "bottomLeft", "bottomRight"].map((pos) => (
+                        <MenuItem
+                            key={pos}
+                            sx={{
+                                border: "1px solid #97979757",
+                                borderRadius: '5px',
+                                fontSize: '0.8rem',
+                                textAlign: "center",
+                                transition: "0.3s",
+                                "&:hover": {
+                                    color: "orange",
+                                    backgroundColor: "#ffa50047",
+                                    borderColor: 'orange'
+                                }
+                            }}
+                            onClick={() => handlePositionChange(pos)}
+                        >
+                            {(pos.charAt(0) + (pos.includes('Left') ? 'L' : 'R')).toUpperCase()}
+                        </MenuItem>
+                    ))}
+                </div>
             </Menu>
 
 
@@ -94,11 +112,12 @@ export default function LocalUserRoom() {
                 className="w-full h-full rounded-xl"
                 autoPlay
                 playsInline
+                muted
             ></video>
 
             {
                 !localVideo && <div className='absolute top-0 w-full h-full flex justify-center items-center'>
-                    <Person sx={{fontSize: '3rem'}} className='text-gray-600' />
+                    <Person sx={{ fontSize: '3rem' }} className='text-gray-600' />
                 </div>
             }
 

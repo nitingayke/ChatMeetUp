@@ -1,12 +1,12 @@
-import React, { useCallback, useContext, useEffect, useState, useRef } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import Avatar from '@mui/material/Avatar';
-import CircularProgress from '@mui/material/CircularProgress';
-import { useSnackbar } from 'notistack';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import ChatHeader from './ChatHeader.jsx';
 import ChatFooter from './ChatFooter.jsx';
 import { ChatMain } from './ChatMain.jsx';
+import { Link, useParams } from 'react-router-dom';
 import { getChatData } from "../../services/chatService.js";
+import Avatar from '@mui/material/Avatar';
+import CircularProgress from '@mui/material/CircularProgress';
+import { useSnackbar } from 'notistack';
 import ChatContext from '../../context/ChatContext.js';
 import UserContext from '../../context/UserContext.js';
 import { socket } from '../../services/socketService.js';
@@ -14,15 +14,15 @@ import LoaderContext from '../../context/LoaderContext.js';
 
 export default function ChatRoom() {
 
-    const { id } = useParams();
+    const [isLoading, setIsLoading] = useState(false);
+    const [remoteUser, setRemoteUser] = useState(null);
 
     const { enqueueSnackbar } = useSnackbar();
     const { userChat, setUserChat, joinedUsers, setJoinedUsers } = useContext(ChatContext);
     const { setIsMessageProcessing } = useContext(LoaderContext);
     const { loginUser } = useContext(UserContext);
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [remoteUser, setRemoteUser] = useState(null);
+    const { id } = useParams();
 
     const handleNewChatMessage = useCallback(({ recipientId, data }) => {
 
@@ -97,63 +97,18 @@ export default function ChatRoom() {
         );
     }, [userChat, loginUser, enqueueSnackbar]);
 
-    const handleUserChatDelete = useCallback(({ chatId, conversationId, userId }) => {
-
-        if (userChat?._id !== conversationId) return;
-
-        setUserChat(prev => ({
-            ...prev,
-            messages: prev?.messages?.filter(chat => chat?._id !== chatId) || []
-        }));
-
-        if (loginUser?._id === userId) {
-            setIsMessageProcessing(false);
-        }
-
-    }, [userChat, loginUser, setIsMessageProcessing]);
-
-    const handleNewChatMessageRef = useRef(handleNewChatMessage);
-    const handlePollVoteSuccessRef = useRef(handlePollVoteSuccess);
-    const handleChatReactionRef = useRef(handleChatReaction);
-    const handleUserChatDeleteRef = useRef(handleUserChatDelete);
-
     useEffect(() => {
-        handleNewChatMessageRef.current = handleNewChatMessage;
-        handlePollVoteSuccessRef.current = handlePollVoteSuccess;
-        handleChatReactionRef.current = handleChatReaction;
-        handleUserChatDeleteRef.current = handleUserChatDelete;
-    }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction, handleUserChatDelete]);
 
-    useEffect(() => {
-        const messageListener = (data) => handleNewChatMessageRef.current(data);
-        const pollVoteListener = (data) => handlePollVoteSuccessRef.current(data);
-        const reactionListener = (data) => handleChatReactionRef.current(data);
-        const chatDeleteListener = (data) => handleUserChatDeleteRef.current(data);
-
-
-        if (!socket.hasListeners("add-chat-message-success")) {
-            socket.on("add-chat-message-success", messageListener);
-        }
-
-        if (!socket.hasListeners("poll-vote-success")) {
-            socket.on("poll-vote-success", pollVoteListener);
-        }
-
-        if (!socket.hasListeners("chat-reaction-success")) {
-            socket.on("chat-reaction-success", reactionListener);
-        }
-
-        if (!socket.hasListeners("chat-message-deleted-success")) {
-            socket.on("chat-message-deleted-success", chatDeleteListener);
-        }
+        socket.on("add-chat-message-success", handleNewChatMessage);
+        socket.on("poll-vote-success", handlePollVoteSuccess);
+        socket.on("chat-reaction-success", handleChatReaction);
 
         return () => {
-            socket.off("add-chat-message-success", messageListener);
-            socket.off("poll-vote-success", pollVoteListener);
-            socket.off("chat-reaction-success", reactionListener);
-            socket.off("chat-message-deleted-success", chatDeleteListener);
+            socket.off("add-chat-message-success", handleNewChatMessage);
+            socket.off("poll-vote-success", handlePollVoteSuccess);
+            socket.off("chat-reaction-success", handleChatReaction);
         };
-    }, []);
+    }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction]);
 
     const getCurrentChatData = async () => {
 
@@ -195,7 +150,7 @@ export default function ChatRoom() {
     };
 
     useEffect(() => {
-        if (!id || !loginUser) return;
+        if (userChat?._id === id) return;
 
         getCurrentChatData();
     }, [id, loginUser]);
@@ -203,14 +158,8 @@ export default function ChatRoom() {
     if (!localStorage.getItem('authToken')) {
         return (
             <div className="h-full flex justify-center items-center p-3">
-                <div className='bg-[#000000ab] p-2 rounded'>
-                    <p className="text-gray-300 ml-3">User not logged in. Please login.</p>
-                    <div className='flex justify-center space-x-2 text-blue-300'>
-                        <Link to={'/login'} className='hover:text-blue-600'>Login</Link>
-                        <span className='text-gray-300'>/</span>
-                        <Link to={'/register'} className='hover:text-blue-600'>Register</Link>
-                    </div>
-                </div>
+                <CircularProgress sx={{ color: "white" }} />
+                <p className="text-gray-300 ml-3">Checking login status...</p>
             </div>
         );
     }
