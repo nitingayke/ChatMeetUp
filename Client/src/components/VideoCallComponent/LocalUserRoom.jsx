@@ -6,7 +6,7 @@ import VideoCallContext from '../../context/VideoCallContext';
 
 export default function LocalUserRoom() {
 
-    const { localMic, setLocalMic, localVideoRef, localVideo, setLocalVideo, peerConnection } = useContext(VideoCallContext);
+    const { localMic, setLocalMic, localVideoRef, localVideo, setLocalVideo } = useContext(VideoCallContext);
     const [anchorEl, setAnchorEl] = useState(null);
     const [position, setPosition] = useState("topRight");
     const open = Boolean(anchorEl);
@@ -26,11 +26,13 @@ export default function LocalUserRoom() {
 
     const handleLocalMic = () => {
         if (localVideoRef.current?.srcObject) {
-            const audioTracks = localVideoRef.current.srcObject.getAudioTracks();
-            audioTracks.forEach(track => track.enabled = !track.enabled);
+            const stream = localVideoRef.current.srcObject;
+            const audioTracks = stream.getAudioTracks();
+            audioTracks.enabled = !audioTracks.enabled; 
             setLocalMic(prev => !prev);
         }
     };
+
 
     const handleLocalVideo = () => {
         if (localVideoRef.current?.srcObject) {

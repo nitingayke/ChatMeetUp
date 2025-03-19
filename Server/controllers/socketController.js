@@ -476,14 +476,14 @@ const connectToSocket = (server) => {
             if (!ongoingCalls.has(from) && !ongoingCalls.has(to)) {
                 return;
             }
-        
+
             ongoingCalls.delete(from);
             ongoingCalls.delete(to);
 
             socket.emit('leave-call');
 
             const remoteUserSockets = onlineUsers.get(to);
-            
+
             if (remoteUserSockets) {
                 remoteUserSockets.forEach((userSocketId) => {
                     socket.to(userSocketId).emit('leave-call');
@@ -493,11 +493,11 @@ const connectToSocket = (server) => {
 
         socket.on('clear-call-data', ({ userId }) => {
 
-            if(ongoingCalls.has(userId)) {
+            if (ongoingCalls.has(userId)) {
                 ongoingCalls.delete(userId);
             }
 
-            if(blockUsers.has(userId)) {
+            if (blockUsers.has(userId)) {
                 blockUsers.delete(userId);
             }
 

@@ -44,7 +44,7 @@ export default function LeftSidebar() {
             className="flex items-center space-x-3 mt-1 p-1 transition-all hover:cursor-pointer z-10 sticky top-0 left-0"
           >
             <div className="p-1 w-8 h-8 flex-shrink-0">
-              <img src="https://res-console.cloudinary.com/dnpg99izj/thumbnails/v1/image/upload/v1742393175/Q2hhdE1lZXRVcF9NZXNzYWdlX0ZpbGVzL3FuZXpwdWdxbXd3Nzljb2szdW9y/drilldown" alt="ChatMeetUp Logo" className="w-full h-full object-contain" />
+              <img src="https://res-console.cloudinary.com/dnpg99izj/thumbnails/v1/image/upload/v1742393175/Q2hhdE1lZXRVcF9NZXNzYWdlX0ZpbGVzL3FuZXpwdWdxbXd3Nzljb2szdW9y/drilldown" alt="" className="w-full h-full object-contain" />
             </div>
 
             <div
