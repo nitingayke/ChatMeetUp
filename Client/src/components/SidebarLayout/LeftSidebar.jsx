@@ -3,7 +3,6 @@ import MessageIcon from "@mui/icons-material/Message";
 import PersonIcon from "@mui/icons-material/Person";
 import PublicIcon from "@mui/icons-material/Public";
 import GroupIcon from "@mui/icons-material/Group";
-import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import Drawer from "@mui/material/Drawer";
 import Button from "@mui/material/Button";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -13,18 +12,12 @@ import GroupAddIcon from "@mui/icons-material/GroupAdd";
 
 import { Link, useLocation } from "react-router-dom";
 import UserContext from "../../context/UserContext";
-import { QuestionAnswerOutlined } from "@mui/icons-material";
 
 export default function LeftSidebar() {
 
   const location = useLocation();
   const { loginUser } = useContext(UserContext);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selected, setSelected] = useState(null);
-
-  useEffect(() => {
-    setSelected(location.pathname);
-  }, [location.pathname]);
 
   const sections = [
     { icon: MessageIcon, title: "Message", redirectLink: "/u/chatting" },
@@ -44,7 +37,7 @@ export default function LeftSidebar() {
             className="flex items-center space-x-3 mt-1 p-1 transition-all hover:cursor-pointer z-10 sticky top-0 left-0"
           >
             <div className="p-1 w-8 h-8 flex-shrink-0">
-              <img src="https://res-console.cloudinary.com/dnpg99izj/thumbnails/v1/image/upload/v1742393175/Q2hhdE1lZXRVcF9NZXNzYWdlX0ZpbGVzL3FuZXpwdWdxbXd3Nzljb2szdW9y/drilldown" alt="" className="w-full h-full object-contain" />
+              <img src="https://res.cloudinary.com/dnpg99izj/image/upload/v1742461753/ChatMeetUp_Message_Files/za0ic1bcjderkaws9ztb.png" alt="logo" className="w-full h-full object-contain" />
             </div>
 
             <div
@@ -61,7 +54,6 @@ export default function LeftSidebar() {
               to={section.redirectLink}
               className={`flex items-center space-x-3 p-[0.65rem] rounded-xl shadow-lg ${location.pathname.startsWith(section.redirectLink) ? 'bg-[#80808045] text-blue-500' : 'bg-[#80808023] text-gray-500'} hover:text-white`}
               key={section.redirectLink}
-              onClick={() => setSelected(section.redirectLink)}
             >
               {React.createElement(section.icon, {
                 style: { fontSize: "1.2rem" },
