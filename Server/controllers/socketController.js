@@ -26,7 +26,7 @@ const connectToSocket = (server) => {
 
     const io = new Server(server, {
         cors: {
-            origin: "https://chatmeetupserver.onrender.com",
+            origin: "https://chatmeetup.vercel.app/",
             methods: ["GET", "POST", "DELETE", "PUT"],
         },
     });
