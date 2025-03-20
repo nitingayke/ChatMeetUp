@@ -43,7 +43,7 @@ app.use("/chat-user", userChat);
 app.use("/status", statusRoute);
 
 app.get('*', (req, res) => {
-    return res.send({ 'message': 'Router not found, just implemented only one router. so dont worry i will implement remaining route.' });
+    return res.send({ 'message': 'Router not found' });
 });
 
 app.use((err, req, res, next) => {
