@@ -2,7 +2,7 @@ import axios from "axios";
 
 const blockUsersData = async (blockUsers, userId) => {
     try {
-        const response = await axios.post("http://localhost:8989/chat-user/block-users", {
+        const response = await axios.post("https://chatmeetupserver.onrender.com/chat-user/block-users", {
             blockUsers,
             userId
         });
@@ -16,7 +16,7 @@ const blockUsersData = async (blockUsers, userId) => {
 const setUnblockUser = async (blockUserId, userId) => {
 
     try {
-        const response = await axios.post("http://localhost:8989/chat-user/unblock-user", {
+        const response = await axios.post("https://chatmeetupserver.onrender.com/chat-user/unblock-user", {
             blockUserId,
             userId
         });
@@ -29,7 +29,7 @@ const setUnblockUser = async (blockUserId, userId) => {
 
 const getUserProfile = async (username) => {
     try {
-        const response = await axios.post("http://localhost:8989/chat-user/user-profile", {
+        const response = await axios.post("https://chatmeetupserver.onrender.com/chat-user/user-profile", {
             username
         });
         return response.data;
@@ -40,7 +40,7 @@ const getUserProfile = async (username) => {
 
 const getGroupProfile = async (id) => {
     try {
-        const response = await axios.post("http://localhost:8989/group/group-profile", {
+        const response = await axios.post("https://chatmeetupserver.onrender.com/group/group-profile", {
             id
         });
         return response.data;
@@ -51,7 +51,7 @@ const getGroupProfile = async (id) => {
 
 const connectToUser = async (remoteId, userId) => {
     try {
-        const response = await axios.post('http://localhost:8989/chat-user/create-connection', {
+        const response = await axios.post('https://chatmeetupserver.onrender.com/chat-user/create-connection', {
             remoteId,
             userId
         });
@@ -64,7 +64,7 @@ const connectToUser = async (remoteId, userId) => {
 
 const joinGroup = async (groupId, userId, password) => {
     try {
-        const response = await axios.post('http://localhost:8989/group/join-group', {
+        const response = await axios.post('https://chatmeetupserver.onrender.com/group/join-group', {
             groupId,
             userId,
             password
@@ -77,7 +77,7 @@ const joinGroup = async (groupId, userId, password) => {
 
 const leaveGroup = async (groupId, userId) => {
     try {
-        const response = await axios.delete('http://localhost:8989/group/leave-group', {
+        const response = await axios.delete('https://chatmeetupserver.onrender.com/group/leave-group', {
             params: { groupId, userId }
         });
         return response.data;
@@ -88,7 +88,7 @@ const leaveGroup = async (groupId, userId) => {
 
 const getUsersData = async (usersId) => {
     try {
-        const response = await axios.post('http://localhost:8989/chat-user/live-users-data', {
+        const response = await axios.post('https://chatmeetupserver.onrender.com/chat-user/live-users-data', {
             usersId
         });
 
@@ -101,7 +101,7 @@ const getUsersData = async (usersId) => {
 const getTotalConnectionData = async (joinedUsers, joinedGroups) => {
 
     try {
-        const response = await axios.post('http://localhost:8989/chat-user/total-Network', {
+        const response = await axios.post('https://chatmeetupserver.onrender.com/chat-user/total-Network', {
             joinedUsers,
             joinedGroups
         });

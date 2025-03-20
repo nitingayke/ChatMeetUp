@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const userLoginService = async (username, password) => {
     try {
-        const response = await axios.post('http://localhost:8989/user/login', {
+        const response = await axios.post('https://chatmeetupserver.onrender.com/user/login', {
             username,
             password
         });
@@ -19,7 +19,7 @@ const userLoginService = async (username, password) => {
 const userRegisterService = async (username, email, password) => {
 
     try {
-        const response = await axios.post('http://localhost:8989/user/register', {
+        const response = await axios.post('https://chatmeetupserver.onrender.com/user/register', {
             username,
             email,
             password
@@ -36,7 +36,7 @@ const userRegisterService = async (username, email, password) => {
 
 const getLoginUser = async () => {
     try {
-        const response = await axios.post('http://localhost:8989/user/get-login-user', {
+        const response = await axios.post('https://chatmeetupserver.onrender.com/user/get-login-user', {
             token: localStorage.getItem('authToken')
         });
 

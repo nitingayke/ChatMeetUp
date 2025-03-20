@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const getTotalStatus = async (statusType) => {
     try {
-        const response = await axios.get(`http://localhost:8989/status/${statusType}`);
+        const response = await axios.get(`https://chatmeetupserver.onrender.com/status/${statusType}`);
         return response.data;
     } catch (error) {
         return error.response?.data || { success: false, message: error.message || "Unable to fetch user status." };
@@ -17,7 +17,7 @@ const uploadNewUserStatus = async (file, message, statusType, userId) => {
         formData.append("statusType", statusType);
         formData.append("userId", userId);
 
-        const response = await axios.post("http://localhost:8989/status/upload", formData, {
+        const response = await axios.post("https://chatmeetupserver.onrender.com/status/upload", formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
 
@@ -29,7 +29,7 @@ const uploadNewUserStatus = async (file, message, statusType, userId) => {
 
 const deleteStatus = async (statusId) => {
     try {
-        const response = await axios.delete(`http://localhost:8989/status/delete/${statusId}`);
+        const response = await axios.delete(`https://chatmeetupserver.onrender.com/status/delete/${statusId}`);
         return response.data;
     } catch (error) {
         return {
@@ -41,7 +41,7 @@ const deleteStatus = async (statusId) => {
 
 const getStatusViews = async (statusId) => {
     try {
-        const response = await axios.post(`http://localhost:8989/status/views`, {
+        const response = await axios.post(`https://chatmeetupserver.onrender.com/status/views`, {
             statusId
         });
 

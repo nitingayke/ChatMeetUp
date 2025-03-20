@@ -74,7 +74,9 @@ export function ChatMain() {
         }
 
         return () => {
-            socket.off("mark-messages-read-success", handleMessageReadSuccess);
+            if (socket.hasListeners("mark-messages-read-success")) {
+                socket.off("mark-messages-read-success", handleMessageReadSuccess);
+            }
         };
     }, [handleMessageReadSuccess]);
 
@@ -201,7 +203,6 @@ export function ChatMain() {
         });
     };
 
-
     // handle if user read message
     useEffect(() => {
         if (observer.current) {
@@ -264,7 +265,6 @@ export function ChatMain() {
             (isGroup && (!clearedAt || new Date(chat.createdAt) < clearedAt))
         );
     }, [loginUser, filterUserChat]);
-
 
     // scroll those message are already read
     useEffect(() => {

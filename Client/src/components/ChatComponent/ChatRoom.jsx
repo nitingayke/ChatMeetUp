@@ -98,15 +98,26 @@ export default function ChatRoom() {
     }, [userChat, loginUser, enqueueSnackbar]);
 
     useEffect(() => {
-
-        socket.on("add-chat-message-success", handleNewChatMessage);
-        socket.on("poll-vote-success", handlePollVoteSuccess);
-        socket.on("chat-reaction-success", handleChatReaction);
+        if (!socket.hasListeners("add-chat-message-success")) {
+            socket.on("add-chat-message-success", handleNewChatMessage);
+        }
+        if (!socket.hasListeners("poll-vote-success")) {
+            socket.on("poll-vote-success", handlePollVoteSuccess);
+        }
+        if (!socket.hasListeners("chat-reaction-success")) {
+            socket.on("chat-reaction-success", handleChatReaction);
+        }
 
         return () => {
-            socket.off("add-chat-message-success", handleNewChatMessage);
-            socket.off("poll-vote-success", handlePollVoteSuccess);
-            socket.off("chat-reaction-success", handleChatReaction);
+            if (socket.hasListeners("add-chat-message-success")) {
+                socket.off("add-chat-message-success", handleNewChatMessage);
+            }
+            if (socket.hasListeners("poll-vote-success")) {
+                socket.off("poll-vote-success", handlePollVoteSuccess);
+            }
+            if (socket.hasListeners("chat-reaction-success")) {
+                socket.off("chat-reaction-success", handleChatReaction);
+            }
         };
     }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction]);
 

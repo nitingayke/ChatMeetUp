@@ -3,7 +3,7 @@ import axios from "axios";
 const getChatData = async (chatId) => {
 
     try {
-        const response = await axios.post('http://localhost:8989/chatRoute/user-chat', {
+        const response = await axios.post('https://chatmeetupserver.onrender.com/chatRoute/user-chat', {
             chatId
         });
 
@@ -15,7 +15,7 @@ const getChatData = async (chatId) => {
 
 const deleteChatMessage = async (chatId, userId) => {
     try {
-        const response = await axios.patch('http://localhost:8989/chatRoute/delete-chat', {
+        const response = await axios.patch('https://chatmeetupserver.onrender.com/chatRoute/delete-chat', {
             chatId,
             userId
         });
@@ -28,7 +28,7 @@ const deleteChatMessage = async (chatId, userId) => {
 
 const changeBackgroundWallpaper = async (userId, url) => {
     try {
-        const response = await axios.patch('http://localhost:8989/chatRoute/update-wallpaper', {
+        const response = await axios.patch('https://chatmeetupserver.onrender.com/chatRoute/update-wallpaper', {
             userId,
             url
         });
@@ -40,7 +40,7 @@ const changeBackgroundWallpaper = async (userId, url) => {
 
 const setBlockUser = async (blockId, userId) => {
     try {
-        const response = await axios.patch('http://localhost:8989/chatRoute/block-entity', {
+        const response = await axios.patch('https://chatmeetupserver.onrender.com/chatRoute/block-entity', {
             blockId,
             userId
         });
@@ -53,7 +53,7 @@ const setBlockUser = async (blockId, userId) => {
 const cleanUserChats = async (chatId, userId) => {
 
     try {
-        const response = await axios.patch('http://localhost:8989/chatRoute/clean-chats', {
+        const response = await axios.patch('https://chatmeetupserver.onrender.com/chatRoute/clean-chats', {
             chatId,
             userId
         });
@@ -65,7 +65,7 @@ const cleanUserChats = async (chatId, userId) => {
 
 const userExitGroup = async (groupId, userId) => {
     try {
-        const response = await axios.delete(`http://localhost:8989/group/exit-group/${groupId}/${userId}`);
+        const response = await axios.delete(`https://chatmeetupserver.onrender.com/group/exit-group/${groupId}/${userId}`);
         return response.data;
     } catch (error) {
         return error.response?.data || { success: false, message: error.message || "Something went wrong" };

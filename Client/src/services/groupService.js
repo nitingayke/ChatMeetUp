@@ -12,7 +12,7 @@ const createNewUserGroup = async (groupData, userId) => {
             formData.append("image", groupData.image);
         }
 
-        const response = await axios.post('http://localhost:8989/group/new-group', formData, {
+        const response = await axios.post('https://chatmeetupserver.onrender.com/group/new-group', formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
@@ -31,7 +31,7 @@ const changeGroupDetails = async (groupId, description, image) => {
         if (description) formData.append("description", description);
         if (image) formData.append("image", image);
 
-        const response = await axios.patch("http://localhost:8989/group/update-group-profile", formData, {
+        const response = await axios.patch("https://chatmeetupserver.onrender.com/group/update-group-profile", formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
 

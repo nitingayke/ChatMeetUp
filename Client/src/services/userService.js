@@ -2,7 +2,7 @@ import axios from "axios";
 
 const updateUserData = async (description, mobileNo, userId) => {
     try {
-        const response = await axios.patch('http://localhost:8989/user-update/update-profile', {
+        const response = await axios.patch('https://chatmeetupserver.onrender.com/user-update/update-profile', {
             description,
             mobileNo,
             userId
@@ -21,7 +21,7 @@ const updateUserProfileImage = async (imageFile, userId) => {
         formData.append("userId", userId);
 
         const response = await axios.patch(
-            'http://localhost:8989/user-update/update-profile-image',
+            'https://chatmeetupserver.onrender.com/user-update/update-profile-image',
             formData,
             {
                 headers: { "Content-Type": "multipart/form-data" }
@@ -36,7 +36,7 @@ const updateUserProfileImage = async (imageFile, userId) => {
 
 const getTotalActiveUsers = async () => {
     try {
-        const response = await axios.get('http://localhost:8989/user-update/get-active-users');
+        const response = await axios.get('https://chatmeetupserver.onrender.com/user-update/get-active-users');
         return response.data;
     } catch (error) {
         return error.response?.data || { success: false, message: error.message || "Unable to get active users." };
