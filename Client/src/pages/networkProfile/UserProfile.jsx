@@ -295,11 +295,13 @@ export default function UserProfile() {
             component = joinGroupsFilter.length > 0 ? (
                 <ul className="space-y-3">
 
-                    <li>
-                        <Link to={'/new-group'} className='flex justify-center items-center gap-4 px-3 py-2 border rounded-lg cursor-pointer transition text-green-500 bg-[#00800030] hover:bg-[#00800055]'>
-                            <Group sx={{ fontSize: '1.4rem' }} /> Create New Group
-                        </Link>
-                    </li>
+                    {
+                        (loginUser?.username === id) && <li>
+                            <Link to={'/new-group'} className='flex justify-center items-center gap-4 px-3 py-2 border rounded-lg cursor-pointer transition text-green-500 bg-[#00800030] hover:bg-[#00800055]'>
+                                <Group sx={{ fontSize: '1.4rem' }} /> Create New Group
+                            </Link>
+                        </li>
+                    }
 
                     {joinGroupsFilter.map((group) => (
                         <li key={group._id}>
