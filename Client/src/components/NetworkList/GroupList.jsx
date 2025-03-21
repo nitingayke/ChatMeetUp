@@ -9,24 +9,24 @@ import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import Brightness1Icon from '@mui/icons-material/Brightness1';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import ChatContext from '../../context/ChatContext.js';
 
 export default function GroupList({ searchQuery }) {
 
+    const { id } = useParams();
     const navigate = useNavigate();
 
-    const { selectedUser, setSelectedUser, setIsDialogOpen } = useContext(ChatContext);
+    const { setIsDialogOpen } = useContext(ChatContext);
     const { loginUser } = useContext(UserContext);
 
     const handleSelectedGroup = (group) => {
-        setSelectedUser(group._id);
         setIsDialogOpen(true);
         navigate(`/u/chatting/${group._id}`);
     }
 
     const getLastReadMessageIndex = (data) => {
-        if (!loginUser || !data || !data.messages?.length) return 0;
+        if (!loginUser || !data?.messages?.length) return 0;
 
         const clearedChat = loginUser.clearedChats.find(cc => cc?.chatId?.toString() === data?._id?.toString());
         const clearedAt = clearedChat ? new Date(clearedChat.clearedAt) : null;
@@ -84,7 +84,7 @@ export default function GroupList({ searchQuery }) {
                     <ListItem
                         key={group._id}
                         sx={{ padding: 0 }}
-                        className={`border-b border-gray-900 hover:bg-gray-800 ${selectedUser === group._id ? 'bg-[#80808045]' : ''}`}
+                        className={`border-b border-gray-900 hover:bg-gray-800 ${id === group?._id ? 'bg-[#80808045]' : ''}`}
                     >
                         <ListItemButton onClick={() => handleSelectedGroup(group)}>
                             <ListItemAvatar>

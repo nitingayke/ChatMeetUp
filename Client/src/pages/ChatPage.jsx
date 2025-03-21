@@ -20,7 +20,7 @@ export default function ChatPage() {
     const { enqueueSnackbar } = useSnackbar();
 
     const { loginUser } = useContext(UserContext);
-    const { setSelectedUser, isDialogOpen, setIsDialogOpen } = useContext(ChatContext);
+    const { isDialogOpen, setIsDialogOpen } = useContext(ChatContext);
 
     useEffect(() => {
         if (!localStorage.getItem("authToken")) {
@@ -28,12 +28,6 @@ export default function ChatPage() {
             navigate("/login");
         }
     }, [enqueueSnackbar, navigate]);
-
-    useEffect(() => {
-        return () => {
-            setSelectedUser(null);
-        }
-    }, [id]);
 
     useEffect(() => {
         const handleBackButton = () => {

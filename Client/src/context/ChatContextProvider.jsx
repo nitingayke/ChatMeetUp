@@ -9,7 +9,6 @@ const ChatContextProvider = ({ children }) => {
     const [inputComponent, setInputComponent] = useState("");
     const [pollOptions, setPollOptions] = useState([]);
     const [inputFile, setInputFile] = useState(null);
-    const [selectedUser, setSelectedUser] = useState(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [joinedUsers, setJoinedUsers] = useState([]);
 
@@ -24,8 +23,6 @@ const ChatContextProvider = ({ children }) => {
         setPollOptions,
         inputFile,
         setInputFile,
-        selectedUser, 
-        setSelectedUser,
         isDialogOpen, 
         setIsDialogOpen,
         joinedUsers, 
@@ -36,7 +33,6 @@ const ChatContextProvider = ({ children }) => {
         inputComponent,
         pollOptions,
         inputFile,
-        selectedUser,
         isDialogOpen,
         joinedUsers
     ]);

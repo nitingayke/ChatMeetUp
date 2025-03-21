@@ -474,7 +474,7 @@ const connectToSocket = (server) => {
         socket.on('call-notification', ({ message, to }) => {
             const remoteUserSockets = onlineUsers.get(to);
 
-            ; if (remoteUserSockets) {
+            if (remoteUserSockets) {
                 remoteUserSockets.forEach((userSocketId) => {
                     socket.to(userSocketId).emit('call-notification', { message });
                 });

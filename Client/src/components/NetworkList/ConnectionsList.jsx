@@ -6,18 +6,18 @@ import Avatar from '@mui/material/Avatar';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { formatTime } from '../../utils/helpers.js';
 import UserContext from '../../context/UserContext.js';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import ChatContext from '../../context/ChatContext.js';
 
 export default function ConnectionsList({ searchQuery }) {
 
+    const { id } = useParams();
     const navigate = useNavigate();
 
-    const { selectedUser, setSelectedUser, setIsDialogOpen } = useContext(ChatContext);
+    const { setIsDialogOpen } = useContext(ChatContext);
     const { loginUser, onlineUsers } = useContext(UserContext);
 
     const handleSelectUser = (value) => {
-        setSelectedUser(value._id);
         setIsDialogOpen(true);
         navigate(`/u/chatting/${value._id}`);
     };
@@ -90,7 +90,7 @@ export default function ConnectionsList({ searchQuery }) {
                     <ListItem
                         key={connection._id}
                         sx={{ padding: 0 }}
-                        className={`border-b border-gray-900 hover:bg-gray-800 ${selectedUser === connection._id ? 'bg-[#80808045]' : ''}`}
+                        className={`border-b border-gray-900 hover:bg-gray-800 ${id === connection?._id ? 'bg-[#80808045]' : ''}`}
                     >
                         <ListItemButton onClick={() => handleSelectUser(connection)}>
                             <ListItemAvatar className='relative'>
