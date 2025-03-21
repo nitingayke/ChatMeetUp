@@ -193,10 +193,10 @@ export default function UserProfile() {
 
     const handleUserLogout = () => {
 
-        if(loginUser) {
+        if (loginUser) {
             socket.emit('user-logout', { userId: loginUser._id });
         }
-        
+
         localStorage.removeItem("authToken");
         setLoginUser(null);
         navigate("/login");
@@ -297,37 +297,46 @@ export default function UserProfile() {
             );
 
         } else if (selectedComponent === 'groups') {
-            component = joinGroupsFilter.length > 0 ? (
-                <ul className="space-y-3">
-
-                    {
-                        (loginUser?.username === id) && <li>
-                            <Link to={'/new-group'} className='flex justify-center items-center gap-4 px-3 py-2 border rounded-lg cursor-pointer transition text-green-500 bg-[#00800030] hover:bg-[#00800055]'>
+            component = (
+                <div>
+                    {/* Show "Create New Group" button if the logged-in user matches the ID */}
+                    {loginUser?.username === id && (
+                        <div className="mb-4">
+                            <Link
+                                to={'/new-group'}
+                                className='flex justify-center items-center gap-4 px-3 py-2 border rounded-lg cursor-pointer transition text-green-500 bg-[#00800030] hover:bg-[#00800055]'>
                                 <Group sx={{ fontSize: '1.4rem' }} /> Create New Group
                             </Link>
-                        </li>
-                    }
+                        </div>
+                    )}
 
-                    {joinGroupsFilter.map((group) => (
-                        <li key={group._id}>
-                            <Link to={`/u/chatting/${group?._id}`} className="flex items-center gap-4 p-3 border border-gray-700 rounded-lg shadow-sm hover:bg-[#80808023] cursor-pointer transition" >
-                                <Avatar src={group?.image} alt={group?.name} className="w-12 h-12" />
+                    {joinGroupsFilter.length > 0 ? (
+                        <ul className="space-y-3">
+                            {joinGroupsFilter.map((group) => (
+                                <li key={group._id}>
+                                    <Link
+                                        to={`/u/chatting/${group?._id}`}
+                                        className="flex items-center gap-4 p-3 border border-gray-700 rounded-lg shadow-sm hover:bg-[#80808023] cursor-pointer transition">
+                                        <Avatar src={group?.image} alt={group?.name} className="w-12 h-12" />
 
-                                <div className="flex-1">
-                                    <h3 className="text-lg font-semibold">{group?.name || "Unknown"}</h3>
-                                    <p className="text-gray-600 text-sm line-clamp-1">{group?.description || "No description available"}</p>
-                                </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-lg font-semibold">{group?.name || "Unknown"}</h3>
+                                            <p className="text-gray-600 text-sm line-clamp-1">{group?.description || "No description available"}</p>
+                                        </div>
 
-                                <span className="text-sm bg-orange-500 text-white px-2 py-1 rounded-full">
-                                    {group?.members?.length || 1} Users
-                                </span>
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p className="text-gray-500 text-center mt-10">No groups joined.</p>
+                                        <span className="text-sm bg-orange-500 text-white px-2 py-1 rounded-full">
+                                            {group?.members?.length || 1} Users
+                                        </span>
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-gray-500 text-center mt-10">No groups joined yet. Start by creating one!</p>
+                    )}
+                </div>
             );
+
         }
 
         return component;
