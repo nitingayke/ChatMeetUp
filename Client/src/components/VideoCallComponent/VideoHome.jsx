@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
 import { socket } from '../../services/socketService';
-
 import RemoteUserRoom from './RemoteUserRoom';
 import LocalUserRoom from './LocalUserRoom';
 import VideoCallContext from '../../context/VideoCallContext';
@@ -11,6 +11,7 @@ export default function VideoHome() {
     const navigate = useNavigate();
     const { id } = useParams();
     const { localVideoRef, remoteVideoRef, localMic, localVideo, peerConnection } = useContext(VideoCallContext);
+    const { enqueueSnackbar } = useSnackbar();
 
     const [isJoin, setIsJoin] = useState(false);
 
@@ -94,16 +95,22 @@ export default function VideoHome() {
             navigate(-1);
         };
 
+        const handleCallNotification = ({message}) => {
+            enqueueSnackbar(message, { variant: 'warning' });
+        }
+
         socket.on('offer', handleOffer);
         socket.on('answer', handleAnswer);
         socket.on('ice-candidate', handleIceCandidate);
         socket.on('leave-call', LeaveCall);
+        socket.on('call-notification', handleCallNotification);
 
         return () => {
             socket.off('offer', handleOffer);
             socket.off('answer', handleAnswer);
             socket.off('ice-candidate', handleIceCandidate);
             socket.off('leave-call', LeaveCall);
+            socket.on('call-notification', handleCallNotification);
         };
     }, []);
 

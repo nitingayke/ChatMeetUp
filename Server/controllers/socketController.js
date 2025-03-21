@@ -471,6 +471,16 @@ const connectToSocket = (server) => {
             }
         });
 
+        socket.on('call-notification', ({ message, to }) => {
+            const remoteUserSockets = onlineUsers.get(to);
+
+;            if (remoteUserSockets) {
+                remoteUserSockets.forEach((userSocketId) => {
+                    socket.to(userSocketId).emit('call-notification', { message });
+                });
+            }
+        });
+
         socket.on('leave-call', ({ from, to }) => {
 
             if (!ongoingCalls.has(from) && !ongoingCalls.has(to)) {

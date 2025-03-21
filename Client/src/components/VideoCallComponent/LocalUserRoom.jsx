@@ -3,10 +3,13 @@ import { motion } from 'framer-motion';
 import { MoreVert, Mic, MicOff, Videocam, VideocamOff, Person } from '@mui/icons-material';
 import { Menu, MenuItem } from '@mui/material';
 import VideoCallContext from '../../context/VideoCallContext';
+import { socket } from '../../services/socketService';
+import { useParams } from 'react-router-dom';
 
 export default function LocalUserRoom() {
 
-    const { localMic, setLocalMic, localVideoRef, localVideo, setLocalVideo } = useContext(VideoCallContext);
+    const { id } = useParams();
+    const { localMic, setLocalMic, localVideoRef, localVideo, setLocalVideo, peerConnection } = useContext(VideoCallContext);
     const [anchorEl, setAnchorEl] = useState(null);
     const [position, setPosition] = useState("topRight");
     const open = Boolean(anchorEl);
@@ -28,17 +31,49 @@ export default function LocalUserRoom() {
         if (localVideoRef.current?.srcObject) {
             const stream = localVideoRef.current.srcObject;
             const audioTracks = stream.getAudioTracks();
-            audioTracks.enabled = !audioTracks.enabled; 
+
+            audioTracks.forEach(track => {
+                track.enabled = !localMic
+            })
+
+            if (peerConnection.current) {
+                peerConnection.current.getSenders().forEach(sender => {
+                    if (sender.track && sender.track.kind === 'audio') {
+                        sender.track.enabled = !localMic;
+                    }
+                })
+            }
+
             setLocalMic(prev => !prev);
+            socket.emit('call-notification', {
+                to: id,
+                message: !localMic ? "Your call partner has unmuted their microphone" : "Your call partner has muted their microphone"
+            });
         }
     };
 
-
     const handleLocalVideo = () => {
         if (localVideoRef.current?.srcObject) {
-            const videoTracks = localVideoRef.current.srcObject.getVideoTracks();
-            videoTracks.forEach(track => track.enabled = !track.enabled);
+            const stream = localVideoRef.current.srcObject;
+            const videoTracks = stream.getVideoTracks();
+
+            videoTracks.forEach(track => {
+                track.enabled = !localVideo;
+            });
+
+            if (peerConnection.current) {
+                peerConnection.current.getSenders().forEach(sender => {
+                    if (sender.track && sender.track.kind === 'video') {
+                        sender.track.enabled = !localVideo;
+                    }
+                })
+            }
+
             setLocalVideo(prev => !prev);
+            socket.emit('call-notification', {
+                to: id,
+                message: (!localVideo) ? "Your call partner has turned on their camera" : "Your call partner has turned off their camera"
+            });
         }
     };
 
