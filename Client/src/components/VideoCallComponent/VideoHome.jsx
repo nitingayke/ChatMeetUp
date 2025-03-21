@@ -110,7 +110,7 @@ export default function VideoHome() {
             socket.off('answer', handleAnswer);
             socket.off('ice-candidate', handleIceCandidate);
             socket.off('leave-call', LeaveCall);
-            socket.on('call-notification', handleCallNotification);
+            socket.off('call-notification', handleCallNotification);
         };
     }, []);
 
