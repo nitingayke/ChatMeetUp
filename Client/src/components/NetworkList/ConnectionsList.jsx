@@ -101,7 +101,7 @@ export default function ConnectionsList({ searchQuery }) {
                                 <div className='flex items-center justify-between'>
                                     <h1 className='font-semibold truncate w-35 mb-1'>{otherUser?.username ?? 'Unknown'}</h1>
 
-                                    {(onlineUsers?.includes(connection?._id)) ? (
+                                    {(onlineUsers?.includes(otherUser?._id)) ? (
                                         <p className="text-xs text-green-400 flex items-center">Online</p>
                                     ) : (
                                         <div className='text-[0.7rem]'>
