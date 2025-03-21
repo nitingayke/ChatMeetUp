@@ -474,7 +474,7 @@ const connectToSocket = (server) => {
         socket.on('call-notification', ({ message, to }) => {
             const remoteUserSockets = onlineUsers.get(to);
 
-;            if (remoteUserSockets) {
+            ; if (remoteUserSockets) {
                 remoteUserSockets.forEach((userSocketId) => {
                     socket.to(userSocketId).emit('call-notification', { message });
                 });
@@ -512,6 +512,19 @@ const connectToSocket = (server) => {
             }
 
             socket.emit('clear-call-data-success');
+        });
+
+        socket.on('user-logout', ({ userId }) => {
+            const userSockets = onlineUsers.get(userId);
+
+            if (userSockets) {
+                userSockets.delete(socket.id);
+                if (userSockets.size === 0) {
+                    onlineUsers.delete(userId);
+                }
+            }
+
+            io.emit("update-online-users", Array.from(onlineUsers.keys()));
         });
 
         socket.on("disconnect", () => {

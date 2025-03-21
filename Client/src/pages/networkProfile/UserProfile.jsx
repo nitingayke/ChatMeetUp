@@ -192,6 +192,11 @@ export default function UserProfile() {
     };
 
     const handleUserLogout = () => {
+
+        if(loginUser) {
+            socket.emit('user-logout', { userId: loginUser._id });
+        }
+        
         localStorage.removeItem("authToken");
         setLoginUser(null);
         navigate("/login");
