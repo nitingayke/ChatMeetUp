@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -36,9 +36,7 @@ export default function StatusPage() {
                 </nav>
 
                 <div className='flex-1 overflow-hidden w-full h-full flex justify-center items-center'>
-                    {
-                        isLoading ? <CircularProgress sx={{color: 'white'}} /> : <StatusView />
-                    }
+                    <StatusView />
                 </div>
 
                 <footer className='z-100 flex items-center gap-3 p-3 bg-gray-900 border-t border-gray-700 sm:rounded-b'>
