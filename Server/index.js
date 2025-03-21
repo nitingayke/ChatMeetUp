@@ -16,7 +16,7 @@ import groupRoute from './routes/groupRoutes.js';
 import { connectToSocket } from './controllers/socketController.js';
 
 const app = express();
-const PORT = 8989;
+const PORT = process.env.PORT || 8989;
 const { MONGO_URL } = process.env;
 
 const server = createServer(app);
