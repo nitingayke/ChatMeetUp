@@ -27,7 +27,7 @@ export default function CreateGroup() {
         showPassword: false,
     });
     const [selectedImg, setSelectedImg] = useState(false);
-    
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -66,10 +66,11 @@ export default function CreateGroup() {
             return;
         }
 
-        if (groupData.password.trim().length < 8 || groupData.password.trim().length > 30) {
+        if (groupData.password.trim().length > 0 && (groupData.password.trim().length < 8 || groupData.password.trim().length > 30)) {
             enqueueSnackbar("Password must be between 8 and 30 characters!", { variant: "error" });
             return;
         }
+
 
         try {
             setIsLoading(true);
