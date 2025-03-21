@@ -8,9 +8,9 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CircularProgress from '@mui/material/CircularProgress';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import StatusContext from '../../context/StatusContext';
-import UserContext from '../../context/UserContext';
-import { socket } from '../../services/socketService';
+import StatusContext from '../../../context/StatusContext';
+import UserContext from '../../../context/UserContext';
+import { socket } from '../../../services/socketService';
 
 
 export default function StatusView() {
