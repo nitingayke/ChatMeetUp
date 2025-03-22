@@ -22,13 +22,15 @@ const chatSchema = new Schema({
     },
     poll: [
         {
-            option: { type: String, required: true, trim: true },
-            votes: {
-                type: mongoose.Schema.Types.ObjectId, 
-                ref: 'User',
-                default: [],
-            },
-        },
+            option: String,
+            votes: [
+                {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'User',
+                    default: []
+                }
+            ]
+        }
     ],
     reactions: [
         {
