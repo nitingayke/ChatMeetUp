@@ -16,6 +16,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 export default function ChatPage() {
 
+    const { id } = useParams();
     const navigate = useNavigate();
     const { enqueueSnackbar } = useSnackbar();
 
@@ -30,10 +31,11 @@ export default function ChatPage() {
     }, [enqueueSnackbar, navigate]);
 
     useEffect(() => {
+
+        setIsDialogOpen(!!id);
+        
         const handleBackButton = () => {
-            if (isDialogOpen) {
-                setIsDialogOpen(false);
-            }
+            setIsDialogOpen(!!id);
         }
 
         window.addEventListener('popstate', handleBackButton);
@@ -41,7 +43,9 @@ export default function ChatPage() {
         return () => {
             window.removeEventListener('popstate', handleBackButton);
         }
-    }, [isDialogOpen, setIsDialogOpen]);
+    }, [setIsDialogOpen, id]);
+
+    
 
     if(!localStorage.getItem('authToken')) {
         return <AuthOptions />

@@ -148,7 +148,7 @@ export default function ChatRoom() {
 
                 setJoinedUsers(userIds);
                 setUserChat(response.userChat);
-
+                
             } else {
                 setUserChat(null);
                 enqueueSnackbar(response.message || "Something went wrong, please try again.", { variant: "error" });
