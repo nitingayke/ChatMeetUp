@@ -8,6 +8,7 @@ import ChatContext from "../context/ChatContext";
 import LeftSidebar from "../components/SidebarLayout/LeftSidebar";
 import Dialog from '@mui/material/Dialog';
 import Slide from '@mui/material/Slide';
+import AuthOptions from "../components/AuthOptions";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -15,7 +16,6 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 export default function ChatPage() {
 
-    const { id } = useParams();
     const navigate = useNavigate();
     const { enqueueSnackbar } = useSnackbar();
 
@@ -42,6 +42,10 @@ export default function ChatPage() {
             window.removeEventListener('popstate', handleBackButton);
         }
     }, [isDialogOpen, setIsDialogOpen]);
+
+    if(!localStorage.getItem('authToken')) {
+        return <AuthOptions />
+    }
 
     return (
         <>
