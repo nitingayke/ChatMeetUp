@@ -171,7 +171,6 @@ const connectToSocket = (server) => {
                     sender: userId,
                     attachments: uploadedFiles,
                     message,
-                    poll: []
                 };
 
                 if (Array.isArray(pollOptions) && pollOptions.length > 0) {
@@ -222,7 +221,6 @@ const connectToSocket = (server) => {
                 });
 
             } catch (error) {
-                console.log(error);
                 socket.emit("error-notification", { message: error.message || "Something went wrong, Can't send message. Try again." });
             }
         });
