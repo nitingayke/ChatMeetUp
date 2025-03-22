@@ -167,13 +167,21 @@ const connectToSocket = (server) => {
                     uploadedFiles.pdf = uploadedPdf.secure_url;
                 }
 
-                const newMessage = new Chat({
+                const newMessageData = {
                     sender: userId,
                     attachments: uploadedFiles,
                     message,
-                    poll: Array.isArray(pollOptions) ? pollOptions.map(option => ({ option })) : [],
-                });
+                    poll: []
+                };
 
+                if (Array.isArray(pollOptions) && pollOptions.length > 0) {
+                    newMessageData.poll = pollOptions.map(option => ({
+                        option,
+                        votes: [],
+                    }));
+                }
+
+                const newMessage = new Chat(newMessageData);
                 await newMessage.save();
 
                 const group = await Group.findById(recipientId);
@@ -214,6 +222,7 @@ const connectToSocket = (server) => {
                 });
 
             } catch (error) {
+                console.log(error);
                 socket.emit("error-notification", { message: error.message || "Something went wrong, Can't send message. Try again." });
             }
         });
@@ -529,6 +538,7 @@ const connectToSocket = (server) => {
 
         socket.on("disconnect", () => {
 
+            console.log(`user disconnect ${socket?.id}`);
             onlineUsers.forEach((socketSet, userId) => {
                 socketSet.delete(socket.id);
                 if (socketSet.size === 0) {

@@ -18,7 +18,12 @@ const CreatePoll = () => {
             return;
         }
 
-        setPollOptions((prev) => [...prev, pollInput]);
+        if (pollOptions.some(option => option.trim().toLowerCase() === pollInput.trim().toLowerCase())) {
+            enqueueSnackbar("This option already exists.", { variant: "warning" });
+            return;
+        }
+
+        setPollOptions((prev) => [...prev, pollInput.trim()]);
         setPollInput("");
     };
 

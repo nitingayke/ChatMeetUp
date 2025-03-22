@@ -90,8 +90,8 @@ export default function ChatFooter() {
             video: (inputComponent === "video") ? inputFile : null,
             pdf: (inputComponent === "pdf") ? inputFile : null,
             image: (inputComponent === "image") ? inputFile : null,
-            userId: loginUser._id,
-            recipientId: userChat._id
+            userId: loginUser?._id,
+            recipientId: userChat?._id
         });
 
         setPollOptions([]);

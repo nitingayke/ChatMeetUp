@@ -231,7 +231,7 @@ export default function UserProfile() {
         return <AuthOptions />;
     }
 
-    if (!userProfile) {
+    if (!userProfile && !isLoading) {
         return (
             <div className='h-full border w-full flex justify-center items-center text-gray-500 text-2xl bg-gradient-to-r from-black to-gray-800'>
                 User Not Found
