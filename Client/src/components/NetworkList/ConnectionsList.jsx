@@ -116,7 +116,7 @@ export default function ConnectionsList({ searchQuery }) {
 
                                 <div className='text-sm flex-1 text-gray-400'>
                                     {lastMessage ? (
-                                        <p className='line-clamp-1 text-[0.8rem]'>{lastMessage?.message ?? ''}</p>
+                                        <p className='line-clamp-1 text-[0.8rem] break-all'>{lastMessage?.message ?? ''}</p>
                                     ) : (
                                         <p className='text-[0.8rem]'>No messages yet</p>
                                     )}

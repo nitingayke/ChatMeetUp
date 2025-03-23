@@ -61,9 +61,9 @@ export default function ChatPoll({ data, localChat }) {
                         key={pollOption?.option ?? `poll-option-${idx}`}
                         onClick={() => handlePollOptions(idx)}
                         className='px-1 py-2 text-base/3 w-full flex flex-col cursor-pointer rounded hover:bg-[#ffffff15]'>
-                        <p className='text-sm flex'>
+                        <p className='text-sm flex break-all'>
                             {pollOption?.option ?? 'Option'}
-                            <span className='ps-2'>{votePercentage.toFixed(1)}%</span>
+                            <span className='ps-2 text-nowrap'>{votePercentage.toFixed(1)}%</span>
                         </p>
                         <div className='rounded h-2 bg-gray-900 w-full mt-1'>
                             <p className="rounded bg-green-500 h-full"

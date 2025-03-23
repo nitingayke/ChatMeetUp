@@ -39,10 +39,9 @@ export default function ChatRoom() {
     }, [userChat, loginUser, setIsMessageProcessing]);
 
     const handlePollVoteSuccess = useCallback(({ conversationId, userId, chatId, pollIdx }) => {
-        if (userChat._id !== conversationId) return;
 
         setUserChat(prevUserChat => {
-            if (prevUserChat._id !== conversationId) return prevUserChat;
+            if (prevUserChat?._id !== conversationId) return prevUserChat;
 
             const updatedMessages = prevUserChat.messages.map(msg => {
                 if (msg._id === chatId) {
@@ -97,15 +96,37 @@ export default function ChatRoom() {
         );
     }, [userChat, loginUser, enqueueSnackbar]);
 
+    const handleChatMessageDeleteAll = useCallback(({ chatId, conversationId, userId }) => {
+
+        setUserChat(prevUserChat => {
+            if(prevUserChat?._id !== conversationId) return prevUserChat;
+            
+            const updatedMessages = prevUserChat?.messages?.filter(msg => msg?._id !== chatId);
+
+            return { ...prevUserChat, messages: updatedMessages };
+        });
+
+        if(loginUser?._id === userId) {
+            setIsMessageProcessing(false);
+        }
+    }, [userChat, loginUser, setIsMessageProcessing]);
+
     useEffect(() => {
+
         if (!socket.hasListeners("add-chat-message-success")) {
             socket.on("add-chat-message-success", handleNewChatMessage);
         }
+
         if (!socket.hasListeners("poll-vote-success")) {
             socket.on("poll-vote-success", handlePollVoteSuccess);
         }
+
         if (!socket.hasListeners("chat-reaction-success")) {
             socket.on("chat-reaction-success", handleChatReaction);
+        }
+
+        if(!socket.hasListeners('chat-message-deleted-success')) {
+            socket.on('chat-message-deleted-success', handleChatMessageDeleteAll);
         }
 
         return () => {
@@ -117,6 +138,9 @@ export default function ChatRoom() {
             }
             if (socket.hasListeners("chat-reaction-success")) {
                 socket.off("chat-reaction-success", handleChatReaction);
+            }
+            if(socket.hasListeners('chat-message-deleted-success')) {
+                socket.off('chat-message-deleted-success', handleChatMessageDeleteAll);
             }
         };
     }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction]);
@@ -183,7 +207,7 @@ export default function ChatRoom() {
         );
     }
 
-    if (!userChat) {
+    if (!userChat && !isLoading) {
         return (
             <div className='h-full flex justify-center text-center items-center p-3'>
                 <h1 className='text-xl text-red-500 p-3 rounded bg-[#000000ab]'>UserChat not found, please try again!</h1>

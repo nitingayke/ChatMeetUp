@@ -350,7 +350,7 @@ export function ChatMain() {
                                             }
 
                                             {/* Message Content */}
-                                            {data?.message && <p className='whitespace-pre-line pt-3 text-gray-200'>{data.message}</p>}
+                                            {data?.message && <p className='whitespace-pre-line pt-3 text-gray-200 break-all'>{data.message}</p>}
 
                                             {/* Attachment */}
                                             <ChatAttachment data={data} />

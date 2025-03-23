@@ -45,7 +45,6 @@ export default function ChatPage() {
         }
     }, [setIsDialogOpen, id]);
 
-    
 
     if(!localStorage.getItem('authToken')) {
         return <AuthOptions />

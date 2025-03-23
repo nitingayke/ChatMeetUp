@@ -107,7 +107,7 @@ export default function GroupList({ searchQuery }) {
                                 </div>
                                 <div className='text-sm flex-1 text-gray-400'>
                                     {lastMessage ? (
-                                        <div className='text-[0.8rem] space-x-1 line-clamp-2'>
+                                        <div className='text-[0.8rem] space-x-1 line-clamp-2 break-all'>
                                             {loginUser?.username === lastMessage?.sender?.username && (
                                                 <span>
                                                     {lastMessage?.readBy?.length === group?.members?.length ? (
