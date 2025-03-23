@@ -248,7 +248,7 @@ export default function StatusList() {
                                                             </h1>
                                                             <p className="text-gray-500 text-[0.7rem]">{formatTime(status?.createdAt)}</p>
                                                         </div>
-                                                        <p className="text-gray-300 text-sm line-clamp-1">{status?.message}</p>
+                                                        <p className="text-gray-300 text-sm line-clamp-1 break-all">{status?.message}</p>
                                                         <div className="text-xs text-gray-400 flex items-center space-x-1 mt-1">
                                                             <p>{(status?.viewers || []).length}</p>
                                                             <VisibilityOutlinedIcon sx={{ fontSize: "0.9rem" }} />

@@ -226,7 +226,7 @@ export default function StatusView() {
                             {showMessage ? <ExpandMoreIcon /> : <ExpandLessIcon />}
                         </button>
 
-                        <div className={`break-words text-gray-200 ${!showMessage && "line-clamp-1"}`}>
+                        <div className={`whitespace-pre-wrap text-gray-200 break-all ${!showMessage && "line-clamp-1"}`}>
                             {
                                 localStatus.message
                             }
