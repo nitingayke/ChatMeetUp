@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useAnimation } from 'framer-motion';
 import { Chat, Lock, Videocam, Poll, Visibility, People } from '@mui/icons-material';
 import UserContext from '../context/UserContext';
-import { Avatar } from '@mui/material';
+import { Avatar, CircularProgress } from '@mui/material';
 import { getTotalActiveUsers } from '../services/userService';
 
 export default function HomePage() {
@@ -11,15 +11,19 @@ export default function HomePage() {
     const { loginUser } = useContext(UserContext);
 
     const [activeUsers, setActiveUsers] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleTotalUsersCount = async () => {
         try {
+            setIsLoading(true);
             const response = await getTotalActiveUsers();
             if (response.success) {
                 setActiveUsers(response.count);
             }
         } catch (error) {
             console.log("Unable to get count");
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -94,11 +98,18 @@ export default function HomePage() {
                 className='bg-gradient-to-r from-blue-400 to-purple-500 py-10 text-center rounded-xl mx-6 my-10 flex flex-col items-center justify-center'
             >
                 <div className='flex items-center justify-center px-3'>
-                    <span className="relative size-5 hidden sm:flex">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00ffd0] opacity-75"></span>
-                        <span className="relative inline-flex size-5 rounded-full bg-[#00ffd0]"></span>
-                    </span>
-                    <h1 className='text-4xl ps-5' style={{ fontWeight: '800' }}><AnimatedNumber target={activeUsers} />+ Active Users</h1>
+                    {
+                        (!isLoading) ? <>
+                            <span className="relative size-5 hidden sm:flex">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00ffd0] opacity-75"></span>
+                                <span className="relative inline-flex size-5 rounded-full bg-[#00ffd0]"></span>
+                            </span>
+                            <h1 className='text-4xl ps-5' style={{ fontWeight: '800' }}>
+                                <AnimatedNumber target={activeUsers} />+ Active Users
+                            </h1>
+                        </>
+                            : <CircularProgress sx={{ color: 'white' }} size={30} />
+                    }
                 </div>
 
                 <p className='text-lg text-gray-100 mt-2 px-3'>Join thousands of users connecting every day!</p>
