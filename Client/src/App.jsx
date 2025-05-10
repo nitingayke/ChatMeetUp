@@ -39,7 +39,7 @@ function App() {
                     setLoginUser(response.data.user);
                 }
             } catch (error) {
-                enqueueSnackbar('User not logged in.');
+                enqueueSnackbar(error?.message || 'User not logged in.');
             }
         };
 
