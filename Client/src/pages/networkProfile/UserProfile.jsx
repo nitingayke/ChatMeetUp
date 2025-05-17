@@ -263,10 +263,13 @@ export default function UserProfile() {
                                     <div className="flex items-center gap-4 ">
                                         <Avatar src={chatUser.image} alt={chatUser.username} className="w-12 h-12" />
 
-                                        <div className="flex-1">
-                                            <h3 className="text-lg font-semibold">{chatUser.username}</h3>
-                                            <p className="text-gray-600 text-sm line-clamp-1">{(chatUser.description || "").length > 0 ? chatUser.description : "No description available"}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-lg font-semibold line-clamp-1">{chatUser?.username}</h3>
+                                            <p className="text-gray-600 text-sm line-clamp-1">
+                                                {(chatUser?.description || "").length > 0 ? chatUser.description : "No description available"}
+                                            </p>
                                         </div>
+
 
                                         <span className="text-sm bg-orange-500 text-white px-2 py-1 rounded-full">
                                             {connection?.messages?.length} Messages

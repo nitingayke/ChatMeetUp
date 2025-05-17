@@ -2,7 +2,6 @@ import Status from "../models/Status.js"
 
 import httpStatus from 'http-status';
 import User from "../models/User.js";
-import { response } from "express";
 
 const getTotalUserStatus = async (req, res) => {
 
