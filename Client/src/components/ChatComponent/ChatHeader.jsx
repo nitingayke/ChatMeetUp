@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import ChatContext from '../../context/ChatContext.js';
 import Avatar from '@mui/material/Avatar';
 import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
@@ -38,9 +38,9 @@ export default function ChatHeader() {
         if (userChat) {
             setRemoteUser(userChat?.user1?.username === loginUser?.username ? userChat?.user2 : userChat?.user1);
         }
-    }, [userChat]);
+    }, [userChat, loginUser?.username]);
 
-    const handleRemoteUserResponse = ({ action, from }) => {
+    const handleRemoteUserResponse = useCallback(({ action, from }) => {
 
         if (action === 'allow') {
             navigate(`/video-call/${from}`);
@@ -49,7 +49,7 @@ export default function ChatHeader() {
         } else if (action === "block") {
             enqueueSnackbar("You have been blocked by the user.", { variant: "error" });
         }
-    }
+    }, [navigate]);
 
     useEffect(() => {
         socket.on('video-call-invitation-remote-response', handleRemoteUserResponse);
@@ -57,7 +57,7 @@ export default function ChatHeader() {
         return () => {
             socket.off('video-call-invitation-remote-response', handleRemoteUserResponse);
         }
-    }, []);
+    }, [handleRemoteUserResponse]);
 
     const handleSearchClose = () => {
         setIsSearchStatus(false);
@@ -159,7 +159,7 @@ export default function ChatHeader() {
             } else {
                 enqueueSnackbar(response.message || "Failed to exit the group.", { variant: "error" });
             }
-        } catch (error) {
+        } catch {
             enqueueSnackbar("Something went wrong. Please try again.", { variant: "error" });
         } finally {
             setIsMessageProcessing(false);

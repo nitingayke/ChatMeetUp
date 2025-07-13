@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Avatar from '@mui/material/Avatar';
@@ -65,7 +65,7 @@ export function ChatMain() {
 
             return { ...prevUserChat, messages: updatedMessages };
         });
-    }, [setLocalChat, setUserChat]);
+    }, [setLocalChat, setUserChat, localChat?._id]);
 
     useEffect(() => {
 

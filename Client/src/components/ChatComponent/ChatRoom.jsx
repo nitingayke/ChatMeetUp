@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import ChatHeader from './ChatHeader.jsx';
 import ChatFooter from './ChatFooter.jsx';
 import { ChatMain } from './ChatMain.jsx';
@@ -36,7 +36,7 @@ export default function ChatRoom() {
         if (loginUser?._id === data?.sender?._id) {
             setIsMessageProcessing(false);
         }
-    }, [userChat, loginUser, setIsMessageProcessing]);
+    }, [userChat, loginUser, setIsMessageProcessing, setUserChat]);
 
     const handlePollVoteSuccess = useCallback(({ conversationId, userId, chatId, pollIdx }) => {
 
@@ -61,7 +61,7 @@ export default function ChatRoom() {
         if (loginUser?._id === userId) {
             setIsMessageProcessing(false);
         }
-    }, [userChat, loginUser, setIsMessageProcessing]);
+    }, [loginUser, setIsMessageProcessing, setUserChat]);
 
     const updateMessageReaction = (msg, userId, emoji) => {
 
@@ -94,7 +94,7 @@ export default function ChatRoom() {
             loginUser._id === userId ? "You reacted to a message!" : "A user added a reaction.",
             { variant: "success" }
         );
-    }, [userChat, loginUser, enqueueSnackbar]);
+    }, [userChat, loginUser, enqueueSnackbar, setUserChat]);
 
     const handleChatMessageDeleteAll = useCallback(({ chatId, conversationId, userId }) => {
 
@@ -109,7 +109,7 @@ export default function ChatRoom() {
         if(loginUser?._id === userId) {
             setIsMessageProcessing(false);
         }
-    }, [userChat, loginUser, setIsMessageProcessing]);
+    }, [loginUser, setIsMessageProcessing, setUserChat]);
 
     useEffect(() => {
 
@@ -143,9 +143,9 @@ export default function ChatRoom() {
                 socket.off('chat-message-deleted-success', handleChatMessageDeleteAll);
             }
         };
-    }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction]);
+    }, [handleNewChatMessage, handlePollVoteSuccess, handleChatReaction, handleChatMessageDeleteAll]);
 
-    const getCurrentChatData = async () => {
+    const getCurrentChatData = useCallback(async () => {
 
         if (!id || !loginUser)
             return;
@@ -182,13 +182,13 @@ export default function ChatRoom() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [enqueueSnackbar, id, loginUser, setJoinedUsers, setUserChat]);
 
     useEffect(() => {
         if (userChat?._id === id) return;
 
         getCurrentChatData();
-    }, [id, loginUser]);
+    }, [id, getCurrentChatData, userChat?._id]);
 
     if (!localStorage.getItem('authToken')) {
         return (
