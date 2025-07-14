@@ -75,7 +75,7 @@
 
 | Total Status                    | Image Status View               | Video Status View               | Status In Mobile               |
 | ------------------------------- | ------------------------------- | ------------------------------- | ------------------------------- |
-| ![ Status](./assets/status.png) | ![Status](./assets/status2.png) | ![ Status](./assets/videoStatus.png) | ![Status](./assets/publicStatus.png) |
+| ![ Status](./assets/status.png) | ![Status](./assets/status2.png) | ![Status](./assets/videoStatus.png) | ![Status](./assets/publicStatus.jpg) |
 
 ---
 
