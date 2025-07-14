@@ -95,9 +95,9 @@
 * Seamless peer-to-peer video calling using WebRTC.
 * Auto reconnect and call decline options.
 
-| Call Init                             | Call Live                             | Call UI                             |
+| Call Init                             | Join Call                             | Call UI                             |
 | ------------------------------------- | ------------------------------------- | ----------------------------------- |
-| ![Call Init](./assets/videocall1.png) | ![Call Live](./assets/videocall2.png) | ![Call UI](./assets/videocall3.png) |
+| ![Call Init](./assets/incommingCall.png) | ![Call Live](./assets/joinCall.png)| ![Call UI](./assets/videoCall.png)  |
 
 ---
 
