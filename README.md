@@ -85,7 +85,7 @@
 * Search chat history and users.
 
 | Chat Room Laptop                 | Chat Room In Mobile              |
-| ----------------------------- ---| ----------------------------- ---|
+| ---------------------------------| ---------------------------------|
 | ![Chat 1](./assets/chatting.png) | ![Chat 2](./assets/chatMain.jpg) |
 
 ---
