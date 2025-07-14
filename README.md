@@ -63,7 +63,9 @@
 
 * Create or join group chats with name and image.
 
-![Join Users](./assets/join-users.png)
+| Join User Mobile                             | Join User Laptop                               |
+| -------------------------------------------- | ---------------------------------------------- |
+| ![Public Status](./assets/userJoin.jpg) | ![Private Status](./assets/userJoin.png) |
 
 ---
 
