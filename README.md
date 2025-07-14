@@ -105,9 +105,9 @@
 
 * Profile picture, status, update username/password.
 
-| Profile View                      | Edit Profile                   |
-| --------------------------------- | ------------------------------ |
-| ![Profile](./assets/profile1.png) | ![Edit](./assets/profile2.png) |
+| Profile View                      |
+| --------------------------------- |
+| ![Profile](./assets/profile.png)  |
 
 ---
 
@@ -155,7 +155,7 @@ CLOUDINARY_API_SECRET=<your_api_secret>
 
 * Entire app is fully responsive for mobile and tablet.
 
-![Mobile](./assets/mobile-view.png)
+![Mobile](./assets/videoCall.png)
 
 ---
 
