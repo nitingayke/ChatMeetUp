@@ -1,6 +1,6 @@
 # ChatMeetUp – Real-Time MERN Stack Based Chat & Video Calling App
 
-![ChatMeetUp Banner](./assets/landingpage.png)
+![ChatMeetUp Banner](./assets/landingPage.png)
 
 ## 📌 About the Project
 
