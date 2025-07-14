@@ -73,11 +73,9 @@
 
 *Share public/private status updates (text/image/video).*
 
-| Join User Mobile                             | Join User Laptop                               |
-| -------------------------------------------- | ---------------------------------------------- |
-| ![ Status](./assets/status.jpg) | ![Status](./assets/status2.png) |
-
-| ![User Status](./assets/userStatus.png) | ![Video Status](./assets/videoStatus.png) |
+| Total Status                    | Image Status View               | Video Status View               | Status In Mobile               |
+| ------------------------------- | ------------------------------- | ------------------------------- | ------------------------------- |
+| ![ Status](./assets/status.png) | ![Status](./assets/status2.png) | ![ Status](./assets/videoStatus.png) | ![Status](./assets/publicStatus.png) |
 
 ---
 
