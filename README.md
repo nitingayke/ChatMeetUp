@@ -72,10 +72,7 @@
 ### ✏️ Public & Private Status
 
 * Share public/private status updates (text/image/video).
-
-| Public Status                                | Private Status                                 |
-| -------------------------------------------- | ---------------------------------------------- |
-| ![Public Status](./assets/public-status.png) | ![Private Status](./assets/private-status.png) |
+| ![Public Status](./assets/status.png) | ![Private Status](./assets/status2.png) | ![Private Status](./assets/userStatus.png) |  ![Private Status](./assets/videoStatus.png)
 
 ---
 
