@@ -84,9 +84,9 @@
 * Send text, emoji, media, and polls.
 * Search chat history and users.
 
-| Chat Room 1                   | Chat Room 2                   | Chat Room 3                   |
-| ----------------------------- | ----------------------------- | ----------------------------- |
-| ![Chat 1](./assets/chat1.png) | ![Chat 2](./assets/chat2.png) | ![Chat 3](./assets/chat3.png) |
+| Chat Room Laptop                 | Chat Room In Mobile              |
+| ----------------------------- ---| ----------------------------- ---|
+| ![Chat 1](./assets/chatting.png) | ![Chat 2](./assets/chatMain.jpg) |
 
 ---
 
